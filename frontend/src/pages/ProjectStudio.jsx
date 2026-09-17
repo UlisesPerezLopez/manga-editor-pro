@@ -1,9 +1,28 @@
 // ProjectStudio.jsx
-// Workspace principal del proyecto en MEP — Manga Editor Pro.
+// Workspace principal del proyecto en MEP — Manga Editor Pro con Lucide React.
 
 import { useEffect, useState, useMemo } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import {
+  ScrollText,
+  Palette,
+  Users,
+  LayoutGrid,
+  BarChart3,
+  FolderUp,
+  Save,
+  Globe,
+  BookOpen,
+  Sparkles,
+  Zap,
+  Dices,
+  CheckCircle2,
+  AlertCircle,
+  AlertTriangle,
+  ArrowLeft,
+  Bot
+} from 'lucide-react'
 import useProjectStore from '../store/projectStore'
 import useAuthStore from '../store/authStore'
 import { generateAPI, chaptersAPI } from '../services/api'
@@ -23,6 +42,8 @@ import BackupModal from '../components/Backup/BackupModal'
 import OnlineBadge from '../components/common/OnlineBadge'
 import AuthorAnalyticsPanel from '../components/Analytics/AuthorAnalyticsPanel'
 import PublishModal from '../components/Publishing/PublishModal'
+import ThemeBackgroundAnimation from '../components/common/ThemeBackgroundAnimation'
+import UserAvatar from '../components/common/UserAvatar'
 
 function ProjectStudioContent() {
   const { id } = useParams()
@@ -41,14 +62,14 @@ function ProjectStudioContent() {
   const [cargandoInicial, setCargandoInicial] = useState(true)
   const [errorCarga, setErrorCarga] = useState(null)
 
-  // Secciones del workspace con i18n reactivo
+  // Secciones del workspace con i18n reactivo e iconos de Lucide
   const SECCIONES = useMemo(() => [
-    { id: 'guiones',     emoji: '📝', label: t('projectStudio.scriptWriter'),    proximamente: false },
-    { id: 'firma-visual',emoji: '🎨', label: t('projectStudio.visualSignature'), proximamente: false },
-    { id: 'personajes',  emoji: '👤', label: t('projectStudio.characters'),      proximamente: false },
-    { id: 'editor',      emoji: '🖼️', label: t('projectStudio.pageEditor'),      proximamente: false }, 
-    { id: 'analitica',   emoji: '📊', label: t('analytics.title'),              proximamente: false },
-    { id: 'exportar',    emoji: '📤', label: t('projectStudio.export'),        proximamente: false },
+    { id: 'guiones',     icon: ScrollText, label: t('projectStudio.scriptWriter') || 'Guionista IA', proximamente: false },
+    { id: 'firma-visual',icon: Palette,    label: t('projectStudio.visualSignature') || 'Firma Visual', proximamente: false },
+    { id: 'personajes',  icon: Users,      label: t('projectStudio.characters') || 'Personajes', proximamente: false },
+    { id: 'editor',      icon: LayoutGrid, label: t('projectStudio.pageEditor') || 'Editor de Páginas', proximamente: false }, 
+    { id: 'analitica',   icon: BarChart3,  label: t('analytics.title') || 'Analítica', proximamente: false },
+    { id: 'exportar',    icon: FolderUp,   label: t('projectStudio.export') || 'Exportar', proximamente: false },
   ], [t])
 
   const cargarCapitulos = async (pId = (id ? parseInt(id, 10) : null)) => {
@@ -145,47 +166,56 @@ function ProjectStudioContent() {
     return (
       <div className="min-h-screen bg-rdc-primary flex items-center justify-center p-4">
         <div className="text-center bg-rdc-secondary/90 border border-rdc-border p-8 rounded-2xl shadow-xl max-w-md backdrop-blur-md">
-          <p className="text-rdc-error text-lg mb-2 font-bold font-titulo">⚠️ {errorCarga || 'Proyecto no encontrado'}</p>
+          <div className="flex items-center justify-center gap-2 text-rdc-error text-lg mb-2 font-bold font-titulo">
+            <AlertTriangle className="w-6 h-6" />
+            <span>{errorCarga || 'Proyecto no encontrado'}</span>
+          </div>
           <p className="text-rdc-muted text-xs mb-6 font-titulo">No se pudo cargar la información del proyecto solicitado.</p>
           <button
             onClick={() => navigate('/dashboard')}
-            className="bg-rdc-accent hover:bg-rdc-accent-hover text-white font-titulo font-bold px-6 py-2.5 rounded-xl transition-all shadow-md"
+            className="bg-rdc-accent hover:bg-rdc-accent-hover text-white font-titulo font-bold px-6 py-2.5 rounded-xl transition-all shadow-md inline-flex items-center gap-2 cursor-pointer"
           >
-            ← {t('nav.dashboard') || 'Panel'}
+            <ArrowLeft className="w-4 h-4" /> {t('nav.dashboard') || 'Panel'}
           </button>
         </div>
       </div>
     )
   }
 
-  const ICONOS_MODO = { propio: '🎨', legendario: '⚡', aleatorio: '🎲' }
   const modoActual = proyectoActivo?.modo_creacion || 'propio'
   const nombreProyecto = proyectoActivo?.nombre || 'Proyecto sin nombre'
   const projectIdNumber = proyectoActivo?.id ? parseInt(proyectoActivo.id, 10) : (id ? parseInt(id, 10) : 0)
 
+  const renderModoIcono = () => {
+    if (modoActual === 'legendario') return <Zap className="w-5 h-5 text-amber-400" />
+    if (modoActual === 'aleatorio') return <Dices className="w-5 h-5 text-indigo-400" />
+    return <Palette className="w-5 h-5 text-rdc-accent" />
+  }
+
   return (
-    <div className="min-h-screen bg-rdc-primary flex flex-col justify-between transition-colors duration-300">
+    <div className="min-h-screen bg-rdc-primary flex flex-col justify-between transition-colors duration-300 relative">
+      <ThemeBackgroundAnimation />
       <AiEngineFallbackBanner />
 
       {/* ── Navbar superior ── */}
       <nav className="bg-rdc-secondary/90 border-b border-rdc-border px-6 py-3
                       flex items-center justify-between flex-shrink-0 z-30 sticky top-0 backdrop-blur-md transition-colors duration-300">
         <div className="flex items-center gap-4">
-          <Link to="/dashboard" className="flex items-center gap-2 group cursor-pointer select-none" title="Ir al Dashboard">
+          <Link to="/" className="flex items-center gap-2 group cursor-pointer select-none" title="MEP — Manga Editor Pro">
             <h1 className="font-manga text-2xl text-rdc-accent group-hover:scale-105 transition-transform">MEP</h1>
           </Link>
           <div className="h-4 w-px bg-rdc-border" />
           <button
             onClick={() => navigate('/dashboard')}
-            className="text-rdc-muted hover:text-rdc-text transition-colors text-sm font-titulo cursor-pointer"
+            className="text-rdc-muted hover:text-rdc-text transition-colors text-sm font-titulo cursor-pointer flex items-center gap-1.5"
           >
-            ← {t('dashboard.projects') || 'Proyectos'}
+            <ArrowLeft className="w-4 h-4" /> {t('dashboard.projects') || 'Proyectos'}
           </button>
           <div className="h-4 w-px bg-rdc-border" />
-          <div className="flex items-center gap-2">
-            <span className="text-xl">
-              {ICONOS_MODO[modoActual] || '📖'}
-            </span>
+          <div className="flex items-center gap-2.5">
+            <div className="p-1.5 rounded-lg bg-rdc-card border border-rdc-border">
+              {renderModoIcono()}
+            </div>
             <div>
               <h2 className="font-titulo text-lg text-rdc-text font-semibold leading-none">
                 {nombreProyecto}
@@ -202,24 +232,24 @@ function ProjectStudioContent() {
           <OnlineBadge />
           <button
             onClick={() => setBackupModalAbierto(true)}
-            className="bg-rdc-card hover:bg-rdc-secondary border border-rdc-border hover:border-rdc-accent text-rdc-text text-xs font-titulo font-semibold px-2.5 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 shadow-sm cursor-pointer"
-            title={t('backup.title')}
+            className="bg-rdc-card hover:bg-rdc-secondary border border-rdc-border hover:border-rdc-accent text-rdc-text text-xs font-titulo font-semibold px-2.5 py-1.5 rounded-xl transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer"
+            title={t('backup.title') || 'Copia de Seguridad'}
           >
-            <span>💾</span> <span className="hidden md:inline">Backup</span>
+            <Save className="w-3.5 h-3.5 text-rdc-muted" /> <span className="hidden md:inline">Backup</span>
           </button>
           <button
             onClick={() => setPublishModalAbierto(true)}
-            className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-titulo font-semibold px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 shadow-sm cursor-pointer"
-            title={t('publishing.title')}
+            className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-titulo font-semibold px-3 py-1.5 rounded-xl transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer"
+            title={t('publishing.title') || 'Publicar'}
           >
-            <span>🚀</span> <span className="hidden md:inline">{t('publishing.title')}</span>
+            <Globe className="w-3.5 h-3.5" /> <span className="hidden md:inline">{t('publishing.title') || 'Publicar'}</span>
           </button>
           <button
             onClick={() => setLectorAbierto(true)}
-            className="bg-rdc-accent hover:bg-rdc-accent-hover text-white text-xs font-titulo font-semibold px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 shadow-sm cursor-pointer"
-            title={t('reader.openReader')}
+            className="bg-rdc-accent hover:bg-rdc-accent-hover text-white text-xs font-titulo font-semibold px-3 py-1.5 rounded-xl transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer"
+            title={t('reader.openReader') || 'Leer Manga'}
           >
-            <span>📖</span> {t('reader.readProject') || 'Leer Manga'}
+            <BookOpen className="w-3.5 h-3.5" /> <span className="hidden sm:inline">{t('reader.readProject') || 'Leer Manga'}</span>
           </button>
           <AiEngineToggle />
           <ThemeToggle />
@@ -228,14 +258,14 @@ function ProjectStudioContent() {
             onClick={verificarGemini}
             className="text-rdc-muted hover:text-rdc-accent text-xs
                        border border-rdc-border hover:border-rdc-accent
-                       px-3 py-1.5 rounded-lg transition-all duration-200
+                       px-3 py-1.5 rounded-xl transition-all duration-200
                        flex items-center gap-1.5 font-titulo cursor-pointer"
+            title="Diagnóstico de IA"
           >
-            {t('projectStudio.geminiStatus') || 'Estado IA'}
+            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+            <span className="hidden lg:inline">{t('projectStudio.geminiStatus') || 'Estado IA'}</span>
           </button>
-          <span className="text-rdc-muted text-sm hidden md:block font-titulo">
-            {usuario?.nombre_artistico || usuario?.username}
-          </span>
+          <UserAvatar />
         </div>
       </nav>
 
@@ -248,39 +278,47 @@ function ProjectStudioContent() {
           <p className="text-rdc-muted text-xs uppercase px-4 mb-3 tracking-wider font-titulo">
             {t('projectStudio.tools') || 'Herramientas'}
           </p>
-          {SECCIONES.map((sec) => (
-            <button
-              key={sec.id}
-              onClick={() => setSeccionActiva(sec.id)}
-              disabled={sec.proximamente}
-              className={`flex items-center gap-3 px-4 py-3 text-sm
-                          transition-all duration-200 text-left cursor-pointer
-                          ${seccionActiva === sec.id
-                            ? 'bg-rdc-accent bg-opacity-15 text-rdc-accent border-r-2 border-rdc-accent'
-                            : 'text-rdc-muted hover:text-rdc-text hover:bg-rdc-card'
-                          }
-                          ${sec.proximamente
-                            ? 'opacity-40 cursor-not-allowed'
-                            : ''
-                          }`}
-            >
-              <span className="text-lg">{sec.emoji}</span>
-              <div>
-                <span className="font-titulo font-medium">{sec.label}</span>
-                {sec.proximamente && (
-                  <p className="text-xs opacity-60">Próximamente</p>
-                )}
-              </div>
-            </button>
-          ))}
+          <div className="space-y-1 px-2">
+            {SECCIONES.map((sec) => {
+              const IconComponent = sec.icon
+              const esActiva = seccionActiva === sec.id
+              return (
+                <button
+                  key={sec.id}
+                  onClick={() => setSeccionActiva(sec.id)}
+                  disabled={sec.proximamente}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm
+                              transition-all duration-200 text-left cursor-pointer
+                              ${esActiva
+                                ? 'bg-rdc-accent/15 text-rdc-accent font-semibold shadow-xs'
+                                : 'text-rdc-muted hover:text-rdc-text hover:bg-rdc-card'
+                              }
+                              ${sec.proximamente
+                                ? 'opacity-40 cursor-not-allowed'
+                                : ''
+                              }`}
+                >
+                  <IconComponent className={`w-4 h-4 flex-shrink-0 ${esActiva ? 'text-rdc-accent' : 'text-rdc-muted'}`} />
+                  <div className="min-w-0 flex-1">
+                    <span className="font-titulo text-xs block truncate">{sec.label}</span>
+                    {sec.proximamente && (
+                      <p className="text-[10px] opacity-60">Próximamente</p>
+                    )}
+                  </div>
+                </button>
+              )
+            })}
+          </div>
 
           {/* Info del proyecto en el sidebar */}
           <div className="mt-auto px-4 pt-4 border-t border-rdc-border">
             <p className="text-rdc-muted text-xs mb-2 font-titulo">{t('projectStudio.visualSignature') || 'Firma Visual'}</p>
             {proyectoActivo?.style_locked ? (
-              <div className="bg-rdc-accent bg-opacity-10 border border-rdc-accent
-                              border-opacity-30 rounded-lg p-2">
-                <p className="text-rdc-accent text-xs font-titulo">{t('projectStudio.styleLocked') || 'Firma Bloqueada'}</p>
+              <div className="bg-rdc-accent/10 border border-rdc-accent/30 rounded-xl p-3">
+                <div className="flex items-center gap-1.5 text-rdc-accent text-xs font-titulo font-semibold">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span>{t('projectStudio.styleLocked') || 'Firma Bloqueada'}</span>
+                </div>
                 {proyectoActivo?.estilo_legendario && (
                   <p className="text-rdc-muted text-xs mt-1 capitalize font-titulo">
                     {proyectoActivo.estilo_legendario.replace(/_/g, ' ')}
@@ -288,9 +326,11 @@ function ProjectStudioContent() {
                 )}
               </div>
             ) : (
-              <div className="bg-yellow-500 bg-opacity-10 border border-yellow-500
-                              border-opacity-30 rounded-lg p-2">
-                <p className="text-yellow-400 text-xs font-titulo">{t('projectStudio.stylePending') || 'Pendiente'}</p>
+              <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-3">
+                <div className="flex items-center gap-1.5 text-yellow-500 dark:text-yellow-400 text-xs font-titulo font-semibold">
+                  <AlertTriangle className="w-3.5 h-3.5" />
+                  <span>{t('projectStudio.stylePending') || 'Pendiente'}</span>
+                </div>
                 <p className="text-rdc-muted text-xs mt-1">
                   {t('projectStudio.pendingSetup') || 'Configura la firma visual'}
                 </p>
@@ -306,25 +346,28 @@ function ProjectStudioContent() {
           {seccionActiva === 'guiones' && (
             <div className="max-w-3xl mx-auto">
               <div className="mb-6">
-                <h2 className="font-titulo text-2xl text-rdc-text font-semibold">
-                  {t('projectStudio.scriptSectionTitle')}
+                <h2 className="font-titulo text-2xl text-rdc-text font-semibold flex items-center gap-2">
+                  <ScrollText className="w-6 h-6 text-rdc-accent" />
+                  <span>{t('projectStudio.scriptSectionTitle') || 'Guionista IA Manga'}</span>
                 </h2>
                 <p className="text-rdc-muted text-sm mt-1">
-                  {t('projectStudio.scriptSectionDesc')}
+                  {t('projectStudio.scriptSectionDesc') || 'Genera y estructura sinopsis, arcos argumentales y guiones técnicos para tus capítulos.'}
                 </p>
               </div>
               {modoActual === 'propio' && !proyectoActivo?.style_locked && (
-                <div className="bg-yellow-500 bg-opacity-10 border border-yellow-500
-                                border-opacity-30 rounded-xl p-4 mb-4">
-                  <p className="text-yellow-400 text-sm font-semibold font-titulo">
-                    {t('projectStudio.stylePending')}
-                  </p>
-                  <p className="text-rdc-muted text-xs mt-1">
-                    {t('newProject.customNote')}
-                  </p>
+                <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-2xl p-4 mb-4 flex items-start gap-3">
+                  <AlertTriangle className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-yellow-500 dark:text-yellow-400 text-sm font-semibold font-titulo">
+                      {t('projectStudio.stylePending') || 'Firma Visual Pendiente'}
+                    </p>
+                    <p className="text-rdc-muted text-xs mt-0.5">
+                      {t('newProject.customNote') || 'Puedes crear tu firma de arte en la pestaña de Firma Visual para guiar el estilo de los personajes.'}
+                    </p>
+                  </div>
                 </div>
               )}
-              <div className="bg-rdc-secondary border border-rdc-border rounded-xl p-6 shadow-xl">
+              <div className="bg-rdc-secondary border border-rdc-border rounded-2xl p-6 shadow-xl">
                 <ScriptGenerator proyecto={proyectoActivo} />
               </div>
             </div>
@@ -334,19 +377,20 @@ function ProjectStudioContent() {
           {seccionActiva === 'firma-visual' && (
             <div className="max-w-3xl mx-auto">
               <div className="mb-6">
-                <h2 className="font-titulo text-2xl text-rdc-text font-semibold">
-                  {t('projectStudio.styleSectionTitle')}
+                <h2 className="font-titulo text-2xl text-rdc-text font-semibold flex items-center gap-2">
+                  <Palette className="w-6 h-6 text-rdc-accent" />
+                  <span>{t('projectStudio.styleSectionTitle') || 'Firma Visual y Consistencia de Arte'}</span>
                 </h2>
                 <p className="text-rdc-muted text-sm mt-1">
                   {modoActual === 'propio'
-                    ? t('projectStudio.styleSectionDescOwn')
-                    : t('projectStudio.styleSectionDescLegendary')
+                    ? (t('projectStudio.styleSectionDescOwn') || 'Define la paleta de tinta, tramas y parámetros visuales de tu obra.')
+                    : (t('projectStudio.styleSectionDescLegendary') || 'Estilo legendario maestro asignado a tu obra.')
                   }
                 </p>
               </div>
 
               {modoActual === 'propio' ? (
-                <div className="bg-rdc-secondary border border-rdc-border rounded-xl p-6 shadow-xl">
+                <div className="bg-rdc-secondary border border-rdc-border rounded-2xl p-6 shadow-xl">
                   <StyleWizard
                     proyecto={proyectoActivo}
                     onEstiloBloqueado={() => {
@@ -355,30 +399,32 @@ function ProjectStudioContent() {
                   />
                 </div>
               ) : (
-                <div className="bg-rdc-secondary border border-rdc-border rounded-xl p-6 shadow-xl">
+                <div className="bg-rdc-secondary border border-rdc-border rounded-2xl p-6 shadow-xl">
                   <div className="text-center py-6">
-                    <p className="text-5xl mb-4">⚡</p>
+                    <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mx-auto mb-4">
+                      <Zap className="w-8 h-8 text-amber-400" />
+                    </div>
                     <h3 className="font-titulo text-xl text-rdc-text font-semibold mb-2">
-                      {t('projectStudio.legendaryActiveTitle')}
+                      {t('projectStudio.legendaryActiveTitle') || 'Estilo Legendario Activado'}
                     </h3>
                     <p className="text-rdc-muted text-sm mb-4">
-                      {t('projectStudio.legendaryActiveDesc')}
+                      {t('projectStudio.legendaryActiveDesc') || 'Este proyecto utiliza los pesos de arte maestro configurados globalmente.'}
                     </p>
-                    <span className="bg-rdc-accent bg-opacity-20 text-rdc-accent
-                                     border border-rdc-accent border-opacity-40
-                                     px-4 py-2 rounded-lg font-titulo capitalize inline-block">
+                    <span className="bg-rdc-accent/20 text-rdc-accent
+                                     border border-rdc-accent/40
+                                     px-4 py-2 rounded-xl font-titulo capitalize inline-block text-sm font-semibold">
                       {proyectoActivo?.estilo_legendario?.replace(/_/g, ' ') || 'Estilo legendario'}
                     </span>
-                    <div className="mt-6 bg-rdc-card rounded-lg p-4 text-left">
-                      <p className="text-rdc-muted text-xs uppercase mb-2 font-titulo">
-                        {t('projectStudio.masterPromptActive')}
+                    <div className="mt-6 bg-rdc-card rounded-xl p-4 text-left border border-rdc-border">
+                      <p className="text-rdc-muted text-xs uppercase mb-2 font-titulo font-semibold">
+                        {t('projectStudio.masterPromptActive') || 'Prompt Maestro del Proyecto'}
                       </p>
                       <p className="text-rdc-text text-xs font-mono leading-relaxed">
                         {proyectoActivo?.system_prompt_maestro?.slice(0, 250) || 'Prompt maestro configurado.'}...
                       </p>
                     </div>
                     <p className="text-rdc-muted text-xs mt-4">
-                      {t('projectStudio.signatureActive')}
+                      {t('projectStudio.signatureActive') || 'Firma de arte activa en todas las generaciones.'}
                     </p>
                   </div>
                 </div>
@@ -390,11 +436,12 @@ function ProjectStudioContent() {
           {seccionActiva === 'personajes' && (
             <div className="max-w-5xl mx-auto">
               <div className="mb-6">
-                <h2 className="font-titulo text-2xl text-rdc-text font-semibold">
-                  {t('projectStudio.charactersSectionTitle')}
+                <h2 className="font-titulo text-2xl text-rdc-text font-semibold flex items-center gap-2">
+                  <Users className="w-6 h-6 text-rdc-accent" />
+                  <span>{t('projectStudio.charactersSectionTitle') || 'Directorio de Personajes'}</span>
                 </h2>
                 <p className="text-rdc-muted text-sm mt-1">
-                  {t('projectStudio.charactersSectionDesc')}
+                  {t('projectStudio.charactersSectionDesc') || 'Administra los diseños, consistencia facial y perfiles de tus protagonistas.'}
                 </p>
               </div>
               <CharacterList proyecto={proyectoActivo} />
@@ -405,30 +452,34 @@ function ProjectStudioContent() {
           {seccionActiva === 'editor' && (
             <div className="max-w-3xl mx-auto">
               <div className="mb-6">
-                <h2 className="font-titulo text-2xl text-rdc-text font-semibold">
-                  {t('projectStudio.editorSectionTitle')}
+                <h2 className="font-titulo text-2xl text-rdc-text font-semibold flex items-center gap-2">
+                  <LayoutGrid className="w-6 h-6 text-rdc-accent" />
+                  <span>{t('projectStudio.editorSectionTitle') || 'Editor Visual de Páginas'}</span>
                 </h2>
                 <p className="text-rdc-muted text-sm mt-1">
-                  {t('projectStudio.editorSectionDesc')}
+                  {t('projectStudio.editorSectionDesc') || 'Maqueta viñetas, globos de diálogo, tramas y efectos sobre el canvas.'}
                 </p>
               </div>
               <div className="bg-rdc-secondary border border-rdc-border
-                              rounded-xl p-8 text-center space-y-4 shadow-xl">
-                <p className="text-6xl">🎨</p>
+                              rounded-2xl p-8 text-center space-y-4 shadow-xl">
+                <div className="w-20 h-20 rounded-2xl bg-rdc-accent/15 border border-rdc-accent/30 flex items-center justify-center mx-auto text-rdc-accent">
+                  <LayoutGrid className="w-10 h-10" />
+                </div>
                 <h3 className="font-titulo text-xl text-rdc-text font-semibold">
-                  MEP Manga Editor
+                  MEP Manga Studio Canvas
                 </h3>
                 <p className="text-rdc-muted text-sm max-w-md mx-auto">
-                  {t('projectStudio.editorDesc')}
+                  {t('projectStudio.editorDesc') || 'Accede al editor multipágina con soporte para capas, plantillas de viñetas manga y renderizado acelerado.'}
                 </p>
                 <button
                   onClick={() => navigate(`/editor/${id}`)}
                   className="bg-rdc-accent hover:bg-rdc-accent-hover text-white
                              font-titulo font-semibold px-8 py-4 rounded-xl
-                             transition-colors duration-200 text-lg
+                             transition-all duration-200 text-base
                              flex items-center gap-3 mx-auto shadow-lg cursor-pointer hover:scale-105"
                 >
-                  {t('projectStudio.openPageEditor')}
+                  <LayoutGrid className="w-5 h-5" />
+                  <span>{t('projectStudio.openPageEditor') || 'Abrir Editor de Páginas'}</span>
                 </button>
               </div>
             </div>
@@ -439,7 +490,8 @@ function ProjectStudioContent() {
             <div className="max-w-5xl mx-auto space-y-6">
               <div className="mb-4">
                 <h2 className="font-titulo text-2xl text-rdc-text font-semibold flex items-center gap-2">
-                  <span>📊</span> {t('analytics.title')}
+                  <BarChart3 className="w-6 h-6 text-rdc-accent" />
+                  <span>{t('analytics.title') || 'Analítica de Creador'}</span>
                 </h2>
                 <p className="text-rdc-muted text-sm mt-1">
                   Métricas de lectores, lecturas en tiempo real, retención y estadísticas de soporte para creadores.
@@ -468,39 +520,47 @@ function ProjectStudioContent() {
       <Modal
         abierto={modalGemini}
         onCerrar={() => setModalGemini(false)}
-        titulo="🤖 Estado de Gemini API"
+        titulo="Estado del Servicio IA"
         ancho="max-w-md"
       >
         {!estadoGemini ? (
           <div className="py-8">
-            <Spinner texto="Verificando conexión con Gemini..." />
+            <Spinner texto="Verificando conexión con el motor de IA..." />
           </div>
         ) : (
           <div className="space-y-4">
-            <div className={`rounded-lg p-4 ${
+            <div className={`rounded-xl p-4 ${
               estadoGemini.estado === 'OPERATIVO'
-                ? 'bg-green-500 bg-opacity-10 border border-green-500 border-opacity-30'
-                : 'bg-rdc-error bg-opacity-10 border border-rdc-error border-opacity-30'
+                ? 'bg-emerald-500/10 border border-emerald-500/30'
+                : 'bg-rdc-error/10 border border-rdc-error/30'
             }`}>
-              <p className={`font-titulo font-semibold text-lg ${
+              <p className={`font-titulo font-semibold text-base flex items-center gap-2 ${
                 estadoGemini.estado === 'OPERATIVO'
-                  ? 'text-green-400'
+                  ? 'text-emerald-400'
                   : 'text-rdc-error'
               }`}>
-                {estadoGemini.estado === 'OPERATIVO' ? '✅ OPERATIVO' : '❌ ERROR'}
+                {estadoGemini.estado === 'OPERATIVO' ? (
+                  <>
+                    <CheckCircle2 className="w-5 h-5" /> OPERATIVO
+                  </>
+                ) : (
+                  <>
+                    <AlertCircle className="w-5 h-5" /> ERROR
+                  </>
+                )}
               </p>
-              <p className="text-rdc-muted text-sm mt-2">{estadoGemini.mensaje}</p>
+              <p className="text-rdc-muted text-sm mt-2">{estadoGemini.mensaje || 'Conexión activa y lista.'}</p>
               {estadoGemini.error && (
                 <p className="text-rdc-error text-xs mt-2 font-mono">
                   {estadoGemini.error}
                 </p>
               )}
             </div>
-            <div className="bg-rdc-card rounded-lg p-4">
-              <p className="text-rdc-muted text-xs uppercase mb-2 font-titulo">Rate limiting activo</p>
-              <p className="text-rdc-text text-sm">Máximo 14 peticiones/minuto</p>
+            <div className="bg-rdc-card rounded-xl p-4 border border-rdc-border">
+              <p className="text-rdc-muted text-xs uppercase mb-1 font-titulo font-semibold">Rate Limiting & Caché</p>
+              <p className="text-rdc-text text-sm font-titulo">Máximo 15 peticiones/minuto por usuario</p>
               <p className="text-rdc-muted text-xs mt-1">
-                Con caché y retry automático ante error 429
+                Con gestión automática de tokens y reintentos ante cuellos de botella.
               </p>
             </div>
           </div>

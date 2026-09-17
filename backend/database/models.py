@@ -20,6 +20,7 @@ class Usuario(Base):
     email = Column(String(100), unique=True, nullable=False, index=True)
     hashed_password = Column(String(200), nullable=False)
     nombre_artistico = Column(String(100), nullable=True)
+    avatar_url = Column(Text, nullable=True)  # URL o data:image SVG/PNG del avatar
     ai_mode = Column(String(30), default="cloud_free", nullable=False)  # 'cloud_free' o 'local'
     activo = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
@@ -36,6 +37,7 @@ class Proyecto(Base):
     id = Column(Integer, primary_key=True, index=True)
     id_usuario = Column(Integer, ForeignKey("usuarios.id"), nullable=False)
     nombre = Column(String(200), nullable=False)
+    portada_url = Column(Text, nullable=True)  # URL o base64 de la portada del proyecto
 
     # Modo de creación: 'propio', 'legendario' o 'aleatorio'
     modo_creacion = Column(String(20), nullable=True)

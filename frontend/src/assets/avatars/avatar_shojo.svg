@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <defs>
+    <linearGradient id="bgShojo" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FF8FAB"/>
+      <stop offset="100%" stop-color="#FB6F92"/>
+    </linearGradient>
+    <linearGradient id="hairShojo" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFE5D9"/>
+      <stop offset="100%" stop-color="#FCD5CE"/>
+    </linearGradient>
+  </defs>
+  <circle cx="50" cy="50" r="48" fill="url(#bgShojo)"/>
+  <path d="M 20 40 C 5 60 10 85 24 90 C 20 75 22 55 30 45 Z" fill="url(#hairShojo)"/>
+  <path d="M 80 40 C 95 60 90 85 76 90 C 80 75 78 55 70 45 Z" fill="url(#hairShojo)"/>
+  <path d="M 32 40 Q 50 36 68 40 L 66 66 Q 50 82 34 66 Z" fill="#FFF0F5"/>
+  <path d="M 26 40 C 26 22 74 22 74 40 C 65 38 60 48 55 42 C 50 48 45 48 40 42 C 35 48 30 38 26 40 Z" fill="url(#hairShojo)"/>
+  <ellipse cx="40" cy="54" rx="5.5" ry="7" fill="#9B5DE5"/>
+  <ellipse cx="60" cy="54" rx="5.5" ry="7" fill="#9B5DE5"/>
+  <circle cx="38" cy="51" r="2.5" fill="#FFFFFF"/>
+  <circle cx="42" cy="57" r="1.2" fill="#FFFFFF"/>
+  <circle cx="58" cy="51" r="2.5" fill="#FFFFFF"/>
+  <circle cx="62" cy="57" r="1.2" fill="#FFFFFF"/>
+  <ellipse cx="32" cy="62" rx="4" ry="2" fill="#FF4D6D" opacity="0.6"/>
+  <ellipse cx="68" cy="62" rx="4" ry="2" fill="#FF4D6D" opacity="0.6"/>
+  <path d="M 46 67 Q 50 71 54 67" stroke="#D90429" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+</svg>

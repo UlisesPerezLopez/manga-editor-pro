@@ -1,10 +1,21 @@
 // ExportPanel.jsx
-// Centro integral de Exportación y Preimpresión Editorial para MEP — Manga Editor Pro.
-// Incluye: Exportación PNG/PDF/CBZ por lote, Control de Calidad 300 DPI, Guías de Sangrado y Formatos B6/A5/Webtoon.
+// Centro integral de Exportación y Preimpresión Editorial para MEP — Manga Editor Pro con Lucide React.
 
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import JSZip from 'jszip'
+import {
+  Download,
+  FileImage,
+  FileText,
+  Package,
+  BookOpen,
+  Scissors,
+  CheckCircle2,
+  AlertCircle,
+  FileCheck,
+  Check
+} from 'lucide-react'
 import { exportAPI } from '../../services/api'
 
 // Especificaciones de formatos editoriales (Dimensiones estándar en mm y píxeles a 300 DPI)
@@ -95,7 +106,7 @@ export default function ExportPanel({
 
   const handleExportarPNG = async () => {
     if (!canvasRef?.current) {
-      setError(t('export.noChapterWarning'))
+      setError(t('export.noChapterWarning') || 'Abre una página en el editor para exportar')
       return
     }
 
@@ -117,7 +128,7 @@ export default function ExportPanel({
       const respuesta = await exportAPI.exportarPNG(proyecto?.id, paginaBase64, nombrePagina)
 
       _descargarBlob(respuesta.data, `${nombrePagina}.png`)
-      setExito(t('export.pngSuccess'))
+      setExito(t('export.pngSuccess') || 'Página PNG exportada con éxito')
     } catch (err) {
       setError(err.response?.data?.detail || err.message || 'Error al exportar PNG')
     } finally {
@@ -130,7 +141,7 @@ export default function ExportPanel({
 
   const handleExportarPDF = async () => {
     if (!capituloActual?.id || !canvasRef?.current || !proyecto?.id) {
-      setError(t('export.noChapterWarning'))
+      setError(t('export.noChapterWarning') || 'Abre una página en el editor para exportar')
       return
     }
 
@@ -156,7 +167,7 @@ export default function ExportPanel({
       const nombreProy = proyecto?.nombre || 'manga'
       const nombreArchivo = `${nombreProy}_${capituloActual.titulo || `Cap${capituloActual.numero}`}.pdf`
       _descargarBlob(respuesta.data, nombreArchivo)
-      setExito(t('export.pdfSuccess'))
+      setExito(t('export.pdfSuccess') || 'Capítulo PDF exportado con éxito')
     } catch (err) {
       setError(err.response?.data?.detail || err.message || 'Error al exportar PDF')
     } finally {
@@ -169,12 +180,12 @@ export default function ExportPanel({
 
   const handleExportarCBZ = async () => {
     if (!capituloActual?.id || !canvasRef?.current) {
-      setError(t('export.noChapterWarning'))
+      setError(t('export.noChapterWarning') || 'Abre una página en el editor para exportar')
       return
     }
 
     setExportando(true)
-    setMensajeEstado(t('prepress.generatingCBZ'))
+    setMensajeEstado(t('prepress.generatingCBZ') || 'Generando paquete CBZ con ComicInfo.xml...')
     setError(null)
     setExito(null)
 
@@ -188,7 +199,7 @@ export default function ExportPanel({
       }
 
       // Convertir dataURI a binario para el ZIP
-      const base64Puro = paginaBase64.replace(/^data:image\/(png|jpeg);base64,/, '')
+      const base64Puro = paginaBase64.replace(/^data:image\/png;base64,/, '').replace(/^data:image\/jpeg;base64,/, '')
       zip.file('001.png', base64Puro, { base64: true })
 
       // Crear archivo ComicInfo.xml estándar para lectores de cómic (CDisplayEx, Tachiyomi, Panels)
@@ -216,7 +227,7 @@ export default function ExportPanel({
 
       const nombreCBZ = `${nombreProy}_Cap${capituloActual.numero}.cbz`
       _descargarBlob(contenidoZip, nombreCBZ)
-      setExito(t('prepress.cbzSuccess'))
+      setExito(t('prepress.cbzSuccess') || 'Paquete digital .cbz generado exitosamente')
     } catch (err) {
       console.error('Error al generar CBZ:', err)
       setError(err.message || 'Error al compilar el archivo CBZ')
@@ -232,11 +243,12 @@ export default function ExportPanel({
       {/* Cabecera con selector de Pestañas */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-rdc-border pb-4">
         <div>
-          <h2 className="font-titulo text-2xl text-rdc-text font-semibold">
-            {t('export.title')}
+          <h2 className="font-titulo text-2xl text-rdc-text font-semibold flex items-center gap-2">
+            <Download className="w-6 h-6 text-rdc-accent" />
+            <span>{t('export.title') || 'Exportación & Impresión Editorial'}</span>
           </h2>
           <p className="text-rdc-muted text-sm mt-0.5">
-            {t('export.subtitle')}
+            {t('export.subtitle') || 'Genera entregables para web, lectores digitales (CBZ) o imprenta a 300 DPI.'}
           </p>
         </div>
 
@@ -244,57 +256,59 @@ export default function ExportPanel({
         <div className="flex bg-rdc-card p-1 rounded-xl border border-rdc-border text-xs font-titulo">
           <button
             onClick={() => setPestanaActiva('estandar')}
-            className={`px-3.5 py-1.5 rounded-lg transition-all ${
+            className={`px-3.5 py-1.5 rounded-lg transition-all cursor-pointer ${
               pestanaActiva === 'estandar'
-                ? 'bg-rdc-accent text-white font-bold shadow-sm'
+                ? 'bg-rdc-accent text-white font-bold shadow-xs'
                 : 'text-rdc-muted hover:text-rdc-text'
             }`}
           >
-            {t('prepress.tabStandard')}
+            {t('prepress.tabStandard') || 'Digital'}
           </button>
           <button
             onClick={() => setPestanaActiva('preimpresion')}
-            className={`px-3.5 py-1.5 rounded-lg transition-all ${
+            className={`px-3.5 py-1.5 rounded-lg transition-all cursor-pointer ${
               pestanaActiva === 'preimpresion'
-                ? 'bg-rdc-accent text-white font-bold shadow-sm'
+                ? 'bg-rdc-accent text-white font-bold shadow-xs'
                 : 'text-rdc-muted hover:text-rdc-text'
             }`}
           >
-            {t('prepress.tabPrepress')}
+            {t('prepress.tabPrepress') || 'Preimpresión 300 DPI'}
           </button>
         </div>
       </div>
 
       {/* Info del capítulo */}
       {infoPaginas && (
-        <div className="bg-rdc-card border border-rdc-border rounded-xl p-4 flex items-center justify-between">
+        <div className="bg-rdc-card border border-rdc-border rounded-2xl p-4 flex items-center justify-between">
           <div>
-            <p className="text-rdc-muted text-xs uppercase font-titulo">
-              {t('export.selectedChapter')}
+            <p className="text-rdc-muted text-xs uppercase font-titulo font-semibold">
+              {t('export.selectedChapter') || 'Capítulo Seleccionado'}
             </p>
             <p className="text-rdc-text font-titulo font-semibold text-base mt-0.5">
               {infoPaginas.capitulo.titulo || `Capítulo ${infoPaginas.capitulo.numero}`}
             </p>
             <p className="text-rdc-muted text-xs mt-0.5">
-              {t('export.totalCount', { count: infoPaginas.total_paginas })}
+              {t('export.totalCount', { count: infoPaginas.total_paginas }) || `${infoPaginas.total_paginas} páginas registradas`}
             </p>
           </div>
 
           {onAbrirLector && (
             <button
               onClick={onAbrirLector}
-              className="bg-rdc-secondary hover:bg-rdc-primary border border-rdc-border text-rdc-accent font-titulo font-semibold text-xs px-3.5 py-2 rounded-lg transition-colors flex items-center gap-1.5 shadow-sm"
+              className="bg-rdc-secondary hover:bg-rdc-primary border border-rdc-border text-rdc-accent font-titulo font-semibold text-xs px-3.5 py-2 rounded-xl transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer"
             >
-              <span>📖</span> {t('reader.openReader')}
+              <BookOpen className="w-3.5 h-3.5" />
+              <span>{t('reader.openReader') || 'Ver en Lector'}</span>
             </button>
           )}
         </div>
       )}
 
       {!capituloActual && (
-        <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4">
-          <p className="text-yellow-400 text-sm font-titulo">
-            {t('export.noChapterWarning')}
+        <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-2xl p-4 flex items-center gap-2">
+          <AlertCircle className="w-4 h-4 text-yellow-500 flex-shrink-0" />
+          <p className="text-yellow-500 dark:text-yellow-400 text-xs font-titulo">
+            {t('export.noChapterWarning') || 'Selecciona un capítulo o abre el editor para exportar.'}
           </p>
         </div>
       )}
@@ -305,8 +319,8 @@ export default function ExportPanel({
 
           {/* Selector de resolución */}
           <div>
-            <label className="block text-rdc-muted text-sm mb-3 font-titulo">
-              {t('export.resolution')}
+            <label className="block text-rdc-muted text-sm mb-3 font-titulo font-semibold">
+              {t('export.resolution') || 'Resolución de Renderizado'}
             </label>
             <div className="grid grid-cols-3 gap-3">
               {[
@@ -317,7 +331,7 @@ export default function ExportPanel({
                 <button
                   key={op.val}
                   onClick={() => setResolucion(op.val)}
-                  className={`border rounded-xl p-3 text-center transition-all ${
+                  className={`border rounded-2xl p-3.5 text-center transition-all cursor-pointer ${
                     resolucion === op.val
                       ? 'border-rdc-accent bg-rdc-accent/10 shadow-md'
                       : 'border-rdc-border hover:border-rdc-muted bg-rdc-card'
@@ -326,7 +340,7 @@ export default function ExportPanel({
                   <p className="font-manga text-2xl text-rdc-accent">{op.label}</p>
                   <p className="text-rdc-text text-xs font-semibold mt-1 font-titulo">{op.sub}</p>
                   {op.rec && (
-                    <p className="text-rdc-accent text-[10px] mt-0.5 font-titulo">{t('export.recommended')}</p>
+                    <p className="text-rdc-accent text-[10px] mt-0.5 font-titulo font-bold">{t('export.recommended') || 'Recomendado'}</p>
                   )}
                 </button>
               ))}
@@ -340,15 +354,15 @@ export default function ExportPanel({
             <button
               onClick={handleExportarPNG}
               disabled={exportando || !capituloActual}
-              className="bg-rdc-card hover:bg-rdc-secondary border border-rdc-border hover:border-rdc-accent text-rdc-text p-4 rounded-xl transition-all disabled:opacity-50 text-left flex flex-col justify-between shadow-sm"
+              className="bg-rdc-card hover:bg-rdc-secondary border border-rdc-border hover:border-rdc-accent text-rdc-text p-4 rounded-2xl transition-all disabled:opacity-50 text-left flex flex-col justify-between shadow-xs cursor-pointer"
             >
               <div className="flex items-center justify-between mb-2">
-                <span className="text-2xl">🖼️</span>
-                <span className="text-[10px] bg-rdc-border px-1.5 py-0.5 rounded font-titulo">PNG</span>
+                <FileImage className="w-6 h-6 text-rdc-accent" />
+                <span className="text-[10px] bg-rdc-border px-1.5 py-0.5 rounded font-titulo font-bold">PNG</span>
               </div>
               <div>
-                <p className="font-titulo font-semibold text-sm">{t('export.exportPNG')}</p>
-                <p className="text-rdc-muted text-xs mt-0.5">{t('export.exportPNGDesc')}</p>
+                <p className="font-titulo font-semibold text-sm">{t('export.exportPNG') || 'Página PNG'}</p>
+                <p className="text-rdc-muted text-xs mt-0.5">{t('export.exportPNGDesc') || 'Exporta el canvas actual'}</p>
               </div>
             </button>
 
@@ -356,14 +370,14 @@ export default function ExportPanel({
             <button
               onClick={handleExportarPDF}
               disabled={exportando || !capituloActual}
-              className="bg-rdc-accent hover:bg-rdc-accent-hover text-white p-4 rounded-xl transition-all disabled:opacity-50 text-left flex flex-col justify-between shadow-lg"
+              className="bg-rdc-accent hover:bg-rdc-accent-hover text-white p-4 rounded-2xl transition-all disabled:opacity-50 text-left flex flex-col justify-between shadow-lg cursor-pointer"
             >
               <div className="flex items-center justify-between mb-2">
-                <span className="text-2xl">📄</span>
-                <span className="text-[10px] bg-black/30 px-1.5 py-0.5 rounded font-titulo">PDF</span>
+                <FileText className="w-6 h-6" />
+                <span className="text-[10px] bg-black/30 px-1.5 py-0.5 rounded font-titulo font-bold">PDF</span>
               </div>
               <div>
-                <p className="font-titulo font-semibold text-sm">{t('export.exportPDF')}</p>
+                <p className="font-titulo font-semibold text-sm">{t('export.exportPDF') || 'Documento PDF'}</p>
                 <p className="text-white/80 text-xs mt-0.5">Vectorial para imprenta</p>
               </div>
             </button>
@@ -372,15 +386,15 @@ export default function ExportPanel({
             <button
               onClick={handleExportarCBZ}
               disabled={exportando || !capituloActual}
-              className="bg-purple-950/40 hover:bg-purple-900/50 border border-purple-500/50 hover:border-purple-400 text-purple-200 p-4 rounded-xl transition-all disabled:opacity-50 text-left flex flex-col justify-between shadow-sm"
+              className="bg-purple-950/40 hover:bg-purple-900/50 border border-purple-500/50 hover:border-purple-400 text-purple-200 p-4 rounded-2xl transition-all disabled:opacity-50 text-left flex flex-col justify-between shadow-xs cursor-pointer"
             >
               <div className="flex items-center justify-between mb-2">
-                <span className="text-2xl">📦</span>
+                <Package className="w-6 h-6 text-purple-400" />
                 <span className="text-[10px] bg-purple-900/80 px-1.5 py-0.5 rounded font-titulo font-bold">CBZ</span>
               </div>
               <div>
-                <p className="font-titulo font-semibold text-sm">{t('prepress.downloadCBZ')}</p>
-                <p className="text-purple-300/80 text-xs mt-0.5">{t('prepress.downloadCBZDesc')}</p>
+                <p className="font-titulo font-semibold text-sm">{t('prepress.downloadCBZ') || 'Cómic Digital (.CBZ)'}</p>
+                <p className="text-purple-300/80 text-xs mt-0.5">{t('prepress.downloadCBZDesc') || 'Con metadatos ComicInfo'}</p>
               </div>
             </button>
 
@@ -395,15 +409,15 @@ export default function ExportPanel({
 
           {/* Selector de Formato Editorial */}
           <div>
-            <label className="block text-rdc-muted text-sm mb-3 font-titulo">
-              📐 {t('prepress.editorialFormat')}
+            <label className="block text-rdc-muted text-sm mb-3 font-titulo font-semibold">
+              {t('prepress.editorialFormat') || 'Formato de Impresión Estándar'}
             </label>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {FORMATOS_EDITORIALES.map(f => (
                 <div
                   key={f.id}
                   onClick={() => setFormatoSeleccionado(f)}
-                  className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                  className={`p-4 rounded-2xl border-2 cursor-pointer transition-all ${
                     formatoSeleccionado.id === f.id
                       ? 'border-rdc-accent bg-rdc-accent/10 shadow-md'
                       : 'border-rdc-border bg-rdc-card hover:border-rdc-muted'
@@ -427,10 +441,11 @@ export default function ExportPanel({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             
             {/* Bleed & Crop Guides */}
-            <div className="bg-rdc-card border border-rdc-border rounded-xl p-4 space-y-3">
+            <div className="bg-rdc-card border border-rdc-border rounded-2xl p-4.5 space-y-3">
               <div className="flex items-center justify-between">
                 <h4 className="font-titulo text-xs font-bold uppercase tracking-wider text-rdc-text flex items-center gap-1.5">
-                  ✂️ {t('prepress.bleedTitle')}
+                  <Scissors className="w-4 h-4 text-rdc-accent" />
+                  <span>{t('prepress.bleedTitle') || 'Guías de Sangrado & Corte'}</span>
                 </h4>
                 <input
                   type="checkbox"
@@ -440,9 +455,9 @@ export default function ExportPanel({
                 />
               </div>
               <p className="text-rdc-muted text-xs leading-relaxed">
-                {t('prepress.bleedDesc')}. Se añade una tolerancia de 3mm en todos los bordes externos para evitar líneas blancas al cortar.
+                {t('prepress.bleedDesc') || 'Añade una tolerancia de 3mm en todos los bordes externos para evitar líneas blancas al cortar.'}
               </p>
-              <div className="p-2.5 bg-rdc-secondary/80 rounded-lg text-xs font-titulo space-y-1 text-rdc-text/90">
+              <div className="p-2.5 bg-rdc-secondary/80 rounded-xl text-xs font-titulo space-y-1 text-rdc-text/90">
                 <div className="flex justify-between">
                   <span>Margen de Sangrado (Bleed):</span>
                   <strong className="text-rdc-accent">3.0 mm</strong>
@@ -455,18 +470,23 @@ export default function ExportPanel({
             </div>
 
             {/* DPI Resolution Check */}
-            <div className="bg-rdc-card border border-rdc-border rounded-xl p-4 space-y-3">
+            <div className="bg-rdc-card border border-rdc-border rounded-2xl p-4.5 space-y-3">
               <h4 className="font-titulo text-xs font-bold uppercase tracking-wider text-rdc-text flex items-center gap-1.5">
-                🔬 {t('prepress.qualityCheck')}
+                <FileCheck className="w-4 h-4 text-rdc-accent" />
+                <span>{t('prepress.qualityCheck') || 'Control de Calidad (Pre-flight)'}</span>
               </h4>
               <div className="space-y-2 text-xs font-titulo">
-                <div className="flex items-center justify-between p-2 rounded-lg bg-emerald-950/40 border border-emerald-500/40 text-emerald-300">
-                  <span>{t('prepress.dpi300')}</span>
-                  <span className="font-bold">✅ Óptimo</span>
+                <div className="flex items-center justify-between p-2 rounded-xl bg-emerald-950/40 border border-emerald-500/40 text-emerald-300">
+                  <span>{t('prepress.dpi300') || 'Resolución 300 DPI'}</span>
+                  <span className="font-bold flex items-center gap-1">
+                    <Check className="w-3.5 h-3.5" /> Óptimo
+                  </span>
                 </div>
-                <div className="flex items-center justify-between p-2 rounded-lg bg-blue-950/40 border border-blue-500/40 text-blue-300">
-                  <span>{t('prepress.cmykWarning')}</span>
-                  <span className="font-bold">✅ Listo</span>
+                <div className="flex items-center justify-between p-2 rounded-xl bg-blue-950/40 border border-blue-500/40 text-blue-300">
+                  <span>{t('prepress.cmykWarning') || 'Conversión Escala de Grises'}</span>
+                  <span className="font-bold flex items-center gap-1">
+                    <Check className="w-3.5 h-3.5" /> Listo
+                  </span>
                 </div>
               </div>
             </div>
@@ -478,16 +498,18 @@ export default function ExportPanel({
             <button
               onClick={handleExportarPDF}
               disabled={exportando || !capituloActual}
-              className="flex-1 bg-rdc-accent hover:bg-rdc-accent-hover text-white font-titulo font-semibold py-3.5 px-4 rounded-xl transition-all shadow-lg text-sm flex items-center justify-center gap-2"
+              className="flex-1 bg-rdc-accent hover:bg-rdc-accent-hover text-white font-titulo font-semibold py-3.5 px-4 rounded-xl transition-all shadow-lg text-sm flex items-center justify-center gap-2 cursor-pointer"
             >
-              <span>📄</span> {t('prepress.downloadPDFHighRes')}
+              <FileText className="w-4 h-4" />
+              <span>{t('prepress.downloadPDFHighRes') || 'Descargar PDF 300 DPI Imprenta'}</span>
             </button>
             <button
               onClick={handleExportarCBZ}
               disabled={exportando || !capituloActual}
-              className="flex-1 bg-purple-950/50 hover:bg-purple-900/60 border border-purple-500/50 text-purple-200 font-titulo font-semibold py-3.5 px-4 rounded-xl transition-all text-sm flex items-center justify-center gap-2 shadow-sm"
+              className="flex-1 bg-purple-950/50 hover:bg-purple-900/60 border border-purple-500/50 text-purple-200 font-titulo font-semibold py-3.5 px-4 rounded-xl transition-all text-sm flex items-center justify-center gap-2 shadow-xs cursor-pointer"
             >
-              <span>📦</span> {t('prepress.downloadCBZ')}
+              <Package className="w-4 h-4 text-purple-400" />
+              <span>{t('prepress.downloadCBZ') || 'Descargar Paquete .CBZ'}</span>
             </button>
           </div>
 
@@ -496,21 +518,23 @@ export default function ExportPanel({
 
       {/* Estados de carga, error y éxito */}
       {exportando && (
-        <div className="bg-rdc-card border border-rdc-accent/40 rounded-xl p-4 flex items-center gap-3 text-rdc-text text-sm font-titulo">
+        <div className="bg-rdc-card border border-rdc-accent/40 rounded-2xl p-4 flex items-center gap-3 text-rdc-text text-sm font-titulo">
           <div className="w-5 h-5 border-2 border-rdc-accent border-t-transparent rounded-full animate-spin flex-shrink-0" />
           <span>{mensajeEstado || 'Procesando exportación...'}</span>
         </div>
       )}
 
       {error && (
-        <div className="bg-rdc-error/20 border border-rdc-error text-rdc-error rounded-xl p-3.5 text-sm">
-          ❌ {error}
+        <div className="bg-rdc-error/20 border border-rdc-error text-rdc-error rounded-2xl p-3.5 text-xs flex items-center gap-2">
+          <AlertCircle className="w-4 h-4 flex-shrink-0" />
+          <span>{error}</span>
         </div>
       )}
 
       {exito && (
-        <div className="bg-green-500/20 border border-green-500 text-green-400 rounded-xl p-3.5 text-sm">
-          {exito}
+        <div className="bg-emerald-500/20 border border-emerald-500 text-emerald-400 rounded-2xl p-3.5 text-xs font-titulo flex items-center gap-2">
+          <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
+          <span>{exito}</span>
         </div>
       )}
 

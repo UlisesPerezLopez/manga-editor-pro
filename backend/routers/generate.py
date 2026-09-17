@@ -48,10 +48,20 @@ async def generar_sinopsis(
             "mensaje": f"Sinopsis generada correctamente ({modo_ai})"
         }
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=f"Error al generar sinopsis ({modo_ai}): {str(e)}"
+        from services.text_engine import _generar_sinopsis_fallback
+        resultado_fallback = _generar_sinopsis_fallback(
+            titulo=datos.titulo,
+            genero=datos.genero,
+            tono=datos.tono,
+            premisa=datos.premisa,
+            num_capitulos=datos.num_capitulos
         )
+        return {
+            "exito": True,
+            "datos": resultado_fallback,
+            "modo_ai": f"{modo_ai}_synthetic_fallback",
+            "mensaje": f"Sinopsis generada con motor resiliente ({str(e)})"
+        }
 
 
 @router.post("/capitulo")
@@ -165,10 +175,23 @@ async def generar_capitulo(
         }
 
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=f"Error al generar capítulo ({modo_ai}): {str(e)}"
+        from services.text_engine import _generar_guion_fallback
+        resultado_fallback = _generar_guion_fallback(
+            titulo_proyecto=proyecto.nombre,
+            numero_capitulo=datos.numero_capitulo,
+            premisa=datos.premisa,
+            genero=datos.genero,
+            tono=datos.tono,
+            personajes=personajes_lista,
+            capitulos_anteriores=caps_anteriores_lista
         )
+        return {
+            "exito": True,
+            "capitulo_id": None,
+            "datos": resultado_fallback,
+            "modo_ai": f"{modo_ai}_synthetic_fallback",
+            "mensaje": f"Guion generado con motor resiliente ({str(e)})"
+        }
 
 
 @router.post("/descripcion-vineta")

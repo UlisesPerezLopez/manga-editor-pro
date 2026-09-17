@@ -42,14 +42,27 @@ export const authAPI = {
   logout: () => api.post('/auth/logout'),
   getAiMode: () => api.get('/auth/ai-mode'),
   setAiMode: (aiMode) => api.patch('/auth/ai-mode', { ai_mode: aiMode }),
+  actualizarAvatar: (avatarUrl) => api.patch('/auth/avatar', { avatar_url: avatarUrl }),
 }
 
 // ─── PROYECTOS ────────────────────────────────────────────────────────────
 export const projectsAPI = {
   listar: () => api.get('/projects'),
-  crear: (datos) => api.post('/projects', datos),
+  crear: (datos) => {
+    const modo = datos.modo_creacion || datos.creation_mode || 'propio'
+    const formato = datos.formato_lectura || datos.reading_format || 'manga'
+    const estilo = modo === 'legendario' ? (datos.estilo_legendario || null) : null
+    const payload = {
+      nombre: (datos.nombre || '').trim(),
+      modo_creacion: modo,
+      formato_lectura: formato,
+      estilo_legendario: estilo,
+    }
+    return api.post('/projects', payload)
+  },
   obtener: (id) => api.get(`/projects/${id}`),
   eliminar: (id) => api.delete(`/projects/${id}`),
+  actualizarPortada: (id, portadaUrl) => api.patch(`/projects/${id}/portada`, { portada_url: portadaUrl }),
   estilosLegendarios: () => api.get('/projects/estilos-legendarios'),
   obtenerAnalytics: (id) => api.get(`/projects/analytics/${id}`),
 }

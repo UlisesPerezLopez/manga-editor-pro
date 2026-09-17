@@ -1,8 +1,17 @@
 // CharacterList.jsx
-// Vista completa de la sección de Personajes dentro del ProjectStudio con soporte i18n.
+// Vista completa de la sección de Personajes dentro del ProjectStudio con soporte i18n y Lucide React.
 
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import {
+  Users,
+  UserPlus,
+  Star,
+  Skull,
+  HeartHandshake,
+  UserCheck,
+  Plus
+} from 'lucide-react'
 import useCharacterStore from '../../store/characterStore'
 import CharacterCard from './CharacterCard'
 import CharacterModal from './CharacterModal'
@@ -36,7 +45,7 @@ export default function CharacterList({ proyecto }) {
 
   const handleEliminar = async (personaje) => {
     if (!proyecto?.id || !personaje?.id) return
-    if (!confirm(t('characters.deleteConfirm', { name: personaje.nombre }))) return
+    if (!confirm(t('characters.deleteConfirm', { name: personaje.nombre }) || `¿Eliminar a ${personaje.nombre}?`)) return
 
     const resultado = await eliminarPersonaje(proyecto.id, personaje.id)
     if (!resultado?.exito) {
@@ -64,45 +73,48 @@ export default function CharacterList({ proyecto }) {
       <div className="flex items-center justify-between">
         <div>
           <p className="text-rdc-muted text-sm mt-1 font-titulo">
-            {personajes.length} {t('dashboard.characters').toLowerCase()}
+            {personajes.length} {t('dashboard.characters')?.toLowerCase() || 'personajes registrados'}
           </p>
         </div>
         <button
           onClick={handleNuevoPersonaje}
           className="bg-rdc-accent hover:bg-rdc-accent-hover text-white
-                     font-titulo font-semibold px-5 py-2.5 rounded-lg
-                     transition-colors duration-200 flex items-center gap-2 shadow-md"
+                     font-titulo font-semibold px-5 py-2.5 rounded-xl
+                     transition-all flex items-center gap-2 shadow-md cursor-pointer hover:scale-105 text-sm"
         >
-          <span className="text-lg">+</span>
-          {t('characters.addBtn')}
+          <UserPlus className="w-4 h-4" />
+          <span>{t('characters.addBtn') || 'Nuevo Personaje'}</span>
         </button>
       </div>
 
       {/* Estado de carga */}
       {cargando && (
         <div className="py-12">
-          <Spinner texto={t('dashboard.loading')} />
+          <Spinner texto={t('dashboard.loading') || 'Cargando personajes...'} />
         </div>
       )}
 
       {/* Sin personajes */}
       {!cargando && personajes.length === 0 && (
-        <div className="border-2 border-dashed border-rdc-border rounded-xl
-                        p-12 text-center">
-          <p className="text-5xl mb-4">👤</p>
+        <div className="border-2 border-dashed border-rdc-border rounded-2xl
+                        p-12 text-center bg-rdc-secondary/40">
+          <div className="w-16 h-16 rounded-2xl bg-rdc-card border border-rdc-border flex items-center justify-center mx-auto mb-4 text-rdc-muted">
+            <Users className="w-8 h-8" />
+          </div>
           <h3 className="font-titulo text-xl text-rdc-text font-semibold mb-2">
-            {t('characters.noCharacters')}
+            {t('characters.noCharacters') || 'Sin personajes registrados'}
           </h3>
-          <p className="text-rdc-muted text-sm mb-6 max-w-md mx-auto">
-            {t('characters.subtitle')}
+          <p className="text-rdc-muted text-sm mb-6 max-w-md mx-auto font-titulo">
+            {t('characters.subtitle') || 'Crea tus personajes manualmente o impórtalos desde las sugerencias del Guionista IA.'}
           </p>
           <button
             onClick={handleNuevoPersonaje}
             className="bg-rdc-accent hover:bg-rdc-accent-hover text-white
-                       font-titulo font-semibold px-6 py-3 rounded-lg
-                       transition-colors duration-200 shadow-lg"
+                       font-titulo font-semibold px-6 py-3 rounded-xl
+                       transition-all shadow-lg inline-flex items-center gap-2 cursor-pointer hover:scale-105 text-sm"
           >
-            {t('characters.addBtn')}
+            <UserPlus className="w-4 h-4" />
+            <span>{t('characters.addBtn') || 'Crear Personaje'}</span>
           </button>
         </div>
       )}
@@ -113,20 +125,24 @@ export default function CharacterList({ proyecto }) {
           {Object.entries(grupos).map(([rol, lista]) => {
             if (lista.length === 0) return null
 
-            const titulos = {
-              protagonista: `⭐ ${t('characters.protagonist')}`,
-              antagonista:  `💀 ${t('characters.antagonist')}`,
-              apoyo:        `🤝 ${t('characters.support')}`,
-              secundario:   `👥 ${t('characters.secondary')}`,
+            const rolConfig = {
+              protagonista: { label: t('characters.protagonist') || 'Protagonistas', icon: Star, color: 'text-amber-400' },
+              antagonista:  { label: t('characters.antagonist') || 'Antagonistas',   icon: Skull, color: 'text-red-400' },
+              apoyo:        { label: t('characters.support') || 'Personajes de Apoyo', icon: HeartHandshake, color: 'text-emerald-400' },
+              secundario:   { label: t('characters.secondary') || 'Secundarios',    icon: Users, color: 'text-rdc-muted' },
             }
+
+            const config = rolConfig[rol] || rolConfig.secundario
+            const RolHeaderIcon = config.icon
 
             return (
               <div key={rol}>
-                <h3 className="font-titulo text-lg text-rdc-muted font-semibold
+                <h3 className="font-titulo text-base text-rdc-text font-semibold
                                mb-4 flex items-center gap-2">
-                  {titulos[rol]}
+                  <RolHeaderIcon className={`w-4 h-4 ${config.color}`} />
+                  <span>{config.label}</span>
                   <span className="text-xs bg-rdc-card text-rdc-muted
-                                   px-2 py-0.5 rounded-full font-mono">
+                                   px-2.5 py-0.5 rounded-full font-mono border border-rdc-border">
                     {lista.length}
                   </span>
                 </h3>

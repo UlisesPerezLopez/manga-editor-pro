@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <defs>
+    <linearGradient id="bgChibi" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#52B788"/>
+      <stop offset="100%" stop-color="#D8F3DC"/>
+    </linearGradient>
+  </defs>
+  <circle cx="50" cy="50" r="48" fill="url(#bgChibi)"/>
+  <polygon points="24,40 28,16 46,30" fill="#2D6A4F"/>
+  <polygon points="28,36 32,22 42,30" fill="#FFB4A2"/>
+  <polygon points="76,40 72,16 54,30" fill="#2D6A4F"/>
+  <polygon points="72,36 68,22 58,30" fill="#FFB4A2"/>
+  <circle cx="50" cy="54" r="28" fill="#FFF1E6"/>
+  <path d="M 26 44 C 26 28 74 28 74 44 C 66 40 62 48 58 44 C 54 50 46 50 42 44 C 38 48 34 40 26 44 Z" fill="#2D6A4F"/>
+  <path d="M 38 52 Q 43 46 48 52" stroke="#1B4332" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <path d="M 54 52 Q 59 46 64 52" stroke="#1B4332" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <circle cx="34" cy="59" r="4" fill="#FF758F" opacity="0.7"/>
+  <circle cx="68" cy="59" r="4" fill="#FF758F" opacity="0.7"/>
+  <path d="M 46 60 Q 48 64 50 61 Q 52 64 54 60" stroke="#1B4332" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+</svg>

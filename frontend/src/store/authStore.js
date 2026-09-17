@@ -77,6 +77,30 @@ const useAuthStore = create((set) => ({
     }
   },
 
+  setUsuario: (usuario) => {
+    localStorage.setItem('rdc_usuario', JSON.stringify(usuario))
+    set({ usuario })
+  },
+
+  actualizarAvatar: async (avatarUrl) => {
+    try {
+      const res = await authAPI.actualizarAvatar(avatarUrl)
+      if (res?.data) {
+        localStorage.setItem('rdc_usuario', JSON.stringify(res.data))
+        set({ usuario: res.data })
+        return { exito: true, usuario: res.data }
+      }
+    } catch (error) {
+      // Fallback local si el backend está offline o en modo mock
+      set(state => {
+        const updated = { ...(state.usuario || {}), avatar_url: avatarUrl }
+        localStorage.setItem('rdc_usuario', JSON.stringify(updated))
+        return { usuario: updated }
+      })
+      return { exito: true }
+    }
+  },
+
   logout: () => {
     localStorage.removeItem('rdc_token')
     localStorage.removeItem('rdc_usuario')

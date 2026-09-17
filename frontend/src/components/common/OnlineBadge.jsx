@@ -1,8 +1,9 @@
 // OnlineBadge.jsx
-// Indicador visual discreto del estado de conectividad (Online / Offline) y sincronización con IndexedDB.
+// Indicador visual discreto del estado de conectividad (Online / Offline) con Lucide React y sincronización con IndexedDB.
 
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Wifi, WifiOff, RefreshCw } from 'lucide-react'
 import {
   contarBorradoresPendientes,
   sincronizarBorradoresConServidor
@@ -58,7 +59,6 @@ export default function OnlineBadge() {
 
     actualizarConteoPendientes()
 
-    // Comprobación periódica cada 20 segundos
     const interval = setInterval(actualizarConteoPendientes, 20000)
 
     return () => {
@@ -77,39 +77,36 @@ export default function OnlineBadge() {
           <button
             onClick={ejecutarSincronizacion}
             disabled={sincronizando}
-            className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-yellow-500/20 border border-yellow-500/40 text-yellow-300 hover:bg-yellow-500/30 transition-all cursor-pointer"
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-yellow-500/20 border border-yellow-500/40 text-yellow-300 hover:bg-yellow-500/30 transition-all cursor-pointer shadow-xs"
             title={`${borradoresPendientes} borradores locales guardados. Haz clic para sincronizar.`}
           >
-            <span className={`w-2 h-2 rounded-full bg-yellow-400 ${sincronizando ? 'animate-ping' : ''}`} />
-            <span className="font-semibold hidden sm:inline">
-              {sincronizando ? t('offline.syncing') : `${borradoresPendientes} ${t('offline.pendingDrafts', { count: borradoresPendientes })}`}
-            </span>
-            <span className={sincronizando ? 'animate-spin text-[10px]' : 'text-[10px]'}>
-              🔄
+            <RefreshCw className={`w-3 h-3 ${sincronizando ? 'animate-spin' : ''}`} />
+            <span className="font-semibold hidden sm:inline text-[11px]">
+              {sincronizando ? (t('offline.syncing') || 'Sincronizando...') : `${borradoresPendientes} ${t('offline.pendingDrafts', { count: borradoresPendientes }) || 'pendientes'}`}
             </span>
           </button>
         ) : (
           <div
-            className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-emerald-950/40 border border-emerald-500/30 text-emerald-300"
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-emerald-950/40 border border-emerald-500/30 text-emerald-300"
             title="Conexión en línea y datos sincronizados"
           >
-            <span className="w-2 h-2 rounded-full bg-emerald-400" />
+            <Wifi className="w-3 h-3 text-emerald-400" />
             <span className="font-semibold hidden md:inline text-[11px]">
-              {t('offline.online')}
+              {t('offline.online') || 'Online'}
             </span>
           </div>
         )
       ) : (
         <div
-          className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-950/60 border border-amber-500/50 text-amber-200 animate-pulse-soft"
-          title={t('offline.offlineDesc')}
+          className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-amber-950/60 border border-amber-500/50 text-amber-200 animate-pulse-soft"
+          title={t('offline.offlineDesc') || 'Modo desconectado (Offline)'}
         >
-          <span className="w-2 h-2 rounded-full bg-amber-400" />
+          <WifiOff className="w-3 h-3 text-amber-400" />
           <span className="font-semibold text-[11px]">
-            {t('offline.offline')}
+            {t('offline.offline') || 'Offline'}
           </span>
           {borradoresPendientes > 0 && (
-            <span className="text-[10px] bg-amber-900/80 px-1 rounded font-mono">
+            <span className="text-[10px] bg-amber-900/80 px-1.5 py-0.2 rounded font-mono">
               {borradoresPendientes}
             </span>
           )}

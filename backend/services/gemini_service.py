@@ -83,13 +83,13 @@ class GeminiService:
                 ultimo_error = e
                 error_str = str(e).lower()
 
-                if "429" in error_str or "quota" in error_str or "exhausted" in error_str:
+                if any(k in error_str for k in ["429", "quota", "exhausted", "503", "500", "unavailable", "overload", "temporarily", "timeout"]):
                     tiempo_espera = ESPERA_BASE ** (intento + 1)
-                    print(f"⚠️  Error 429 intento {intento + 1}/{MAX_REINTENTOS}. "
-                          f"Esperando {tiempo_espera:.0f}s...")
+                    print(f"[WARN] Error transitorio Gemini ({error_str[:60]}) intento {intento + 1}/{MAX_REINTENTOS}. "
+                          f"Esperando {tiempo_espera:.1f}s...")
                     await asyncio.sleep(tiempo_espera)
                 else:
-                    print(f"❌ Error Gemini: {e}")
+                    print(f"[ERROR] Error Gemini no recuperable: {e}")
                     raise e
 
         raise Exception(
@@ -348,7 +348,7 @@ Diálogo mejorado:"""
                         part.inline_data.data
                     ).decode("utf-8")
                     mime = part.inline_data.mime_type or "image/png"
-                    print("✅ Gemini Imagen: imagen generada correctamente")
+                    print("[GEMINI-IMG] Imagen generada correctamente")
                     return f"data:{mime};base64,{imagen_b64}"
 
             raise Exception("Gemini Imagen no devolvió datos de imagen")

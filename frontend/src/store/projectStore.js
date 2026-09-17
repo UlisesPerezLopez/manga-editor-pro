@@ -99,6 +99,39 @@ const useProjectStore = create((set, get) => ({
     }
   },
 
+  actualizarPortada: async (idProyecto, portadaUrl) => {
+    try {
+      const res = await projectsAPI.actualizarPortada(idProyecto, portadaUrl)
+      if (res?.data) {
+        set(state => ({
+          proyectoActivo: state.proyectoActivo?.id === idProyecto
+            ? { ...state.proyectoActivo, portada_url: portadaUrl }
+            : state.proyectoActivo
+        }))
+        return { exito: true, proyecto: res.data }
+      }
+    } catch (e) {
+      console.warn('Error backend al actualizar portada, aplicando cambio local:', e)
+      set(state => ({
+        proyectoActivo: state.proyectoActivo?.id === idProyecto
+          ? { ...state.proyectoActivo, portada_url: portadaUrl }
+          : state.proyectoActivo
+      }))
+      return { exito: true }
+    }
+  },
+
+  setSinopsisGenerada: (sinopsis) => set({ sinopsisGenerada: sinopsis }),
+  setGuionGenerado: (guion) => set({ guionGenerado: guion }),
+
+  actualizarSinopsisGenerada: (updater) => set(state => ({
+    sinopsisGenerada: typeof updater === 'function' ? updater(state.sinopsisGenerada) : updater
+  })),
+
+  actualizarGuionGenerado: (updater) => set(state => ({
+    guionGenerado: typeof updater === 'function' ? updater(state.guionGenerado) : updater
+  })),
+
   limpiarGuion: () => set({ guionGenerado: null, errorGuion: null }),
   limpiarSinopsis: () => set({ sinopsisGenerada: null, errorSinopsis: null }),
   limpiarTodo: () => set({

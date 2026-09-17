@@ -83,7 +83,7 @@ class TestE2EPipeline:
         """Prueba creación y gestión de proyecto y fichas de personajes."""
         headers = auth_context["headers"]
 
-        # 1. Crear nuevo proyecto de manga
+        # 1. Crear nuevo proyecto de manga en modo legendario
         nuevo_proyecto = {
             "nombre": "Crónicas de Ceniza",
             "modo_creacion": "legendario",
@@ -96,6 +96,26 @@ class TestE2EPipeline:
         assert proj_data["nombre"] == "Crónicas de Ceniza"
         assert proj_data["formato_lectura"] == "manga"
         proj_id = proj_data["id"]
+
+        # 1b. Probar creación en modo 'aleatorio'
+        res_aleatorio = client.post("/projects", json={
+            "nombre": "Aventura Aleatoria",
+            "modo_creacion": "aleatorio",
+            "formato_lectura": "jp_manga"
+        }, headers=headers)
+        assert res_aleatorio.status_code == 201
+        assert res_aleatorio.json()["modo_creacion"] == "aleatorio"
+        assert res_aleatorio.json()["formato_lectura"] == "manga"
+
+        # 1c. Probar creación en modo 'propio' con formato occidental
+        res_propio = client.post("/projects", json={
+            "nombre": "Universo Propio",
+            "modo_creacion": "propio",
+            "formato_lectura": "occidental"
+        }, headers=headers)
+        assert res_propio.status_code == 201
+        assert res_propio.json()["modo_creacion"] == "propio"
+        assert res_propio.json()["formato_lectura"] == "occidental"
 
         # 2. Crear personaje en el proyecto
         personaje_data = {

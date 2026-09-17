@@ -11,6 +11,7 @@ from models.schemas import (
     UsuarioLogin,
     UsuarioRespuesta,
     UsuarioActualizarModoAI,
+    UsuarioActualizarAvatar,
     TokenRespuesta,
     MensajeRespuesta
 )
@@ -204,6 +205,29 @@ async def actualizar_modo_ai(
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
     usuario.ai_mode = datos.ai_mode
+    db.commit()
+    db.refresh(usuario)
+    return usuario
+
+
+@router.patch("/avatar", response_model=UsuarioRespuesta)
+async def actualizar_avatar(
+    datos: UsuarioActualizarAvatar,
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    db: Session = Depends(get_db)
+):
+    """Actualiza la imagen de avatar del usuario."""
+    email = verificar_token(credentials.credentials)
+    if not email:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token inválido o expirado"
+        )
+    usuario = db.query(Usuario).filter(Usuario.email == email).first()
+    if not usuario:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+    usuario.avatar_url = datos.avatar_url
     db.commit()
     db.refresh(usuario)
     return usuario

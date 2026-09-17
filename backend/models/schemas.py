@@ -30,6 +30,7 @@ class UsuarioRespuesta(BaseModel):
     username: str
     email: str
     nombre_artistico: Optional[str] = None
+    avatar_url: Optional[str] = None
     ai_mode: Optional[str] = "cloud_free"
     activo: bool
     created_at: datetime
@@ -41,6 +42,11 @@ class UsuarioRespuesta(BaseModel):
 class UsuarioActualizarModoAI(BaseModel):
     """Esquema para conmutar el modo de IA del usuario ('cloud_free' o 'local')"""
     ai_mode: str = Field(pattern="^(cloud_free|local)$")
+
+
+class UsuarioActualizarAvatar(BaseModel):
+    """Esquema para actualizar el avatar de usuario"""
+    avatar_url: str = Field(min_length=1)
 
 
 class TokenRespuesta(BaseModel):
@@ -58,15 +64,21 @@ class ProyectoCrear(BaseModel):
     modo_creacion: str = Field(pattern="^(propio|legendario|aleatorio)$")
     estilo_legendario: Optional[str] = None
     formato_lectura: str = Field(default="manga",
-                                  pattern="^(manga|occidental)$")
+                                  pattern="^(manga|jp_manga|occidental|webtoon)$")
+
+
+class ProyectoActualizarPortada(BaseModel):
+    """Esquema para actualizar la portada del proyecto"""
+    portada_url: str = Field(min_length=1)
 
 
 class ProyectoRespuesta(BaseModel):
     """Datos del proyecto devueltos al cliente"""
     id: int
     nombre: str
-    modo_creacion: Optional[str]
-    estilo_legendario: Optional[str]
+    portada_url: Optional[str] = None
+    modo_creacion: Optional[str] = None
+    estilo_legendario: Optional[str] = None
     style_locked: bool
     formato_lectura: str
     created_at: datetime

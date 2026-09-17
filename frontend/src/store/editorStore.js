@@ -32,7 +32,57 @@ const useEditorStore = create((set, get) => ({
     set({ cargando: true })
     try {
       const r = await chaptersAPI.listar(idProyecto)
-      set({ capitulos: r.data, cargando: false })
+      let caps = r.data || []
+
+      // DESBLOQUEO INICIAL AUTOMÁTICO:
+      // Si el proyecto no tiene capítulos creados, crear Capítulo 1 -> Página 1
+      if (caps.length === 0) {
+        try {
+          const resCap = await chaptersAPI.crearCapitulo(idProyecto, {
+            numero: 1,
+            titulo: 'Capítulo 1'
+          })
+          if (resCap?.data) {
+            const capNuevo = resCap.data
+            const resPag = await chaptersAPI.crearPagina(idProyecto, capNuevo.id, {
+              numero: 1,
+              layout_template: 'blank'
+            })
+            if (resPag?.data) {
+              capNuevo.paginas = [resPag.data]
+              caps = [capNuevo]
+              set({ capitulos: caps, cargando: false })
+              get().cargarPagina(idProyecto, resPag.data.id, capNuevo)
+              return
+            }
+          }
+        } catch (errAuto) {
+          console.warn('Error auto-creando capítulo inicial:', errAuto)
+        }
+      } else {
+        // Si hay capítulos pero el primero no tiene páginas, crear Página 1
+        const primerCap = caps[0]
+        if (!primerCap.paginas || primerCap.paginas.length === 0) {
+          try {
+            const resPag = await chaptersAPI.crearPagina(idProyecto, primerCap.id, {
+              numero: 1,
+              layout_template: 'blank'
+            })
+            if (resPag?.data) {
+              primerCap.paginas = [resPag.data]
+            }
+          } catch (e) {}
+        }
+
+        // Cargar automáticamente la primera página si no hay página activa
+        if (!get().paginaActiva && primerCap.paginas && primerCap.paginas.length > 0) {
+          set({ capitulos: caps, cargando: false })
+          get().cargarPagina(idProyecto, primerCap.paginas[0].id, primerCap)
+          return
+        }
+      }
+
+      set({ capitulos: caps, cargando: false })
     } catch (e) {
       console.error('Error cargando capítulos:', e)
       set({ cargando: false })

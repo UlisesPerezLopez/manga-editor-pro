@@ -15,24 +15,24 @@ export default function Modal({ abierto, onCerrar, titulo, children, ancho = "ma
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm overflow-y-auto animate-fade-in"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto animate-in fade-in duration-200"
       onClick={onCerrar}
     >
       <div
-        className={`relative w-full ${ancho} my-auto bg-rdc-secondary border border-rdc-border
-                    rounded-2xl shadow-2xl max-h-[90vh] flex flex-col transition-colors duration-300`}
+        className={`relative w-full ${ancho} bg-rdc-secondary border border-rdc-border
+                    rounded-2xl shadow-2xl max-h-[90vh] flex flex-col transition-colors duration-300 overflow-hidden animate-in zoom-in-95 duration-200`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header del modal */}
-        <div className="flex items-center justify-between p-6 border-b border-rdc-border transition-colors duration-300 flex-shrink-0">
-          <h3 className="font-titulo text-xl text-rdc-text font-semibold">{titulo}</h3>
+        <div className="flex items-center justify-between p-5 border-b border-rdc-border transition-colors duration-300 flex-shrink-0">
+          <h3 className="font-titulo text-lg text-rdc-text font-semibold">{titulo}</h3>
           <button
             onClick={onCerrar}
-            className="text-rdc-muted hover:text-rdc-text transition-colors text-2xl
-                       w-8 h-8 flex items-center justify-center rounded-lg
+            className="text-rdc-muted hover:text-rdc-text transition-colors text-lg
+                       w-8 h-8 flex items-center justify-center rounded-xl
                        hover:bg-rdc-card cursor-pointer"
           >
-            ×
+            ✕
           </button>
         </div>
         {/* Contenido scrollable */}

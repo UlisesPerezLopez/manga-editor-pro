@@ -39,14 +39,14 @@ class RateLimiter:
                 tiempo_espera = self.period - (ahora - self.calls[0])
                 if tiempo_espera > 0:
                     disponibles = self.max_calls - len(self.calls)
-                    print(f"⏳ Rate limit: esperando {tiempo_espera:.1f}s "
+                    print(f"[RATE-LIMIT] Esperando {tiempo_espera:.1f}s "
                           f"(cola: {len(self.calls)}/{self.max_calls})")
                     await asyncio.sleep(tiempo_espera)
 
             # Registrar esta llamada
             self.calls.append(time.monotonic())
             disponibles = self.max_calls - len(self.calls)
-            print(f"🔄 Gemini API: llamada enviada "
+            print(f"[GEMINI] Llamada enviada "
                   f"({disponibles} llamadas disponibles en esta ventana)")
 
 
@@ -78,7 +78,7 @@ class CacheMemoria:
             del self._cache[clave]
             return None
 
-        print(f"💾 Caché HIT: reutilizando respuesta guardada")
+        print(f"[CACHE-HIT] Reutilizando respuesta guardada")
         return valor
 
     def set(self, prompt: str, valor: Any):
@@ -92,12 +92,12 @@ class CacheMemoria:
 
         clave = self._generar_clave(prompt)
         self._cache[clave] = (time.time(), valor)
-        print(f"💾 Caché SET: respuesta guardada ({len(self._cache)} entradas)")
+        print(f"[CACHE-SET] Respuesta guardada ({len(self._cache)} entradas)")
 
     def limpiar(self):
         """Vacía completamente el caché."""
         self._cache.clear()
-        print("🗑️ Caché limpiado")
+        print("[CACHE-CLEAR] Cache limpiado")
 
 
 # Instancias globales compartidas por toda la aplicación

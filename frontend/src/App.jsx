@@ -9,6 +9,7 @@ import Register       from './pages/Register'
 import Dashboard      from './pages/Dashboard'
 import NewProject     from './pages/NewProject'
 import ProjectStudio  from './pages/ProjectStudio'
+import Editor         from './pages/Editor'
 
 function RutaPrivada({ children }) {
   const { token } = useAuthStore()
@@ -46,6 +47,9 @@ function App() {
         } />
         <Route path="/project/:id" element={
           <RutaPrivada><ProjectStudio /></RutaPrivada>
+        } />
+        <Route path="/editor/:id" element={
+          <RutaPrivada><Editor /></RutaPrivada>
         } />
 
         {/* 404 → Landing */}

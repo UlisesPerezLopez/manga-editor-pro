@@ -10,6 +10,7 @@ from database.database import get_db
 from database.models import Proyecto, Usuario
 from models.schemas import (
     ProyectoCrear,
+    ProyectoActualizarPortada,
     ProyectoRespuesta,
     MensajeRespuesta
 )
@@ -198,7 +199,8 @@ async def obtener_estadisticas(
         "num_capitulos": num_capitulos,
         "num_paginas": num_paginas,
         "num_imagenes_generadas": num_imagenes,
-        "thumbnail_url": None,
+        "portada_url": getattr(proyecto, 'portada_url', None),
+        "thumbnail_url": getattr(proyecto, 'portada_url', None),
         "created_at": proyecto.created_at.isoformat() if proyecto.created_at else None,
         "updated_at": proyecto.updated_at.isoformat() if proyecto.updated_at else None,
     }
@@ -314,14 +316,17 @@ async def crear_proyecto(
             "unique unexpected artistic combination, professional manga artwork"
         )
 
+    # Normalizar formato de lectura
+    formato_normalizado = "manga" if datos.formato_lectura in ["manga", "jp_manga"] else datos.formato_lectura
+
     # Crear el proyecto en la base de datos
     nuevo_proyecto = Proyecto(
         id_usuario=usuario_actual.id,
-        nombre=datos.nombre,
+        nombre=datos.nombre.strip(),
         modo_creacion=datos.modo_creacion,
         estilo_legendario=estilo_legendario,
         system_prompt_maestro=system_prompt,
-        formato_lectura=datos.formato_lectura,
+        formato_lectura=formato_normalizado,
         style_locked=(datos.modo_creacion in ["legendario", "aleatorio"])
     )
 
@@ -400,3 +405,30 @@ async def eliminar_proyecto(
         mensaje=f"Proyecto '{proyecto.nombre}' eliminado correctamente",
         exito=True
     )
+
+
+@router.patch("/{proyecto_id}/portada", response_model=ProyectoRespuesta)
+async def actualizar_portada(
+    proyecto_id: int,
+    datos: ProyectoActualizarPortada,
+    usuario_actual: Usuario = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Actualiza la portada del proyecto (URL o base64).
+    """
+    proyecto = db.query(Proyecto).filter(
+        Proyecto.id == proyecto_id,
+        Proyecto.id_usuario == usuario_actual.id
+    ).first()
+
+    if not proyecto:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Proyecto no encontrado"
+        )
+
+    proyecto.portada_url = datos.portada_url
+    db.commit()
+    db.refresh(proyecto)
+    return proyecto

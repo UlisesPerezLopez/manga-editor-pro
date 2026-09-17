@@ -65,7 +65,7 @@ export default function Login() {
             className="w-full h-full object-cover scale-105 transition-all duration-700 opacity-90"
           />
           {/* Overlay temático para realce sin sobreexposición */}
-          <div className={`absolute inset-0 ${esGhibli ? 'bg-black/20' : 'bg-black/45'}`} />
+          <div className={`absolute inset-0 ${esGhibli ? 'bg-amber-50/20 backdrop-brightness-95' : 'bg-black/40 backdrop-blur-[0.5px]'}`} />
         </div>
       )}
 
@@ -178,18 +178,18 @@ export default function Login() {
                          font-titulo font-bold py-3.5 rounded-xl transition-all duration-200
                          text-base disabled:opacity-50 shadow-lg hover:shadow-theme-glow hover:scale-[1.02] cursor-pointer"
             >
-              {cargando ? t('auth.loggingIn') : t('auth.submitLogin')}
+              {cargando ? (t('auth.loggingIn') || 'Iniciando sesión...') : (t('auth.submitLogin') || t('auth.loginBtn') || 'Iniciar Sesión')}
             </button>
           </form>
 
           {/* Enlace a Registro */}
           <p className="text-center text-rdc-muted text-xs mt-6 font-titulo">
-            {t('auth.noAccount')}{' '}
+            {t('auth.noAccount') || '¿No tienes cuenta?'}{' '}
             <Link
               to="/register"
               className="text-rdc-accent hover:text-rdc-accent-hover font-bold transition-colors underline"
             >
-              {t('auth.createOne')}
+              {t('auth.createOne') || 'Crear una'}
             </Link>
           </p>
         </div>

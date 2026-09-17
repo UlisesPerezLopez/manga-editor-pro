@@ -187,82 +187,98 @@ const MangaCanvas = forwardRef(function MangaCanvas({
       canvas.isDrawingMode = false
       canvas.defaultCursor = 'default'
       canvas.selection = true
-    } else {
-      canvas.isDrawingMode = false
-      canvas.defaultCursor = 'crosshair'
+      return
+    }
+
+    if (herramientaActiva === 'pincel') {
+      canvas.isDrawingMode = true
       canvas.selection = false
+      if (!canvas.freeDrawingBrush) {
+        canvas.freeDrawingBrush = new fabric.PencilBrush(canvas)
+      }
+      canvas.freeDrawingBrush.color = '#111111'
+      canvas.freeDrawingBrush.width = 3
+      return () => {
+        canvas.isDrawingMode = false
+      }
+    }
 
-      // Gestionar click para crear elementos
-      canvas.off('mouse:down')
-      canvas.off('mouse:move')
-      canvas.off('mouse:up')
+    // Herramientas de inserción (viñeta, bocadillos, texto)
+    canvas.isDrawingMode = false
+    canvas.defaultCursor = 'crosshair'
+    canvas.selection = false
 
-      let origenX = 0, origenY = 0
-      let objetoTemp = null
-      let dibujando = false
+    let origenX = 0, origenY = 0
+    let objetoTemp = null
+    let dibujando = false
 
-      canvas.on('mouse:down', (opt) => {
-        if (opt.target) return  // Click sobre objeto existente
+    const onMouseDown = (opt) => {
+      if (opt.target) return  // Click sobre objeto existente
+      const pointer = canvas.getPointer(opt.e)
+      origenX = pointer.x
+      origenY = pointer.y
+      dibujando = true
+
+      if (herramientaActiva === 'vineta') {
+        objetoTemp = new fabric.Rect({
+          left: origenX, top: origenY,
+          width: 1, height: 1,
+          fill: 'transparent',
+          stroke: COLORES.vineta,
+          strokeWidth: 2,
+          selectable: true,
+          hasControls: true,
+          data: { tipo: 'vineta' }
+        })
+        canvas.add(objetoTemp)
+      }
+    }
+
+    const onMouseMove = (opt) => {
+      if (!dibujando || !objetoTemp) return
+      const pointer = canvas.getPointer(opt.e)
+
+      if (herramientaActiva === 'vineta') {
+        const w = Math.abs(pointer.x - origenX)
+        const h = Math.abs(pointer.y - origenY)
+        objetoTemp.set({
+          left: Math.min(pointer.x, origenX),
+          top: Math.min(pointer.y, origenY),
+          width: w < 10 ? 10 : w,
+          height: h < 10 ? 10 : h,
+        })
+        canvas.renderAll()
+      }
+    }
+
+    const onMouseUp = (opt) => {
+      if (!dibujando) return
+      dibujando = false
+
+      if (herramientaActiva !== 'vineta' && herramientaActiva !== 'seleccionar') {
         const pointer = canvas.getPointer(opt.e)
-        origenX = pointer.x
-        origenY = pointer.y
-        dibujando = true
+        _crearElementoEn(pointer.x, pointer.y, herramientaActiva)
+      }
 
-        if (herramientaActiva === 'vineta') {
-          objetoTemp = new fabric.Rect({
-            left: origenX, top: origenY,
-            width: 1, height: 1,
-            fill: 'transparent',
-            stroke: COLORES.vineta,
-            strokeWidth: 2,
-            selectable: true,
-            hasControls: true,
-            data: { tipo: 'vineta' }
-          })
-          canvas.add(objetoTemp)
+      if (objetoTemp) {
+        if (objetoTemp.width < 20 || objetoTemp.height < 20) {
+          canvas.remove(objetoTemp)
+        } else {
+          canvas.setActiveObject(objetoTemp)
         }
-      })
+      }
 
-      canvas.on('mouse:move', (opt) => {
-        if (!dibujando || !objetoTemp) return
-        const pointer = canvas.getPointer(opt.e)
+      objetoTemp = null
+    }
 
-        if (herramientaActiva === 'vineta') {
-          const w = Math.abs(pointer.x - origenX)
-          const h = Math.abs(pointer.y - origenY)
-          objetoTemp.set({
-            left: Math.min(pointer.x, origenX),
-            top: Math.min(pointer.y, origenY),
-            width: w < 10 ? 10 : w,
-            height: h < 10 ? 10 : h,
-          })
-          canvas.renderAll()
-        }
-      })
+    canvas.on('mouse:down', onMouseDown)
+    canvas.on('mouse:move', onMouseMove)
+    canvas.on('mouse:up', onMouseUp)
 
-      canvas.on('mouse:up', (opt) => {
-        if (!dibujando) return
-        dibujando = false
-
-        if (herramientaActiva !== 'vineta' && herramientaActiva !== 'seleccionar') {
-          const pointer = canvas.getPointer(opt.e)
-          _crearElementoEn(pointer.x, pointer.y, herramientaActiva)
-        }
-
-        if (objetoTemp) {
-          // Si la viñeta es demasiado pequeña, eliminarla
-          if (objetoTemp.width < 20 || objetoTemp.height < 20) {
-            canvas.remove(objetoTemp)
-          } else {
-            canvas.setActiveObject(objetoTemp)
-          }
-        }
-
-        objetoTemp = null
-        canvas.off('mouse:down')
-        canvas.off('mouse:move')
-        canvas.off('mouse:up')
-      })
+    return () => {
+      canvas.off('mouse:down', onMouseDown)
+      canvas.off('mouse:move', onMouseMove)
+      canvas.off('mouse:up', onMouseUp)
     }
   }, [herramientaActiva])
 
@@ -437,6 +453,15 @@ const MangaCanvas = forwardRef(function MangaCanvas({
       if (fabricRef.current) historyRedo(fabricRef.current)
     },
     eliminarSeleccion: _eliminarSeleccion,
+    limpiar: () => {
+      const canvas = fabricRef.current
+      if (!canvas) return
+      if (!confirm('¿Limpiar todo el lienzo?')) return
+      canvas.clear()
+      canvas.backgroundColor = '#FFFFFF'
+      canvas.renderAll()
+      guardarEstado(canvas)
+    },
     guardarAhora: _guardarAhora,
     aplicarPlantilla: aplicarPlantillaExterna,
 

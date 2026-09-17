@@ -1,8 +1,23 @@
 // BackupModal.jsx
-// Módulo de Copias de Seguridad (Backup & Restore) para exportar e importar proyectos completos (.mepbackup / JSON).
+// Módulo de Copias de Seguridad (Backup & Restore) para exportar e importar proyectos completos (.mepbackup / JSON) con Lucide React.
 
 import { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
+import {
+  Save,
+  FolderUp,
+  FolderDown,
+  UploadCloud,
+  FileArchive,
+  CheckCircle2,
+  AlertCircle,
+  RefreshCw,
+  Layers,
+  Users,
+  BookOpen,
+  ArrowLeft,
+  PackageCheck
+} from 'lucide-react'
 import { projectsAPI, chaptersAPI, charactersAPI } from '../../services/api'
 import Modal from '../UI/Modal'
 import Spinner from '../UI/Spinner'
@@ -72,7 +87,7 @@ export default function BackupModal({
     setProcesando(true)
     setError(null)
     setExito(null)
-    setMensajeEstado(t('backup.exporting'))
+    setMensajeEstado(t('backup.exporting') || 'Empaquetando backup...')
     setProgreso(20)
 
     try {
@@ -119,7 +134,7 @@ export default function BackupModal({
       URL.revokeObjectURL(url)
 
       setProgreso(100)
-      setExito(`${t('backup.exportSuccess')}: ${fileName}`)
+      setExito(`${t('backup.exportSuccess') || 'Backup exportado'}: ${fileName}`)
     } catch (err) {
       console.error('Error al exportar backup:', err)
       setError(err.response?.data?.detail || err.message || 'Error al compilar el backup')
@@ -145,7 +160,7 @@ export default function BackupModal({
       setDatosImportar(data)
       setNombreArchivo(nombre)
     } catch (err) {
-      setError(`${t('backup.restoreError')}: ${err.message}`)
+      setError(`${t('backup.restoreError') || 'Error de restauración'}: ${err.message}`)
       setDatosImportar(null)
       setNombreArchivo('')
     }
@@ -185,7 +200,7 @@ export default function BackupModal({
     setError(null)
     setExito(null)
     setProgreso(10)
-    setMensajeEstado(t('backup.restoring'))
+    setMensajeEstado(t('backup.restoring') || 'Iniciando restauración...')
 
     try {
       const pOrig = datosImportar.proyecto
@@ -203,7 +218,7 @@ export default function BackupModal({
 
       // 2. Reconstruir Capítulos y Páginas
       const capitulos = datosImportar.capitulos || []
-      setMensajeEstado(t('backup.restoringChapters'))
+      setMensajeEstado(t('backup.restoringChapters') || 'Restaurando capítulos...')
 
       for (let i = 0; i < capitulos.length; i++) {
         const c = capitulos[i]
@@ -236,7 +251,7 @@ export default function BackupModal({
 
       // 3. Reconstruir Personajes
       const personajes = datosImportar.personajes || []
-      setMensajeEstado(t('backup.restoringCharacters'))
+      setMensajeEstado(t('backup.restoringCharacters') || 'Restaurando personajes...')
 
       for (let j = 0; j < personajes.length; j++) {
         const per = personajes[j]
@@ -253,7 +268,7 @@ export default function BackupModal({
       }
 
       setProgreso(100)
-      setExito(`${t('backup.restoreSuccess')} "${nombreRestaurado}"`)
+      setExito(`${t('backup.restoreSuccess') || 'Proyecto restaurado exitosamente'}: "${nombreRestaurado}"`)
 
       if (onRestauracionExitosa) {
         onRestauracionExitosa(nuevoProyecto)
@@ -271,7 +286,7 @@ export default function BackupModal({
     <Modal
       abierto={abierto}
       onCerrar={onCerrar}
-      titulo={`💾 ${t('backup.title')}`}
+      titulo="Copias de Seguridad (Backup & Restore)"
       ancho="max-w-2xl"
     >
       <div className="space-y-5">
@@ -280,23 +295,23 @@ export default function BackupModal({
         <div className="flex bg-rdc-card p-1 rounded-xl border border-rdc-border text-xs font-titulo">
           <button
             onClick={() => { setPestana('exportar'); setError(null); setExito(null) }}
-            className={`flex-1 py-2 rounded-lg transition-all ${
+            className={`flex-1 py-2 rounded-lg transition-all flex items-center justify-center gap-2 cursor-pointer ${
               pestana === 'exportar'
-                ? 'bg-rdc-accent text-white font-bold shadow-sm'
+                ? 'bg-rdc-accent text-white font-bold shadow-xs'
                 : 'text-rdc-muted hover:text-rdc-text'
             }`}
           >
-            📤 {t('backup.exportTitle')}
+            <FolderUp className="w-4 h-4" /> {t('backup.exportTitle') || 'Exportar Backup'}
           </button>
           <button
             onClick={() => { setPestana('importar'); setError(null); setExito(null) }}
-            className={`flex-1 py-2 rounded-lg transition-all ${
+            className={`flex-1 py-2 rounded-lg transition-all flex items-center justify-center gap-2 cursor-pointer ${
               pestana === 'importar'
-                ? 'bg-rdc-accent text-white font-bold shadow-sm'
+                ? 'bg-rdc-accent text-white font-bold shadow-xs'
                 : 'text-rdc-muted hover:text-rdc-text'
             }`}
           >
-            📥 {t('backup.importTitle')}
+            <FolderDown className="w-4 h-4" /> {t('backup.importTitle') || 'Importar / Restaurar'}
           </button>
         </div>
 
@@ -304,19 +319,19 @@ export default function BackupModal({
         {pestana === 'exportar' && (
           <div className="space-y-4">
             <p className="text-rdc-muted text-xs leading-relaxed font-titulo">
-              {t('backup.exportDesc')}
+              {t('backup.exportDesc') || 'Descarga un archivo .mepbackup con el proyecto íntegro, capas vectoriales del canvas, estructura de capítulos y directorio de personajes.'}
             </p>
 
             {!proyectoInicial && proyectos.length > 0 && (
               <div>
                 <label className="block text-rdc-muted text-xs mb-1.5 font-titulo">
-                  {t('backup.selectProjectToBackup')}
+                  {t('backup.selectProjectToBackup') || 'Seleccionar Proyecto:'}
                 </label>
                 <select
                   value={proyectoIdExportar}
                   onChange={(e) => setProyectoIdExportar(e.target.value)}
                   disabled={procesando}
-                  className="w-full bg-rdc-card border border-rdc-border rounded-lg px-3 py-2 text-rdc-text text-xs focus:outline-none focus:border-rdc-accent"
+                  className="w-full bg-rdc-card border border-rdc-border rounded-xl px-3 py-2 text-rdc-text text-xs focus:outline-none focus:border-rdc-accent font-titulo"
                 >
                   {proyectos.map(p => (
                     <option key={p.id} value={p.id}>
@@ -327,11 +342,12 @@ export default function BackupModal({
               </div>
             )}
 
-            <div className="bg-rdc-secondary border border-rdc-border rounded-xl p-4 text-xs space-y-2">
-              <h5 className="font-titulo font-bold text-rdc-text">
-                📦 Contenido del paquete .mepbackup:
+            <div className="bg-rdc-secondary border border-rdc-border rounded-2xl p-4 text-xs space-y-2.5">
+              <h5 className="font-titulo font-bold text-rdc-text flex items-center gap-2">
+                <PackageCheck className="w-4 h-4 text-rdc-accent" />
+                Contenido del paquete .mepbackup:
               </h5>
-              <ul className="list-disc list-inside text-rdc-muted space-y-1">
+              <ul className="text-rdc-muted space-y-1.5 pl-6 list-disc">
                 <li>Metadatos completos del proyecto y formato de lectura.</li>
                 <li>Estructura completa de Capítulos y Páginas.</li>
                 <li>Estados vectoriales y capas del Canvas Fabric.js.</li>
@@ -342,9 +358,9 @@ export default function BackupModal({
             <button
               onClick={handleExportar}
               disabled={procesando}
-              className="w-full bg-rdc-accent hover:bg-rdc-accent-hover text-white font-titulo font-semibold py-3 px-4 rounded-xl transition-all shadow-lg text-sm flex items-center justify-center gap-2 disabled:opacity-50"
+              className="w-full bg-rdc-accent hover:bg-rdc-accent-hover text-white font-titulo font-semibold py-3 px-4 rounded-xl transition-all shadow-lg text-sm flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
             >
-              <span>📥</span> {t('backup.exportBtn')}
+              <FolderUp className="w-4 h-4" /> {t('backup.exportBtn') || 'Exportar Archivo .mepbackup'}
             </button>
           </div>
         )}
@@ -353,7 +369,7 @@ export default function BackupModal({
         {pestana === 'importar' && (
           <div className="space-y-4">
             <p className="text-rdc-muted text-xs leading-relaxed font-titulo">
-              {t('backup.importDesc')}
+              {t('backup.importDesc') || 'Restaura una obra desde un archivo .mepbackup o .json estructurado previamente generado.'}
             </p>
 
             {/* Dropzone */}
@@ -361,7 +377,7 @@ export default function BackupModal({
               onDragOver={(e) => e.preventDefault()}
               onDrop={handleDrop}
               onClick={() => fileInputRef.current?.click()}
-              className="border-2 border-dashed border-rdc-border hover:border-rdc-accent rounded-xl p-6 text-center cursor-pointer transition-all bg-rdc-card/50 hover:bg-rdc-card"
+              className="border-2 border-dashed border-rdc-border hover:border-rdc-accent rounded-2xl p-6 text-center cursor-pointer transition-all bg-rdc-card/50 hover:bg-rdc-card flex flex-col items-center justify-center gap-2"
             >
               <input
                 ref={fileInputRef}
@@ -370,25 +386,27 @@ export default function BackupModal({
                 onChange={handleFileChange}
                 className="hidden"
               />
-              <p className="text-3xl mb-2">📁</p>
-              <p className="font-titulo text-xs text-rdc-text font-semibold mb-1">
-                {nombreArchivo ? `${t('backup.fileSelected')} ${nombreArchivo}` : t('backup.dragDrop')}
+              <UploadCloud className="w-10 h-10 text-rdc-muted group-hover:text-rdc-accent transition-colors" />
+              <p className="font-titulo text-xs text-rdc-text font-semibold">
+                {nombreArchivo ? `${t('backup.fileSelected') || 'Archivo seleccionado:'} ${nombreArchivo}` : (t('backup.dragDrop') || 'Arrastra tu archivo aquí o haz clic')}
               </p>
               <span className="text-[11px] text-rdc-accent underline font-titulo">
-                {t('backup.selectFile')}
+                {t('backup.selectFile') || 'Examinar archivos (.mepbackup)'}
               </span>
             </div>
 
             {/* Resumen del archivo cargado */}
             {datosImportar && datosImportar.proyecto && (
-              <div className="bg-rdc-card border border-emerald-500/40 rounded-xl p-4 space-y-2 text-xs">
+              <div className="bg-rdc-card border border-emerald-500/40 rounded-2xl p-4 space-y-2 text-xs">
                 <div className="flex items-center justify-between text-emerald-400 font-titulo font-bold">
-                  <span>✅ Backup válido detectado</span>
-                  <span className="text-[10px] bg-emerald-950 px-2 py-0.5 rounded border border-emerald-500/40">
+                  <span className="flex items-center gap-1.5">
+                    <CheckCircle2 className="w-4 h-4" /> Backup válido detectado
+                  </span>
+                  <span className="text-[10px] bg-emerald-950 px-2 py-0.5 rounded-full border border-emerald-500/40">
                     MEP v{datosImportar.mep_version || '2.0'}
                   </span>
                 </div>
-                <p className="text-rdc-text font-semibold text-sm">
+                <p className="text-rdc-text font-semibold text-sm font-titulo">
                   {datosImportar.proyecto.nombre}
                 </p>
                 <div className="grid grid-cols-3 gap-2 pt-2 border-t border-rdc-border text-[11px] text-rdc-muted font-titulo">
@@ -400,9 +418,9 @@ export default function BackupModal({
                 <button
                   onClick={handleRestaurar}
                   disabled={procesando}
-                  className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-titulo font-bold py-2.5 px-4 rounded-lg transition-all shadow-md text-xs mt-3 flex items-center justify-center gap-2"
+                  className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-titulo font-bold py-2.5 px-4 rounded-xl transition-all shadow-md text-xs mt-3 flex items-center justify-center gap-2 cursor-pointer"
                 >
-                  <span>🔄</span> Restaurar en Base de Datos
+                  <RefreshCw className={`w-4 h-4 ${procesando ? 'animate-spin' : ''}`} /> Restaurar en Base de Datos
                 </button>
               </div>
             )}
@@ -411,9 +429,9 @@ export default function BackupModal({
 
         {/* Barra de progreso / Mensaje de proceso */}
         {procesando && (
-          <div className="space-y-2 bg-rdc-secondary p-3 rounded-lg border border-rdc-border text-xs">
+          <div className="space-y-2 bg-rdc-secondary p-3.5 rounded-xl border border-rdc-border text-xs">
             <div className="flex items-center justify-between font-titulo">
-              <span className="text-rdc-text">{mensajeEstado}</span>
+              <span className="text-rdc-text font-semibold">{mensajeEstado}</span>
               <span className="text-rdc-accent font-bold">{progreso}%</span>
             </div>
             <div className="w-full bg-rdc-card h-2 rounded-full overflow-hidden">
@@ -427,14 +445,16 @@ export default function BackupModal({
 
         {/* Alertas de Error y Éxito */}
         {error && (
-          <div className="bg-rdc-error/20 border border-rdc-error text-rdc-error rounded-xl p-3 text-xs">
-            ❌ {error}
+          <div className="bg-rdc-error/20 border border-rdc-error text-rdc-error rounded-xl p-3.5 text-xs flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 flex-shrink-0" />
+            <span>{error}</span>
           </div>
         )}
 
         {exito && (
-          <div className="bg-green-500/20 border border-green-500 text-green-400 rounded-xl p-3 text-xs font-titulo">
-            ✅ {exito}
+          <div className="bg-emerald-500/20 border border-emerald-500 text-emerald-400 rounded-xl p-3.5 text-xs font-titulo flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
+            <span>{exito}</span>
           </div>
         )}
 
@@ -442,9 +462,10 @@ export default function BackupModal({
           <button
             onClick={onCerrar}
             disabled={procesando}
-            className="bg-rdc-card hover:bg-rdc-border text-rdc-text font-titulo px-4 py-2 rounded-lg text-xs transition-colors"
+            className="bg-rdc-card hover:bg-rdc-border text-rdc-text font-titulo px-4 py-2 rounded-xl text-xs transition-colors cursor-pointer flex items-center gap-1.5"
           >
-            {t('nav.back')}
+            <ArrowLeft className="w-3.5 h-3.5" />
+            {t('nav.back') || 'Cerrar'}
           </button>
         </div>
 
