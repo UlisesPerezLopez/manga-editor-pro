@@ -1,0 +1,222 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ═══════════════════════════════════════════════════════════════════
+   SISTEMA GLOBAL DE TEMAS ARTÍSTICOS: MEP — MANGA EDITOR PRO
+   Modo Día:   "Ghibli Meadow & Sky" (.theme-ghibli)
+   Modo Noche: "Sanctuary & Cosmos - Saint Seiya" (.theme-seiya)
+   ═══════════════════════════════════════════════════════════════════ */
+
+:root,
+.theme-seiya {
+  /* Fondo cósmico azul marino profundo y sombras de nebulosa */
+  --bg-primary-rgb: 11 14 27;          /* #0B0E1B */
+  --bg-secondary-rgb: 19 25 43;        /* #13192B */
+  --bg-card-rgb: 28 36 59;             /* #1C243B */
+
+  /* Acento: Dorado Cosmos brillante y energía estelar */
+  --accent-rgb: 229 169 60;            /* #E5A93C */
+  --accent-hover-rgb: 255 208 0;       /* #FFD000 */
+  --accent-secondary-rgb: 59 130 246;  /* #3B82F6 (Azul estelar) */
+
+  /* Textos: Blanco estelar pulido y plata lunar */
+  --text-primary-rgb: 241 245 249;     /* #F1F5F9 */
+  --text-secondary-rgb: 148 163 184;   /* #94A3B8 */
+
+  /* Bordes de armadura y resplandor cósmico */
+  --border-rgb: 42 55 90;              /* #2A375A */
+  --border-glow-rgb: 229 169 60;       /* #E5A93C */
+
+  /* Semántica */
+  --success-rgb: 74 222 128;           /* #4ADE80 */
+  --warning-rgb: 251 191 36;           /* #FBBF24 */
+  --error-rgb: 248 113 113;            /* #F87171 */
+
+  /* Badges & Efectos Saint Seiya */
+  --badge-gold-rgb: 255 215 0;         /* Oro Divino */
+  --badge-purple-rgb: 139 92 246;      /* Púrpura Galáctico */
+
+  --theme-glow: 0 0 20px rgba(229, 169, 60, 0.28);
+  --theme-subtle-glow: 0 0 25px rgba(59, 130, 246, 0.2);
+  --overlay-bg: rgba(11, 14, 27, 0.85);
+  --glass-bg: rgba(19, 25, 43, 0.75);
+}
+
+.theme-ghibli {
+  /* Fondos marfil suave, verde pradera luminoso y azul cielo acuarela */
+  --bg-primary-rgb: 244 247 242;       /* #F4F7F2 */
+  --bg-secondary-rgb: 255 255 255;     /* #FFFFFF */
+  --bg-card-rgb: 234 242 232;          /* #EAF2E8 */
+
+  /* Acento: Verde esmeralda bosque y toques terracota nostálgicos */
+  --accent-rgb: 45 106 79;             /* #2D6A4F */
+  --accent-hover-rgb: 27 67 50;        /* #1B4332 */
+  --accent-secondary-rgb: 217 119 54;  /* #D97736 (Terracota Ghibli) */
+
+  /* Textos: Verde bosque muy oscuro con contraste AAA y musgo suave */
+  --text-primary-rgb: 27 45 35;        /* #1B2D23 */
+  --text-secondary-rgb: 82 110 93;     /* #526E5D */
+
+  /* Bordes de tono musgo/madera clara sutil */
+  --border-rgb: 210 222 201;           /* #D2DEC9 */
+  --border-glow-rgb: 45 106 79;        /* #2D6A4F */
+
+  /* Semántica */
+  --success-rgb: 46 125 50;            /* #2E7D32 */
+  --warning-rgb: 217 119 54;           /* #D97736 */
+  --error-rgb: 198 40 40;              /* #C62828 */
+
+  /* Badges & Efectos Ghibli */
+  --badge-gold-rgb: 212 163 115;       /* Oro Suave */
+  --badge-purple-rgb: 69 123 157;      /* Azul Lago */
+
+  --theme-glow: 0 4px 18px rgba(45, 106, 79, 0.15);
+  --theme-subtle-glow: 0 4px 22px rgba(217, 119, 54, 0.12);
+  --overlay-bg: rgba(244, 247, 242, 0.88);
+  --glass-bg: rgba(255, 255, 255, 0.85);
+}
+
+/* Reset y transiciones globales de tema */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  background-color: rgb(var(--bg-primary-rgb));
+  color: rgb(var(--text-primary-rgb));
+  font-family: 'Inter', sans-serif;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  position: relative;
+  overflow-x: hidden;
+  transition: background-color 0.35s ease, color 0.35s ease, border-color 0.35s ease;
+}
+
+/* Capa de atmósfera y fondo temático */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  background-size: cover;
+  background-position: center;
+  filter: blur(1.5px);
+  opacity: 0.16;
+  animation: backgroundSlideShow 60s infinite;
+  transition: opacity 0.4s ease, filter 0.4s ease;
+  pointer-events: none;
+}
+
+.theme-ghibli body::before,
+.theme-ghibli::before {
+  opacity: 0.12;
+  filter: blur(1.5px);
+}
+
+.theme-seiya body::before,
+.theme-seiya::before {
+  opacity: 0.18;
+  filter: blur(1.5px);
+}
+
+/* Scrollbar temática */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: rgb(var(--bg-primary-rgb));
+}
+::-webkit-scrollbar-thumb {
+  background: rgb(var(--border-rgb));
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgb(var(--accent-rgb));
+}
+
+/* Clases tipográficas oficiales */
+.font-manga {
+  font-family: 'Bangers', cursive;
+  letter-spacing: 0.05em;
+}
+
+.font-titulo {
+  font-family: 'Rajdhani', sans-serif;
+}
+
+/* Efectos visuales de brillo temático */
+.cosmos-glow {
+  box-shadow: var(--theme-glow);
+}
+
+.cosmos-subtle-glow {
+  box-shadow: var(--theme-subtle-glow);
+}
+
+.glass-panel {
+  background-color: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* Animaciones */
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.animate-pulse-soft {
+  animation: pulse-soft 2s ease-in-out infinite;
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.2; transform: scale(0.85); }
+  50% { opacity: 1; transform: scale(1.25); }
+}
+
+.animate-twinkle {
+  animation: twinkle 3s ease-in-out infinite;
+}
+
+@keyframes fallingLeaf {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  50% {
+    transform: translate(35px, 50vh) rotate(180deg);
+  }
+  90% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translate(-25px, 105vh) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+.animate-falling-leaf {
+  animation: fallingLeaf 10s linear infinite;
+}
+
+@keyframes backgroundSlideShow {
+  0%, 33% {
+    background-image: url('./assets/fondo_login_1.png');
+  }
+  34%, 66% {
+    background-image: url('./assets/fondo_login_2.png');
+  }
+  67%, 100% {
+    background-image: url('./assets/fondo_login_3.png');
+  }
+}

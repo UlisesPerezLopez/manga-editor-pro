@@ -1,0 +1,35 @@
+# Dockerfile.frontend
+# Multi-stage build para el Frontend de MEP (React 18 + Vite + TailwindCSS + Nginx Alpine)
+
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# Instalar dependencias
+COPY frontend/package*.json ./
+RUN npm ci || npm install
+
+# Copiar código fuente y compilar
+COPY frontend/ ./
+RUN npm run build
+
+# ─── STAGE FINAL: SERVIDOR WEB NGINX ALPINO ──────────────────────────────────
+FROM nginx:alpine
+
+# Limpiar archivos por defecto de Nginx
+RUN rm -rf /usr/share/nginx/html/*
+
+# Copiar bundle de producción generado por Vite
+COPY --from=builder /app/dist /usr/share/nginx/html
+
+# Copiar configuración personalizada de Nginx
+COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
+
+# Exponer puerto HTTP estándar
+EXPOSE 80
+
+# Healthcheck
+HEALTHCHECK --interval=30s --timeout=3s --retries=3 \
+  CMD wget --quiet --tries=1 --spider http://localhost/ || exit 1
+
+CMD ["nginx", "-g", "daemon off;"]

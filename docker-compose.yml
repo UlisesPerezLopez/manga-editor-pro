@@ -1,0 +1,67 @@
+version: '3.8'
+
+services:
+  # ─── 1. BASE DE DATOS POSTGRESQL ──────────────────────────────────────────
+  db:
+    image: postgres:16-alpine
+    container_name: mep_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: mep_user
+      POSTGRES_PASSWORD: mep_secure_password_2026
+      POSTGRES_DB: mep_manga_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mep_user -d mep_manga_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - mep_network
+
+  # ─── 2. BACKEND API (FASTAPI + PYTHON 3.11) ──────────────────────────────
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: mep_backend
+    restart: unless-stopped
+    environment:
+      ENTORNO: production
+      DATABASE_URL: postgresql://mep_user:mep_secure_password_2026@db:5432/mep_manga_db
+      JWT_SECRET_KEY: mep_super_secret_jwt_key_production_2026_change_me
+      FRONTEND_URL: http://localhost
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      REPLICATE_API_TOKEN: ${REPLICATE_API_TOKEN:-}
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - mep_network
+
+  # ─── 3. FRONTEND (REACT 18 + VITE + NGINX) ─────────────────────────────────
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: mep_frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - mep_network
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  mep_network:
+    driver: bridge

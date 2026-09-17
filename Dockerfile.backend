@@ -1,0 +1,46 @@
+# Dockerfile.backend
+# Imagen multi-stage ligera en Python 3.11 Slim para producción en Render, Railway o Docker
+
+FROM python:3.11-slim as builder
+
+WORKDIR /app
+
+# Instalar herramientas de compilación para dependencias nativas
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libpq-dev \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY backend/requirements.txt .
+RUN pip install --no-cache-dir --user -r requirements.txt
+
+# ─── STAGE FINAL DE EJECUCIÓN ────────────────────────────────────────────────
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Instalar librerías de runtime necesarias (libpq para PostgreSQL)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpq5 \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copiar dependencias de Python desde builder
+COPY --from=builder /root/.local /root/.local
+ENV PATH=/root/.local/bin:$PATH
+ENV PYTHONUNBUFFERED=1
+ENV ENTORNO=production
+
+# Copiar código fuente del backend
+COPY backend /app
+
+# Exponer puerto 8000
+EXPOSE 8000
+
+# Healthcheck de contenedor
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD curl -f http://localhost:8000/docs || exit 1
+
+# Comando de inicio con uvicorn para producción
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2"]
