@@ -46,33 +46,36 @@ export default function LandingPage() {
   const MODOS = [
     {
       icon: Palette,
-      iconColor: 'text-purple-400',
       titulo: t('landing.modes.custom.title') || 'Tu Propio Estilo',
       desc: t('landing.modes.custom.desc') || 'Sube 3 a 5 páginas de tu arte para clonar tu firma visual con IA.',
-      ghibliClasses: 'bg-[#FDFBF7]/95 border-emerald-200/80 text-[#1B2D23] shadow-md hover:border-emerald-300 hover:shadow-lg',
-      cosmosClasses: 'bg-purple-950/40 border-purple-500/80 text-white from-purple-900/30 to-transparent shadow-purple-900/20 hover:border-purple-400',
-      btnGhibli: 'bg-emerald-700 hover:bg-emerald-800 text-white border-transparent shadow-sm',
-      btnCosmos: 'border-purple-500/50 hover:bg-purple-900/40 text-purple-200',
+      ghibliClasses: 'bg-white/90 border-2 border-purple-200 hover:border-purple-300 shadow-sm hover:shadow-md',
+      cosmosClasses: 'bg-[#0e1322] border-2 border-purple-500/40 hover:border-purple-400 text-white shadow-lg shadow-purple-950/20',
+      badgeGhibli: 'bg-purple-100 text-purple-700',
+      badgeCosmos: 'bg-purple-950/60 text-purple-400 border border-purple-500/30',
+      btnGhibli: 'bg-purple-100 hover:bg-purple-200 text-purple-900 font-semibold py-2 px-3 text-xs sm:text-sm rounded-lg transition-colors',
+      btnCosmos: 'bg-purple-600 hover:bg-purple-500 text-white shadow-md font-semibold py-2 px-3 text-xs sm:text-sm rounded-lg transition-colors',
     },
     {
       icon: Zap,
-      iconColor: 'text-amber-400',
       titulo: t('landing.modes.legendary.title') || 'Estilos Legendarios',
       desc: t('landing.modes.legendary.desc') || 'Crea en el estilo visual de los grandes mangakas de la historia.',
-      ghibliClasses: 'bg-[#FDFBF7]/95 border-amber-200/80 text-[#1B2D23] shadow-md hover:border-amber-300 hover:shadow-lg',
-      cosmosClasses: 'bg-blue-950/40 border-rdc-accent/80 text-white from-blue-900/30 to-transparent shadow-blue-900/20 hover:border-blue-400',
-      btnGhibli: 'bg-amber-700 hover:bg-amber-800 text-white border-transparent shadow-sm',
-      btnCosmos: 'border-blue-500/50 hover:bg-blue-900/40 text-blue-200',
+      ghibliClasses: 'bg-white/90 border-2 border-amber-200 hover:border-amber-300 shadow-sm hover:shadow-md',
+      cosmosClasses: 'bg-[#0e1322] border-2 border-amber-500/40 hover:border-amber-400 text-white shadow-lg shadow-amber-950/20',
+      badgeGhibli: 'bg-amber-100 text-amber-700',
+      badgeCosmos: 'bg-amber-950/60 text-amber-400 border border-amber-500/30',
+      btnGhibli: 'bg-amber-100 hover:bg-amber-200 text-amber-900 font-semibold py-2 px-3 text-xs sm:text-sm rounded-lg transition-colors',
+      btnCosmos: 'bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-md font-bold py-2 px-3 text-xs sm:text-sm rounded-lg transition-colors',
     },
     {
       icon: Dices,
-      iconColor: 'text-emerald-400',
       titulo: t('landing.modes.random.title') || 'Estilo Sorpresa',
       desc: t('landing.modes.random.desc') || 'Deja que la IA combine técnicas y cree un estilo único para ti.',
-      ghibliClasses: 'bg-[#FDFBF7]/95 border-rose-200/80 text-[#1B2D23] shadow-md hover:border-rose-300 hover:shadow-lg',
-      cosmosClasses: 'bg-green-950/40 border-green-500/80 text-white from-green-900/30 to-transparent shadow-green-900/20 hover:border-green-400',
-      btnGhibli: 'bg-[#D97736] hover:bg-[#c06528] text-white border-transparent shadow-sm',
-      btnCosmos: 'border-green-500/50 hover:bg-green-900/40 text-green-200',
+      ghibliClasses: 'bg-white/90 border-2 border-emerald-200 hover:border-emerald-300 shadow-sm hover:shadow-md',
+      cosmosClasses: 'bg-[#0e1322] border-2 border-emerald-500/40 hover:border-emerald-400 text-white shadow-lg shadow-emerald-950/20',
+      badgeGhibli: 'bg-emerald-100 text-emerald-700',
+      badgeCosmos: 'bg-emerald-950/60 text-emerald-400 border border-emerald-500/30',
+      btnGhibli: 'bg-emerald-100 hover:bg-emerald-200 text-emerald-900 font-semibold py-2 px-3 text-xs sm:text-sm rounded-lg transition-colors',
+      btnCosmos: 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-md font-semibold py-2 px-3 text-xs sm:text-sm rounded-lg transition-colors',
     },
   ]
 
@@ -113,7 +116,7 @@ export default function LandingPage() {
     <div className="min-h-screen bg-rdc-primary text-rdc-text flex flex-col justify-between transition-colors duration-300 relative overflow-x-hidden">
       {/* ── NAVBAR ── */}
       <nav className="sticky top-0 z-50 bg-rdc-secondary/90 border-b
-                      border-rdc-border px-6 py-4
+                      border-rdc-border px-6 py-3
                       flex items-center justify-between
                       backdrop-blur-md transition-colors duration-300">
         <Link
@@ -167,8 +170,8 @@ export default function LandingPage() {
         </div>
       </nav>
 
-      {/* ── HERO SECTION ── */}
-      <section className="relative px-6 py-24 sm:py-32 flex flex-col items-center justify-center text-center overflow-hidden min-h-[600px]">
+      {/* ── HERO SECTION RESTAURADO ── */}
+      <section className="relative px-4 sm:px-6 min-h-[380px] sm:min-h-[420px] lg:min-h-[440px] flex flex-col items-center justify-center text-center overflow-hidden">
         {/* Fondo dinámico aleatorio con overlay */}
         {fondoAleatorio && (
           <div
@@ -177,88 +180,113 @@ export default function LandingPage() {
           />
         )}
         <div
-          className={`absolute inset-0 transition-colors duration-500 backdrop-blur-[0.5px] ${
+          className={`absolute inset-0 transition-colors duration-500 ${
             esGhibli
-              ? 'bg-amber-50/20 backdrop-brightness-95'
+              ? 'bg-black/20'
               : 'bg-black/40 backdrop-blur-[0.5px]'
           }`}
         />
 
-        <div className="relative z-10 max-w-4xl mx-auto space-y-6">
-          <h1 className="font-manga text-5xl sm:text-7xl lg:text-8xl tracking-tight drop-shadow-lg text-rdc-text">
-            MEP
-          </h1>
-
-          <p className="font-titulo text-2xl sm:text-3xl lg:text-4xl font-bold tracking-wide drop-shadow-md text-rdc-text">
-            {t('landing.heroTitle')}
-          </p>
-
-          <p className="font-titulo text-base sm:text-lg text-rdc-muted max-w-2xl mx-auto leading-relaxed drop-shadow-sm">
-            {t('landing.heroSubtitle')}
-          </p>
-
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
-            <button
-              onClick={() => navigate(isAuthenticated ? '/dashboard' : '/register')}
-              className="w-full sm:w-auto bg-rdc-accent hover:bg-rdc-accent-hover text-white font-titulo font-semibold text-lg px-8 py-3.5 rounded-xl transition-all duration-200 shadow-xl hover:shadow-rdc-accent/20 hover:scale-105 cursor-pointer flex items-center justify-center gap-2"
+        <div className="relative z-10 max-w-3xl mx-auto space-y-2">
+          {/* ── Cartel Central Manga / Narrator Box Opaco ── */}
+          <div
+            className={`relative mx-auto max-w-lg px-6 sm:px-8 py-3.5 sm:py-4 rounded-2xl border-2 border-black transition-all duration-300 ${
+              esGhibli
+                ? 'bg-white shadow-[4px_4px_0px_0px_rgba(5,150,105,0.9)]'
+                : 'bg-[#0B0F19] shadow-[4px_4px_0px_0px_rgba(245,158,11,0.9)]'
+            }`}
+          >
+            {/* Tag / Badge de Narrador Manga */}
+            <div
+              className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider mb-1.5 border ${
+                esGhibli
+                  ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
+                  : 'bg-amber-950/90 text-amber-300 border-amber-500/40'
+              }`}
             >
-              <span>{isAuthenticated ? (t('nav.dashboard') || 'Ir al Panel') : t('landing.getStarted')}</span>
-              <Sparkles className="w-5 h-5" />
-            </button>
-            {!isAuthenticated && (
-              <button
-                onClick={() => navigate('/login')}
-                className="w-full sm:w-auto bg-white/15 hover:bg-white/25 border border-white/20 text-white font-titulo text-lg px-8 py-3.5 rounded-xl backdrop-blur-sm transition-all duration-200 cursor-pointer"
-              >
-                {t('landing.haveAccount')}
-              </button>
-            )}
+              <Sparkles className="w-3 h-3 text-rdc-accent" />
+              <span>MEP STUDIO · {t('brand.name')}</span>
+            </div>
+
+            {/* Título Principal MEP */}
+            <h1
+              className={`font-manga text-4xl sm:text-5xl tracking-tight leading-none mb-1 select-none ${
+                esGhibli ? 'text-emerald-700' : 'text-amber-500'
+              }`}
+            >
+              MEP
+            </h1>
+
+            {/* Subtítulo MANGA EDITOR PRO */}
+            <p
+              className={`font-titulo text-base sm:text-lg font-black tracking-wide uppercase mb-1 ${
+                esGhibli ? 'text-slate-900' : 'text-white'
+              }`}
+            >
+              MANGA EDITOR PRO
+            </p>
+
+            {/* Descripción / Tagline sintética */}
+            <p
+              className={`font-titulo text-xs sm:text-sm max-w-md mx-auto leading-tight truncate sm:whitespace-normal ${
+                esGhibli ? 'text-slate-700 font-medium' : 'text-slate-300 font-medium'
+              }`}
+            >
+              {t('brand.tagline')}
+            </p>
           </div>
         </div>
       </section>
 
-      {/* ── SECCIÓN: 3 MODOS DE CREACIÓN ── */}
-      <section className="px-6 py-20 max-w-6xl mx-auto w-full z-10 relative">
-        <div className="text-center mb-14">
-          <h2 className="font-titulo text-3xl sm:text-4xl text-rdc-text
-                         font-semibold mb-4">
+      {/* ── SECCIÓN: TRES FORMAS DE CREAR TU CÓMIC ── */}
+      <section className="w-full px-4 sm:px-6 relative z-10">
+        <div className="text-center pt-3 sm:pt-4">
+          <h2 className={`font-titulo text-xl sm:text-2xl font-extrabold mb-0.5 ${
+            esGhibli ? 'text-slate-900' : 'text-white'
+          }`}>
             {t('landing.threeModesTitle')}
           </h2>
-          <p className="text-rdc-muted text-base max-w-xl mx-auto font-titulo">
-            {t('landing.threeModesSubtitle')}
-          </p>
         </div>
+        <p className="text-center text-xs sm:text-sm mb-4 font-titulo max-w-xl mx-auto text-slate-500 dark:text-slate-400">
+          {t('landing.threeModesSubtitle')}
+        </p>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 px-4 pb-8 sm:pb-12">
           {MODOS.map((modo, i) => {
             const ModoIcon = modo.icon
             return (
               <div
                 key={i}
-                className={`border-2 rounded-2xl p-8 transition-all duration-300
-                            hover:scale-105 hover:shadow-2xl flex flex-col justify-between backdrop-blur-md ${
-                              esGhibli ? modo.ghibliClasses : modo.cosmosClasses
-                            }`}
+                className={`min-h-[250px] sm:min-h-[270px] flex flex-col justify-between p-4 sm:p-5 rounded-2xl transition-all duration-300 hover:scale-[1.02] hover:shadow-xl ${
+                  esGhibli ? modo.ghibliClasses : modo.cosmosClasses
+                }`}
               >
                 <div>
-                  <div className="w-14 h-14 rounded-2xl bg-black/20 flex items-center justify-center mb-6">
-                    <ModoIcon className={`w-8 h-8 ${modo.iconColor}`} />
+                  <div className={`w-9 h-9 p-2 rounded-lg flex items-center justify-center mb-2.5 ${
+                    esGhibli ? modo.badgeGhibli : modo.badgeCosmos
+                  }`}>
+                    <ModoIcon className="w-5 h-5" />
                   </div>
-                  <h3 className="font-titulo text-2xl font-bold mb-3">
+                  <h3 className={`font-titulo text-base sm:text-lg font-bold mb-1 ${
+                    esGhibli ? 'text-slate-900' : 'text-white'
+                  }`}>
                     {modo.titulo}
                   </h3>
-                  <p className="text-sm leading-relaxed mb-6 opacity-90 font-titulo">
+                  <p className={`text-xs sm:text-sm leading-snug mb-3 font-titulo ${
+                    esGhibli ? 'text-slate-600' : 'text-slate-300'
+                  }`}>
                     {modo.desc}
                   </p>
                 </div>
 
                 <button
                   onClick={() => navigate(isAuthenticated ? '/new-project' : '/register')}
-                  className={`w-full py-2.5 rounded-xl border font-titulo text-sm font-semibold transition-all duration-200 mt-auto cursor-pointer ${
+                  className={`w-full font-titulo cursor-pointer flex items-center justify-center gap-1.5 ${
                     esGhibli ? modo.btnGhibli : modo.btnCosmos
                   }`}
                 >
-                  {t('landing.getStarted')}
+                  <span>{t('landing.getStarted')}</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
                 </button>
               </div>
             )
@@ -266,38 +294,53 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── SECCIÓN: CARACTERÍSTICAS ── */}
-      <section className="px-6 py-20 bg-rdc-secondary/50 border-t
-                          border-rdc-border transition-colors duration-300 z-10 relative">
+      {/* ── SECCIÓN: CARACTERÍSTICAS (TODO LO QUE NECESITAS PARA CREAR) ── */}
+      <section className={`border-t border-rdc-border transition-colors duration-300 z-10 relative ${
+        esGhibli ? 'bg-[#F9F8F3]/60' : 'bg-[#0a0d18]/70'
+      }`}>
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-14">
-            <h2 className="font-titulo text-3xl sm:text-4xl text-rdc-text
-                           font-semibold mb-4">
+          <div className="text-center pt-12 pb-2">
+            <h2 className={`font-titulo text-3xl font-bold ${
+              esGhibli ? 'text-slate-900' : 'text-white'
+            }`}>
               {t('landing.featuresTitle')}
             </h2>
-            <p className="text-rdc-muted text-base font-titulo">
-              {t('landing.featuresSubtitle')}
-            </p>
           </div>
+          <p className={`text-base text-center mb-10 font-titulo max-w-2xl mx-auto px-4 ${
+            esGhibli ? 'text-slate-600' : 'text-slate-400'
+          }`}>
+            {t('landing.featuresSubtitle')}
+          </p>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 px-4 pb-16">
             {FEATURES.map((f, i) => {
               const FeatureIcon = f.icon
               return (
                 <div
                   key={i}
-                  className="bg-rdc-secondary border border-rdc-border rounded-2xl
-                             p-6 hover:border-rdc-accent transition-all duration-200
-                             hover:shadow-theme-subtle-glow backdrop-blur-sm"
+                  className={`p-6 sm:p-7 rounded-2xl transition-all duration-200 flex flex-col justify-start hover:scale-[1.01] ${
+                    esGhibli
+                      ? 'bg-white/90 border border-slate-200/90 shadow-sm hover:border-emerald-400/60 hover:shadow-md'
+                      : 'bg-[#0e1322] border border-slate-800 hover:border-slate-700 hover:shadow-lg hover:shadow-slate-950/40 backdrop-blur-sm'
+                  }`}
                 >
-                  <div className="w-10 h-10 rounded-xl bg-rdc-card border border-rdc-border flex items-center justify-center mb-3 text-rdc-accent">
-                    <FeatureIcon className="w-5 h-5" />
+                  <div
+                    className={`w-11 h-11 rounded-xl p-2.5 flex items-center justify-center mb-4 shrink-0 ${
+                      esGhibli
+                        ? 'bg-emerald-50 border border-emerald-200 text-emerald-700'
+                        : 'bg-slate-800/90 border border-slate-700 text-amber-400'
+                    }`}
+                  >
+                    <FeatureIcon className="w-6 h-6" />
                   </div>
-                  <h3 className="font-titulo text-lg text-rdc-text
-                                 font-semibold mb-2">
+                  <h3 className={`font-titulo text-lg font-bold mb-1 ${
+                    esGhibli ? 'text-slate-900' : 'text-white'
+                  }`}>
                     {f.titulo}
                   </h3>
-                  <p className="text-rdc-muted text-sm leading-relaxed font-titulo">
+                  <p className={`leading-relaxed text-sm mt-2 font-titulo ${
+                    esGhibli ? 'text-slate-600' : 'text-slate-300'
+                  }`}>
                     {f.desc}
                   </p>
                 </div>
@@ -308,19 +351,22 @@ export default function LandingPage() {
       </section>
 
       {/* ── CTA FINAL ── */}
-      <section className="px-6 py-20 text-center relative overflow-hidden z-10">
+      <section className="px-6 py-14 sm:py-16 text-center relative overflow-hidden z-10">
         <div className="max-w-2xl mx-auto relative z-10">
-          <h2 className="font-titulo text-3xl sm:text-5xl text-rdc-text
-                         font-semibold mb-4">
+          <h2 className={`font-titulo text-3xl sm:text-4xl font-bold mb-3 ${
+            esGhibli ? 'text-slate-900' : 'text-white'
+          }`}>
             {t('landing.ctaTitle')}
           </h2>
-          <p className="text-rdc-muted text-base mb-8 font-titulo">
+          <p className={`text-sm sm:text-base mb-8 font-titulo ${
+            esGhibli ? 'text-slate-600' : 'text-slate-400'
+          }`}>
             {t('landing.ctaSubtitle')}
           </p>
           <button
             onClick={() => navigate(isAuthenticated ? '/new-project' : '/register')}
             className="bg-rdc-accent hover:bg-rdc-accent-hover text-white
-                       font-titulo font-semibold text-lg px-10 py-4 rounded-xl
+                       font-titulo font-semibold text-base px-8 py-3.5 rounded-xl
                        transition-all duration-200 shadow-xl
                        hover:shadow-theme-glow hover:scale-105 cursor-pointer inline-flex items-center gap-2"
           >
@@ -331,12 +377,12 @@ export default function LandingPage() {
       </section>
 
       {/* ── FOOTER ── */}
-      <footer className="border-t border-rdc-border py-8 px-6 text-center
-                         text-rdc-muted text-sm transition-colors duration-300 z-10 relative">
+      <footer className="border-t border-rdc-border py-6 px-6 text-center
+                         text-rdc-muted text-xs transition-colors duration-300 z-10 relative">
         <p className="font-titulo mb-1">
           MEP — Manga Editor Pro · {t('brand.tagline')}
         </p>
-        <p className="text-xs opacity-75 font-titulo">
+        <p className="opacity-75 font-titulo">
           {t('landing.footerNote')}
         </p>
       </footer>

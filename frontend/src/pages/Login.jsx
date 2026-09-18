@@ -62,10 +62,10 @@ export default function Login() {
           <img
             src={fondoAleatorio}
             alt="Manga Art Background"
-            className="w-full h-full object-cover scale-105 transition-all duration-700 opacity-90"
+            className="w-full h-full object-cover scale-105 transition-all duration-700"
           />
-          {/* Overlay temático para realce sin sobreexposición */}
-          <div className={`absolute inset-0 ${esGhibli ? 'bg-amber-50/20 backdrop-brightness-95' : 'bg-black/40 backdrop-blur-[0.5px]'}`} />
+          {/* Overlay temático para realce sin sobreexposición ni lavado */}
+          <div className={`absolute inset-0 ${esGhibli ? 'bg-black/20' : 'bg-black/40 backdrop-blur-[0.5px]'}`} />
         </div>
       )}
 
@@ -78,16 +78,38 @@ export default function Login() {
       {/* Contenedor del formulario */}
       <div className="w-full max-w-md relative z-10 py-6">
 
-        {/* Logo y título */}
+        {/* Logo y título estilo Manga Speech Box */}
         <div className="text-center mb-6">
           <Link to="/" className="inline-block group cursor-pointer select-none">
-            <h1 className="font-manga text-5xl text-rdc-accent mb-1 drop-shadow-lg group-hover:scale-105 transition-transform duration-200">
-              MEP
-            </h1>
-            <p className="font-titulo text-xl font-bold tracking-widest uppercase text-rdc-text drop-shadow-md">
-              Manga Editor Pro
-            </p>
-            <p className="text-rdc-muted text-xs mt-0.5">{t('brand.tagline')}</p>
+            <div
+              className={`px-6 py-4 rounded-2xl border-2 border-black transition-all duration-300 inline-block ${
+                esGhibli
+                  ? 'bg-white shadow-[4px_4px_0px_0px_rgba(5,150,105,0.9)]'
+                  : 'bg-[#0B0F19] shadow-[4px_4px_0px_0px_rgba(245,158,11,0.9)]'
+              }`}
+            >
+              <h1
+                className={`font-manga text-4xl sm:text-5xl leading-none mb-1 group-hover:scale-105 transition-transform ${
+                  esGhibli ? 'text-emerald-700' : 'text-amber-500'
+                }`}
+              >
+                MEP
+              </h1>
+              <p
+                className={`font-titulo text-base sm:text-lg font-black tracking-widest uppercase ${
+                  esGhibli ? 'text-slate-900' : 'text-white'
+                }`}
+              >
+                Manga Editor Pro
+              </p>
+              <p
+                className={`text-xs mt-0.5 font-medium ${
+                  esGhibli ? 'text-slate-700' : 'text-slate-300'
+                }`}
+              >
+                {t('brand.tagline')}
+              </p>
+            </div>
           </Link>
         </div>
 

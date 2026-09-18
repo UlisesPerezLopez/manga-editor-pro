@@ -160,7 +160,7 @@ function NewProjectContent() {
       <BackgroundSlideshow
         imagenes={fondosDisponibles}
         intervalo={5000}
-        overlayClassName={esGhibli ? 'bg-amber-50/20 backdrop-brightness-95' : 'bg-black/40 backdrop-blur-[0.5px]'}
+        overlayClassName={esGhibli ? 'bg-black/20' : 'bg-black/40 backdrop-blur-[0.5px]'}
       />
 
       {/* Animación de partículas detrás del contenido (Cosmos vs Ghibli) */}

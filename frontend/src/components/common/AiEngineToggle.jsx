@@ -229,6 +229,17 @@ export default function AiEngineToggle({ variant = 'default' }) {
               </div>
             </div>
           </div>
+
+          {/* Botón de cierre "Listo" */}
+          <div className="flex justify-end pt-1">
+            <button
+              type="button"
+              onClick={() => setModalAbierto(false)}
+              className="bg-rdc-accent hover:bg-rdc-accent-hover text-white font-titulo font-semibold text-xs sm:text-sm px-6 py-2 rounded-xl transition-all duration-200 shadow-md hover:scale-105 cursor-pointer"
+            >
+              {t('common.done') || 'Listo'}
+            </button>
+          </div>
         </div>
       </Modal>
     </>
