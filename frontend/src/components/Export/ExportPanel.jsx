@@ -1,14 +1,7 @@
-// ExportPanel.jsx
-// Centro integral de Exportación y Preimpresión Editorial para MEP — Manga Editor Pro con Lucide React.
-
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import JSZip from 'jszip'
 import {
-  Download,
-  FileImage,
-  FileText,
-  Package,
   BookOpen,
   Scissors,
   CheckCircle2,
@@ -17,6 +10,7 @@ import {
   Check
 } from 'lucide-react'
 import { exportAPI } from '../../services/api'
+import MangaIcon from '../common/MangaIcon'
 
 // Especificaciones de formatos editoriales (Dimensiones estándar en mm y píxeles a 300 DPI)
 const FORMATOS_EDITORIALES = [
@@ -243,9 +237,9 @@ export default function ExportPanel({
       {/* Cabecera con selector de Pestañas */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-rdc-border pb-4">
         <div>
-          <h2 className="font-titulo text-2xl text-rdc-text font-semibold flex items-center gap-2">
-            <Download className="w-6 h-6 text-rdc-accent" />
-            <span>{t('export.title') || 'Exportación & Impresión Editorial'}</span>
+          <h2 className="text-2xl font-bold flex items-center font-titulo text-rdc-text">
+            <MangaIcon name="exportar" size={28} className="mr-3" />
+            <span>{t('export.title') || 'Exportar'}</span>
           </h2>
           <p className="text-rdc-muted text-sm mt-0.5">
             {t('export.subtitle') || 'Genera entregables para web, lectores digitales (CBZ) o imprenta a 300 DPI.'}
@@ -331,10 +325,10 @@ export default function ExportPanel({
                 <button
                   key={op.val}
                   onClick={() => setResolucion(op.val)}
-                  className={`border rounded-2xl p-3.5 text-center transition-all cursor-pointer ${
+                  className={`rounded-2xl p-4 text-center transition-all cursor-pointer ${
                     resolucion === op.val
-                      ? 'border-rdc-accent bg-rdc-accent/10 shadow-md'
-                      : 'border-rdc-border hover:border-rdc-muted bg-rdc-card'
+                      ? 'border-2 border-black dark:border-amber-400 bg-emerald-50/60 dark:bg-amber-950/20 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] ring-2 ring-emerald-600/30'
+                      : 'border-2 border-slate-900 dark:border-slate-700 bg-white dark:bg-slate-900/90 shadow-[3px_3px_0px_0px_rgba(15,23,42,0.85)] hover:border-slate-700 dark:hover:border-slate-500'
                   }`}
                 >
                   <p className="font-manga text-2xl text-rdc-accent">{op.label}</p>
@@ -354,15 +348,15 @@ export default function ExportPanel({
             <button
               onClick={handleExportarPNG}
               disabled={exportando || !capituloActual}
-              className="bg-rdc-card hover:bg-rdc-secondary border border-rdc-border hover:border-rdc-accent text-rdc-text p-4 rounded-2xl transition-all disabled:opacity-50 text-left flex flex-col justify-between shadow-xs cursor-pointer"
+              className="bg-white dark:bg-slate-900/90 border-2 border-slate-900 dark:border-slate-700 text-slate-900 dark:text-white p-4 rounded-2xl transition-all disabled:opacity-50 text-left flex flex-col justify-between shadow-[3px_3px_0px_0px_rgba(15,23,42,0.85)] hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-0.5 cursor-pointer"
             >
               <div className="flex items-center justify-between mb-2">
-                <FileImage className="w-6 h-6 text-rdc-accent" />
-                <span className="text-[10px] bg-rdc-border px-1.5 py-0.5 rounded font-titulo font-bold">PNG</span>
+                <MangaIcon name="subir_portada" size={24} className="mb-2" />
+                <span className="text-[10px] bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-slate-200 px-2 py-0.5 rounded-md font-titulo font-bold border border-slate-400 dark:border-slate-600">PNG</span>
               </div>
               <div>
-                <p className="font-titulo font-semibold text-sm">{t('export.exportPNG') || 'Página PNG'}</p>
-                <p className="text-rdc-muted text-xs mt-0.5">{t('export.exportPNGDesc') || 'Exporta el canvas actual'}</p>
+                <p className="font-titulo font-bold text-sm text-slate-900 dark:text-white">{t('export.exportPNG') || 'Página PNG'}</p>
+                <p className="text-slate-600 dark:text-slate-400 text-xs mt-0.5">{t('export.exportPNGDesc') || 'Exporta el canvas actual'}</p>
               </div>
             </button>
 
@@ -370,15 +364,15 @@ export default function ExportPanel({
             <button
               onClick={handleExportarPDF}
               disabled={exportando || !capituloActual}
-              className="bg-rdc-accent hover:bg-rdc-accent-hover text-white p-4 rounded-2xl transition-all disabled:opacity-50 text-left flex flex-col justify-between shadow-lg cursor-pointer"
+              className="bg-rdc-accent hover:bg-rdc-accent-hover text-white border-2 border-slate-900 dark:border-slate-700 p-4 rounded-2xl transition-all disabled:opacity-50 text-left flex flex-col justify-between shadow-[3px_3px_0px_0px_rgba(15,23,42,0.85)] hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-0.5 cursor-pointer"
             >
               <div className="flex items-center justify-between mb-2">
-                <FileText className="w-6 h-6" />
-                <span className="text-[10px] bg-black/30 px-1.5 py-0.5 rounded font-titulo font-bold">PDF</span>
+                <MangaIcon name="contador_capitulos" size={24} className="mb-2" />
+                <span className="text-[10px] bg-black/40 text-white px-2 py-0.5 rounded-md font-titulo font-bold border border-black/30">PDF</span>
               </div>
               <div>
-                <p className="font-titulo font-semibold text-sm">{t('export.exportPDF') || 'Documento PDF'}</p>
-                <p className="text-white/80 text-xs mt-0.5">Vectorial para imprenta</p>
+                <p className="font-titulo font-bold text-sm">{t('export.exportPDF') || 'Documento PDF'}</p>
+                <p className="text-white/90 text-xs mt-0.5">Vectorial para imprenta</p>
               </div>
             </button>
 
@@ -386,15 +380,15 @@ export default function ExportPanel({
             <button
               onClick={handleExportarCBZ}
               disabled={exportando || !capituloActual}
-              className="bg-purple-950/40 hover:bg-purple-900/50 border border-purple-500/50 hover:border-purple-400 text-purple-200 p-4 rounded-2xl transition-all disabled:opacity-50 text-left flex flex-col justify-between shadow-xs cursor-pointer"
+              className="bg-purple-50 dark:bg-purple-950/50 hover:bg-purple-100 dark:hover:bg-purple-900/60 border-2 border-slate-900 dark:border-slate-700 text-purple-950 dark:text-purple-200 p-4 rounded-2xl transition-all disabled:opacity-50 text-left flex flex-col justify-between shadow-[3px_3px_0px_0px_rgba(15,23,42,0.85)] hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-0.5 cursor-pointer"
             >
               <div className="flex items-center justify-between mb-2">
-                <Package className="w-6 h-6 text-purple-400" />
-                <span className="text-[10px] bg-purple-900/80 px-1.5 py-0.5 rounded font-titulo font-bold">CBZ</span>
+                <MangaIcon name="carpeta_proyectos" size={24} className="mb-2" />
+                <span className="text-[10px] bg-purple-200 dark:bg-purple-900/80 text-purple-900 dark:text-purple-200 px-2 py-0.5 rounded-md font-titulo font-bold border border-purple-400 dark:border-purple-600">CBZ</span>
               </div>
               <div>
-                <p className="font-titulo font-semibold text-sm">{t('prepress.downloadCBZ') || 'Cómic Digital (.CBZ)'}</p>
-                <p className="text-purple-300/80 text-xs mt-0.5">{t('prepress.downloadCBZDesc') || 'Con metadatos ComicInfo'}</p>
+                <p className="font-titulo font-bold text-sm text-purple-950 dark:text-purple-100">{t('prepress.downloadCBZ') || 'Cómic Digital (.CBZ)'}</p>
+                <p className="text-purple-800 dark:text-purple-300 text-xs mt-0.5">{t('prepress.downloadCBZDesc') || 'Con metadatos ComicInfo'}</p>
               </div>
             </button>
 
@@ -419,8 +413,8 @@ export default function ExportPanel({
                   onClick={() => setFormatoSeleccionado(f)}
                   className={`p-4 rounded-2xl border-2 cursor-pointer transition-all ${
                     formatoSeleccionado.id === f.id
-                      ? 'border-rdc-accent bg-rdc-accent/10 shadow-md'
-                      : 'border-rdc-border bg-rdc-card hover:border-rdc-muted'
+                      ? 'border-2 border-black dark:border-amber-400 bg-emerald-50/60 dark:bg-amber-950/20 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] ring-2 ring-emerald-600/30'
+                      : 'border-2 border-slate-900 dark:border-slate-700 bg-white dark:bg-slate-900/90 shadow-[3px_3px_0px_0px_rgba(15,23,42,0.85)] hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-0.5'
                   }`}
                 >
                   <div className="flex items-center justify-between">
@@ -500,7 +494,7 @@ export default function ExportPanel({
               disabled={exportando || !capituloActual}
               className="flex-1 bg-rdc-accent hover:bg-rdc-accent-hover text-white font-titulo font-semibold py-3.5 px-4 rounded-xl transition-all shadow-lg text-sm flex items-center justify-center gap-2 cursor-pointer"
             >
-              <FileText className="w-4 h-4" />
+              <MangaIcon name="contador_capitulos" size={18} className="mr-2 inline-block" />
               <span>{t('prepress.downloadPDFHighRes') || 'Descargar PDF 300 DPI Imprenta'}</span>
             </button>
             <button
@@ -508,7 +502,7 @@ export default function ExportPanel({
               disabled={exportando || !capituloActual}
               className="flex-1 bg-purple-950/50 hover:bg-purple-900/60 border border-purple-500/50 text-purple-200 font-titulo font-semibold py-3.5 px-4 rounded-xl transition-all text-sm flex items-center justify-center gap-2 shadow-xs cursor-pointer"
             >
-              <Package className="w-4 h-4 text-purple-400" />
+              <MangaIcon name="carpeta_proyectos" size={18} className="mr-2 inline-block" />
               <span>{t('prepress.downloadCBZ') || 'Descargar Paquete .CBZ'}</span>
             </button>
           </div>

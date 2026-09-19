@@ -77,12 +77,12 @@ export default function OnlineBadge() {
           <button
             onClick={ejecutarSincronizacion}
             disabled={sincronizando}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-yellow-500/20 border border-yellow-500/40 text-yellow-300 hover:bg-yellow-500/30 transition-all cursor-pointer shadow-xs"
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-amber-950 font-bold bg-amber-100/90 border border-amber-400/80 shadow-xs hover:bg-amber-200/90 dark:text-amber-300 dark:bg-amber-950/40 dark:border-amber-500/40 dark:hover:bg-amber-900/50 transition-all cursor-pointer"
             title={`${borradoresPendientes} borradores locales guardados. Haz clic para sincronizar.`}
           >
             <RefreshCw className={`w-3 h-3 ${sincronizando ? 'animate-spin' : ''}`} />
             <span className="font-semibold hidden sm:inline text-[11px]">
-              {sincronizando ? (t('offline.syncing') || 'Sincronizando...') : `${borradoresPendientes} ${t('offline.pendingDrafts', { count: borradoresPendientes }) || 'pendientes'}`}
+              {sincronizando ? (t('offline.syncing') || 'Sincronizando...') : (t('offline.pendingDrafts', { count: borradoresPendientes }) || `${borradoresPendientes} ${borradoresPendientes === 1 ? 'borrador pendiente' : 'borradores pendientes'}`)}
             </span>
           </button>
         ) : (

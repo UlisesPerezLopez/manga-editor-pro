@@ -5,23 +5,11 @@ import { useEffect, useState, useMemo } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import {
-  ScrollText,
-  Palette,
-  Users,
-  LayoutGrid,
-  BarChart3,
-  FolderUp,
-  Save,
-  Globe,
-  BookOpen,
   Sparkles,
-  Zap,
-  Dices,
   CheckCircle2,
   AlertCircle,
   AlertTriangle,
-  ArrowLeft,
-  Bot
+  ArrowLeft
 } from 'lucide-react'
 import useProjectStore from '../store/projectStore'
 import useAuthStore from '../store/authStore'
@@ -44,6 +32,7 @@ import AuthorAnalyticsPanel from '../components/Analytics/AuthorAnalyticsPanel'
 import PublishModal from '../components/Publishing/PublishModal'
 import ThemeBackgroundAnimation from '../components/common/ThemeBackgroundAnimation'
 import UserAvatar from '../components/common/UserAvatar'
+import MangaIcon from '../components/common/MangaIcon'
 
 function ProjectStudioContent() {
   const { id } = useParams()
@@ -62,14 +51,14 @@ function ProjectStudioContent() {
   const [cargandoInicial, setCargandoInicial] = useState(true)
   const [errorCarga, setErrorCarga] = useState(null)
 
-  // Secciones del workspace con i18n reactivo e iconos de Lucide
+  // Secciones del workspace con i18n reactivo e iconos Manga oficiales
   const SECCIONES = useMemo(() => [
-    { id: 'guiones',     icon: ScrollText, label: t('projectStudio.scriptWriter') || 'Guionista IA', proximamente: false },
-    { id: 'firma-visual',icon: Palette,    label: t('projectStudio.visualSignature') || 'Firma Visual', proximamente: false },
-    { id: 'personajes',  icon: Users,      label: t('projectStudio.characters') || 'Personajes', proximamente: false },
-    { id: 'editor',      icon: LayoutGrid, label: t('projectStudio.pageEditor') || 'Editor de Páginas', proximamente: false }, 
-    { id: 'analitica',   icon: BarChart3,  label: t('analytics.title') || 'Analítica', proximamente: false },
-    { id: 'exportar',    icon: FolderUp,   label: t('projectStudio.export') || 'Exportar', proximamente: false },
+    { id: 'guiones',      iconName: 'guionista_ia',         label: t('projectStudio.scriptWriter') || 'Guionista IA', proximamente: false },
+    { id: 'firma-visual', iconName: 'firma_visual',         label: t('projectStudio.visualSignature') || 'Firma Visual', proximamente: false },
+    { id: 'personajes',   iconName: 'personajes',           label: t('projectStudio.characters') || 'Personajes', proximamente: false },
+    { id: 'editor',       iconName: 'editor_paginas',       label: t('projectStudio.pageEditor') || 'Editor de Páginas', proximamente: false }, 
+    { id: 'analitica',    iconName: 'analitica_engagement', label: t('analytics.title') || 'Analítica y Engagement', proximamente: false },
+    { id: 'exportar',     iconName: 'exportar',             label: t('projectStudio.export') || 'Exportar', proximamente: false },
   ], [t])
 
   const cargarCapitulos = async (pId = (id ? parseInt(id, 10) : null)) => {
@@ -187,9 +176,9 @@ function ProjectStudioContent() {
   const projectIdNumber = proyectoActivo?.id ? parseInt(proyectoActivo.id, 10) : (id ? parseInt(id, 10) : 0)
 
   const renderModoIcono = () => {
-    if (modoActual === 'legendario') return <Zap className="w-5 h-5 text-amber-400" />
-    if (modoActual === 'aleatorio') return <Dices className="w-5 h-5 text-indigo-400" />
-    return <Palette className="w-5 h-5 text-rdc-accent" />
+    if (modoActual === 'legendario') return <MangaIcon name="modo_legendario" size={20} />
+    if (modoActual === 'aleatorio') return <MangaIcon name="modo_aleatorio" size={20} />
+    return <MangaIcon name="creacion_propia" size={20} />
   }
 
   return (
@@ -235,21 +224,21 @@ function ProjectStudioContent() {
             className="bg-rdc-card hover:bg-rdc-secondary border border-rdc-border hover:border-rdc-accent text-rdc-text text-xs font-titulo font-semibold px-2.5 py-1.5 rounded-xl transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer"
             title={t('backup.title') || 'Copia de Seguridad'}
           >
-            <Save className="w-3.5 h-3.5 text-rdc-muted" /> <span className="hidden md:inline">Backup</span>
+            <MangaIcon name="backup" size={18} className="mr-2 inline-block" /> <span className="hidden md:inline">Backup</span>
           </button>
           <button
             onClick={() => setPublishModalAbierto(true)}
             className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-titulo font-semibold px-3 py-1.5 rounded-xl transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer"
-            title={t('publishing.title') || 'Publicar'}
+            title={t('publishing.title') || 'Publicación Digital y SEO Editorial'}
           >
-            <Globe className="w-3.5 h-3.5" /> <span className="hidden md:inline">{t('publishing.title') || 'Publicar'}</span>
+            <MangaIcon name="formato_occidental" size={18} className="mr-2 inline-block" /> <span className="hidden md:inline">{t('publishing.title') || 'Publicar'}</span>
           </button>
           <button
             onClick={() => setLectorAbierto(true)}
             className="bg-rdc-accent hover:bg-rdc-accent-hover text-white text-xs font-titulo font-semibold px-3 py-1.5 rounded-xl transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer"
             title={t('reader.openReader') || 'Leer Manga'}
           >
-            <BookOpen className="w-3.5 h-3.5" /> <span className="hidden sm:inline">{t('reader.readProject') || 'Leer Manga'}</span>
+            <MangaIcon name="leer_comic_visor" size={18} className="mr-2 inline-block" /> <span className="hidden sm:inline">{t('reader.readProject') || 'Leer Manga'}</span>
           </button>
           <AiEngineToggle />
           <ThemeToggle />
@@ -280,7 +269,6 @@ function ProjectStudioContent() {
           </p>
           <div className="space-y-1 px-2">
             {SECCIONES.map((sec) => {
-              const IconComponent = sec.icon
               const esActiva = seccionActiva === sec.id
               return (
                 <button
@@ -298,7 +286,13 @@ function ProjectStudioContent() {
                                 : ''
                               }`}
                 >
-                  <IconComponent className={`w-4 h-4 flex-shrink-0 ${esActiva ? 'text-rdc-accent' : 'text-rdc-muted'}`} />
+                  <MangaIcon
+                    name={sec.iconName}
+                    size={24}
+                    className={`flex-shrink-0 transition-transform duration-200 ${
+                      esActiva ? 'scale-105 drop-shadow-xs' : 'opacity-85'
+                    }`}
+                  />
                   <div className="min-w-0 flex-1">
                     <span className="font-titulo text-xs block truncate">{sec.label}</span>
                     {sec.proximamente && (
@@ -346,9 +340,9 @@ function ProjectStudioContent() {
           {seccionActiva === 'guiones' && (
             <div className="max-w-3xl mx-auto">
               <div className="mb-6">
-                <h2 className="font-titulo text-2xl text-rdc-text font-semibold flex items-center gap-2">
-                  <ScrollText className="w-6 h-6 text-rdc-accent" />
-                  <span>{t('projectStudio.scriptSectionTitle') || 'Guionista IA Manga'}</span>
+                <h2 className="font-titulo text-2xl text-rdc-text font-semibold flex items-center">
+                  <MangaIcon name="guionista_ia" size={28} className="mr-3 inline-block" />
+                  <span>{t('projectStudio.scriptSectionTitle') || 'Guionista IA'}</span>
                 </h2>
                 <p className="text-rdc-muted text-sm mt-1">
                   {t('projectStudio.scriptSectionDesc') || 'Genera y estructura sinopsis, arcos argumentales y guiones técnicos para tus capítulos.'}
@@ -377,9 +371,9 @@ function ProjectStudioContent() {
           {seccionActiva === 'firma-visual' && (
             <div className="max-w-3xl mx-auto">
               <div className="mb-6">
-                <h2 className="font-titulo text-2xl text-rdc-text font-semibold flex items-center gap-2">
-                  <Palette className="w-6 h-6 text-rdc-accent" />
-                  <span>{t('projectStudio.styleSectionTitle') || 'Firma Visual y Consistencia de Arte'}</span>
+                <h2 className="text-2xl font-black flex items-center gap-3 font-titulo text-slate-900 dark:text-white">
+                  <MangaIcon name="firma_visual" size={28} />
+                  <span>Firma Visual</span>
                 </h2>
                 <p className="text-rdc-muted text-sm mt-1">
                   {modoActual === 'propio'
@@ -401,8 +395,8 @@ function ProjectStudioContent() {
               ) : (
                 <div className="bg-rdc-secondary border border-rdc-border rounded-2xl p-6 shadow-xl">
                   <div className="text-center py-6">
-                    <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mx-auto mb-4">
-                      <Zap className="w-8 h-8 text-amber-400" />
+                    <div className="w-16 h-16 mx-auto mb-3 flex items-center justify-center rounded-2xl border-2 border-slate-900 bg-amber-50 shadow-[2px_2px_0px_0px_rgba(0,0,0,0.85)]">
+                      <MangaIcon name="modo_legendario" size={32} />
                     </div>
                     <h3 className="font-titulo text-xl text-rdc-text font-semibold mb-2">
                       {t('projectStudio.legendaryActiveTitle') || 'Estilo Legendario Activado'}
@@ -436,9 +430,9 @@ function ProjectStudioContent() {
           {seccionActiva === 'personajes' && (
             <div className="max-w-5xl mx-auto">
               <div className="mb-6">
-                <h2 className="font-titulo text-2xl text-rdc-text font-semibold flex items-center gap-2">
-                  <Users className="w-6 h-6 text-rdc-accent" />
-                  <span>{t('projectStudio.charactersSectionTitle') || 'Directorio de Personajes'}</span>
+                <h2 className="font-titulo text-2xl text-rdc-text font-semibold flex items-center">
+                  <MangaIcon name="personajes" size={28} className="mr-3 inline-block" />
+                  <span>{t('projectStudio.charactersSectionTitle') || 'Personajes'}</span>
                 </h2>
                 <p className="text-rdc-muted text-sm mt-1">
                   {t('projectStudio.charactersSectionDesc') || 'Administra los diseños, consistencia facial y perfiles de tus protagonistas.'}
@@ -452,9 +446,9 @@ function ProjectStudioContent() {
           {seccionActiva === 'editor' && (
             <div className="max-w-3xl mx-auto">
               <div className="mb-6">
-                <h2 className="font-titulo text-2xl text-rdc-text font-semibold flex items-center gap-2">
-                  <LayoutGrid className="w-6 h-6 text-rdc-accent" />
-                  <span>{t('projectStudio.editorSectionTitle') || 'Editor Visual de Páginas'}</span>
+                <h2 className="font-titulo text-2xl text-rdc-text font-semibold flex items-center">
+                  <MangaIcon name="editor_paginas" size={28} className="mr-3 inline-block" />
+                  <span>{t('projectStudio.editorSectionTitle') || 'Editor de Páginas'}</span>
                 </h2>
                 <p className="text-rdc-muted text-sm mt-1">
                   {t('projectStudio.editorSectionDesc') || 'Maqueta viñetas, globos de diálogo, tramas y efectos sobre el canvas.'}
@@ -463,7 +457,7 @@ function ProjectStudioContent() {
               <div className="bg-rdc-secondary border border-rdc-border
                               rounded-2xl p-8 text-center space-y-4 shadow-xl">
                 <div className="w-20 h-20 rounded-2xl bg-rdc-accent/15 border border-rdc-accent/30 flex items-center justify-center mx-auto text-rdc-accent">
-                  <LayoutGrid className="w-10 h-10" />
+                  <MangaIcon name="editor_paginas" size={40} />
                 </div>
                 <h3 className="font-titulo text-xl text-rdc-text font-semibold">
                   MEP Manga Studio Canvas
@@ -478,7 +472,7 @@ function ProjectStudioContent() {
                              transition-all duration-200 text-base
                              flex items-center gap-3 mx-auto shadow-lg cursor-pointer hover:scale-105"
                 >
-                  <LayoutGrid className="w-5 h-5" />
+                  <MangaIcon name="editor_paginas" size={20} />
                   <span>{t('projectStudio.openPageEditor') || 'Abrir Editor de Páginas'}</span>
                 </button>
               </div>
@@ -489,9 +483,9 @@ function ProjectStudioContent() {
           {seccionActiva === 'analitica' && (
             <div className="max-w-5xl mx-auto space-y-6">
               <div className="mb-4">
-                <h2 className="font-titulo text-2xl text-rdc-text font-semibold flex items-center gap-2">
-                  <BarChart3 className="w-6 h-6 text-rdc-accent" />
-                  <span>{t('analytics.title') || 'Analítica de Creador'}</span>
+                <h2 className="font-titulo text-2xl text-rdc-text font-semibold flex items-center">
+                  <MangaIcon name="analitica_engagement" size={28} className="mr-3 inline-block" />
+                  <span>{t('analytics.title') || 'Analítica y Engagement del Autor'}</span>
                 </h2>
                 <p className="text-rdc-muted text-sm mt-1">
                   Métricas de lectores, lecturas en tiempo real, retención y estadísticas de soporte para creadores.

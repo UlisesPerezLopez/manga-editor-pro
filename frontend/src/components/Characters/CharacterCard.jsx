@@ -1,19 +1,23 @@
 // CharacterCard.jsx
 // Tarjeta visual de un personaje con sus datos principales y Lucide React.
 
-import { Pencil, Trash2, Bot, Star, Skull, HeartHandshake, Users } from 'lucide-react'
+import { Pencil, Trash2, Bot } from 'lucide-react'
+import { getRoleBadge, getDefaultAvatar } from '../../assets/avatars'
 
 const CONFIG_ROL = {
-  protagonista: { bg: 'bg-amber-500/20 text-amber-300 border-amber-500/30', label: 'Protagonista', icon: Star },
-  antagonista:  { bg: 'bg-red-500/20 text-red-300 border-red-500/30',       label: 'Antagonista',  icon: Skull },
-  apoyo:        { bg: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30', label: 'Apoyo',        icon: HeartHandshake },
-  secundario:   { bg: 'bg-rdc-card text-rdc-muted border-rdc-border',      label: 'Secundario',   icon: Users },
+  protagonista: { bg: 'bg-amber-500/20 text-amber-900 dark:text-amber-300 border-amber-500/40', label: 'Protagonista' },
+  antagonista:  { bg: 'bg-red-500/20 text-red-900 dark:text-red-300 border-red-500/40',       label: 'Antagonista' },
+  apoyo:        { bg: 'bg-emerald-500/20 text-emerald-900 dark:text-emerald-300 border-emerald-500/40', label: 'Apoyo' },
+  secundario:   { bg: 'bg-rdc-card text-rdc-muted border-rdc-border',      label: 'Secundario' },
 }
 
 export default function CharacterCard({ personaje, onEditar, onEliminar }) {
   const rol = personaje.rol || 'secundario'
   const configRol = CONFIG_ROL[rol] || CONFIG_ROL.secundario
-  const RolIcon = configRol.icon
+
+  const rawAvatar = personaje.avatar || personaje.imagen || personaje.avatar_url || personaje.imagen_url || null
+  const esAvatarValido = rawAvatar && typeof rawAvatar === 'string' && rawAvatar.trim().length > 2
+  const avatarSrc = esAvatarValido ? rawAvatar : getDefaultAvatar(rol)
 
   return (
     <div className="bg-rdc-secondary border border-rdc-border rounded-2xl
@@ -23,22 +27,30 @@ export default function CharacterCard({ personaje, onEditar, onEliminar }) {
       <div>
         {/* Cabecera con rol y avatar */}
         <div className="bg-rdc-card px-4 py-4 flex items-center gap-3.5 border-b border-rdc-border/60">
-          {/* Avatar con inicial */}
-          <div className="w-12 h-12 rounded-xl bg-rdc-secondary border
-                          border-rdc-border flex items-center justify-center
-                          flex-shrink-0 shadow-inner">
-            <span className="font-manga text-xl text-rdc-accent">
-              {personaje.nombre.charAt(0).toUpperCase()}
-            </span>
+          {/* Avatar / Miniatura del Personaje */}
+          <div className="w-12 h-12 rounded-xl overflow-hidden border-2 border-slate-900 dark:border-slate-700 bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,0.85)] flex-shrink-0">
+            <img
+              src={avatarSrc}
+              alt={personaje.nombre}
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                e.target.onerror = null
+                e.target.src = getDefaultAvatar(rol)
+              }}
+            />
           </div>
 
           <div className="flex-1 min-w-0">
             <h3 className="font-titulo text-base text-rdc-text font-semibold truncate leading-tight">
               {personaje.nombre}
             </h3>
-            <span className={`inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full
+            <span className={`inline-flex items-center text-[11px] px-2.5 py-0.5 rounded-full
                               mt-1 border font-titulo font-semibold ${configRol.bg}`}>
-              <RolIcon className="w-3 h-3" />
+              <img
+                src={getRoleBadge(rol)}
+                alt={configRol.label}
+                className="w-4 h-4 inline-block mr-1.5 object-contain select-none pointer-events-none"
+              />
               <span>{configRol.label}</span>
             </span>
           </div>

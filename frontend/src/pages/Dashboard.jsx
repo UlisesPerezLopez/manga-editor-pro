@@ -6,12 +6,7 @@ import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import {
-  FolderKanban,
-  Users,
-  Layers,
-  Sparkles,
   Plus,
-  Save,
   Search,
   BookOpen,
   FolderPlus,
@@ -29,6 +24,7 @@ import OnlineBadge from '../components/common/OnlineBadge'
 import ThemeBackgroundAnimation from '../components/common/ThemeBackgroundAnimation'
 import ProyectoCard from '../components/Dashboard/ProyectoCard'
 import UserAvatar from '../components/common/UserAvatar'
+import MangaIcon from '../components/common/MangaIcon'
 
 export default function Dashboard() {
   const navigate = useNavigate()
@@ -148,7 +144,7 @@ export default function Dashboard() {
             className="bg-rdc-card hover:bg-rdc-secondary border border-rdc-border hover:border-rdc-accent text-rdc-text text-xs font-titulo font-semibold px-2.5 py-1.5 rounded-xl transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer"
             title={t('backup.title') || 'Backup'}
           >
-            <Save className="w-3.5 h-3.5 text-rdc-accent" />
+            <MangaIcon name="backup" size={18} className="mr-2 inline-block" />
             <span className="hidden md:inline">Backup</span>
           </button>
           <AiEngineToggle />
@@ -173,21 +169,21 @@ export default function Dashboard() {
 
       <main className="flex-1 max-w-7xl mx-auto w-full px-6 py-8 relative z-10">
 
-        {/* ── Estadísticas globales del usuario con Lucide Icons ── */}
+        {/* ── Estadísticas globales del usuario con MangaIcon ── */}
         {resumen && (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
             {[
-              { val: resumen.num_proyectos,        label: t('dashboard.projects') || 'Proyectos',   icon: FolderKanban, color: 'text-indigo-400' },
-              { val: resumen.num_personajes_total,  label: t('dashboard.characters') || 'Personajes', icon: Users,        color: 'text-emerald-400' },
-              { val: resumen.num_capitulos_total,   label: t('dashboard.chapters') || 'Capítulos',   icon: Layers,       color: 'text-amber-400' },
-              { val: resumen.num_imagenes_total,    label: t('dashboard.aiImages') || 'Imágenes IA',  icon: Sparkles,     color: 'text-purple-400' },
-            ].map(({ val, label, icon: Icon, color }) => (
+              { val: resumen.num_proyectos,        label: t('dashboard.projects') || 'Proyectos',   iconName: 'carpeta_proyectos' },
+              { val: resumen.num_personajes_total,  label: t('dashboard.characters') || 'Personajes', iconName: 'personajes' },
+              { val: resumen.num_capitulos_total,   label: t('dashboard.chapters') || 'Capítulos',   iconName: 'contador_capitulos' },
+              { val: resumen.num_imagenes_total,    label: t('dashboard.aiImages') || 'Imágenes IA',  iconName: 'imagenes_ia_generadas' },
+            ].map(({ val, label, iconName }) => (
               <div key={label}
                    className="bg-rdc-secondary/90 border border-rdc-border
                               rounded-2xl p-4 flex items-center gap-4 shadow-sm backdrop-blur-md
                               transition-colors duration-300 hover:border-rdc-accent group">
-                <div className="p-3 rounded-xl bg-rdc-card group-hover:scale-105 transition-transform">
-                  <Icon className={`w-6 h-6 ${color}`} />
+                <div className="p-3 rounded-xl bg-rdc-card group-hover:scale-105 transition-transform flex items-center justify-center">
+                  <MangaIcon name={iconName} size={28} />
                 </div>
                 <div>
                   <p className="font-manga text-3xl text-rdc-accent leading-none">{val}</p>
@@ -217,22 +213,23 @@ export default function Dashboard() {
 
           <div className="flex gap-2 overflow-x-auto pb-1 sm:pb-0 no-scrollbar">
             {[
-              { id: 'todos',     label: t('dashboard.filterAll') || 'Todos' },
-              { id: 'propio',    label: t('dashboard.filterCustom') || 'Propio' },
-              { id: 'legendario',label: t('dashboard.filterLegendary') || 'Legendario' },
-              { id: 'aleatorio', label: t('dashboard.filterRandom') || 'Aleatorio' },
+              { id: 'todos',     label: t('dashboard.filterAll') || 'Todos', iconName: null },
+              { id: 'propio',    label: t('dashboard.filterCustom') || 'Propios', iconName: 'creacion_propia' },
+              { id: 'legendario',label: t('dashboard.filterLegendary') || 'Legendarios', iconName: 'modo_legendario' },
+              { id: 'aleatorio', label: t('dashboard.filterRandom') || 'Aleatorios', iconName: 'modo_aleatorio' },
             ].map(f => (
               <button
                 key={f.id}
                 onClick={() => setFiltro(f.id)}
                 className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-titulo cursor-pointer
-                            transition-all duration-200 whitespace-nowrap ${
+                            transition-all duration-200 whitespace-nowrap flex items-center ${
                               filtro === f.id
                                 ? 'bg-rdc-accent text-white font-semibold shadow-md'
                                 : 'bg-rdc-secondary/80 border border-rdc-border text-rdc-muted hover:text-rdc-text hover:bg-rdc-card'
                             }`}
               >
-                {f.label}
+                {f.iconName && <MangaIcon name={f.iconName} size={18} className="mr-1.5" />}
+                <span>{f.label}</span>
               </button>
             ))}
           </div>

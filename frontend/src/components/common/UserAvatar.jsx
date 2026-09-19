@@ -19,21 +19,23 @@ import {
 import useAuthStore from '../../store/authStore'
 import useAiStore from '../../store/aiStore'
 
-// Importar avatares SVG manga locales
-import avatarShonen from '../../assets/avatars/avatar_shonen.svg'
-import avatarShojo from '../../assets/avatars/avatar_shojo.svg'
-import avatarSeinen from '../../assets/avatars/avatar_seinen.svg'
-import avatarCyberpunk from '../../assets/avatars/avatar_cyberpunk.svg'
-import avatarMecha from '../../assets/avatars/avatar_mecha.svg'
-import avatarChibi from '../../assets/avatars/avatar_chibi.svg'
+// Importar catálogo oficial de avatares Manga entintados
+import { MANGA_AVATARS } from '../../assets/avatars'
 
 const AVATARES_PREDETERMINADOS = [
-  { id: 'shonen',    nombre: 'Shōnen Hero',   src: avatarShonen },
-  { id: 'shojo',     nombre: 'Shōjo Sparkle', src: avatarShojo },
-  { id: 'seinen',    nombre: 'Seinen Grit',   src: avatarSeinen },
-  { id: 'cyberpunk', nombre: 'Cyberpunk Neo', src: avatarCyberpunk },
-  { id: 'mecha',     nombre: 'Mecha Pilot',   src: avatarMecha },
-  { id: 'chibi',     nombre: 'Chibi Mascot',  src: avatarChibi },
+  { id: 'espadachin_shonen',            nombre: 'Espadachín Shōnen 1',   src: MANGA_AVATARS.espadachin_shonen },
+  { id: 'espadachin_shonen2',           nombre: 'Espadachín Shōnen 2',   src: MANGA_AVATARS.espadachin_shonen2 },
+  { id: 'hechicera_mistica',            nombre: 'Hechicera Mística 1',   src: MANGA_AVATARS.hechicera_mistica },
+  { id: 'hechicera_mistica2',           nombre: 'Hechicera Mística 2',   src: MANGA_AVATARS.hechicera_mistica2 },
+  { id: 'detective_cyberpunk',          nombre: 'Detective Cyberpunk 1', src: MANGA_AVATARS.detective_cyberpunk },
+  { id: 'detective_cyberpunk2',         nombre: 'Detective Cyberpunk 2', src: MANGA_AVATARS.detective_cyberpunk2 },
+  { id: 'detective_cyberpunk3',         nombre: 'Detective Cyberpunk 3', src: MANGA_AVATARS.detective_cyberpunk3 },
+  { id: 'piloto_mecha_ingeniera',       nombre: 'Piloto Mecha 1',        src: MANGA_AVATARS.piloto_mecha_ingeniera },
+  { id: 'piloto_mecha_ingeniera2',      nombre: 'Piloto Mecha 2',        src: MANGA_AVATARS.piloto_mecha_ingeniera2 },
+  { id: 'sensei_maestro_veterano',      nombre: 'Sensei Veterano 1',     src: MANGA_AVATARS.sensei_maestro_veterano },
+  { id: 'sensei_maestro_veterano2',     nombre: 'Sensei Veterano 2',     src: MANGA_AVATARS.sensei_maestro_veterano2 },
+  { id: 'villano_cerebral_cientifico',  nombre: 'Villano Cerebral 1',    src: MANGA_AVATARS.villano_cerebral_cientifico },
+  { id: 'villano_cerebral_cientifico2', nombre: 'Villano Cerebral 2',    src: MANGA_AVATARS.villano_cerebral_cientifico2 },
 ]
 
 export default function UserAvatar({ showName = true, className = '' }) {
@@ -60,7 +62,7 @@ export default function UserAvatar({ showName = true, className = '' }) {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [menuAbierto])
 
-  const avatarActual = usuario?.avatar_url || avatarShonen
+  const avatarActual = usuario?.avatar_url || MANGA_AVATARS.espadachin_shonen
   const nombreMostrar = usuario?.nombre_artistico || usuario?.username || 'Mangaka'
 
   const handleSeleccionarPreset = async (src) => {
@@ -171,28 +173,28 @@ export default function UserAvatar({ showName = true, className = '' }) {
               <Sparkles className="w-3.5 h-3.5 text-rdc-accent" />
               {t('avatar.selectPreset') || 'Elige tu Avatar Manga'}
             </p>
-            <div className="grid grid-cols-6 gap-1.5">
+            <div className="grid grid-cols-5 gap-2 max-h-48 overflow-y-auto pr-1 py-1 custom-scrollbar">
               {AVATARES_PREDETERMINADOS.map(av => {
                 const esActivo = avatarActual === av.src
                 return (
                   <button
                     key={av.id}
                     onClick={() => handleSeleccionarPreset(av.src)}
-                    className={`relative rounded-xl p-1 transition-all group hover:scale-110 cursor-pointer border ${
+                    className={`relative w-9 h-9 rounded-lg overflow-hidden border bg-white hover:scale-110 transition-transform cursor-pointer flex-shrink-0 ${
                       esActivo
-                        ? 'border-rdc-accent bg-rdc-accent/20 ring-2 ring-rdc-accent/40 shadow-sm'
-                        : 'border-rdc-border hover:border-rdc-accent/50 bg-rdc-card'
+                        ? 'border-black dark:border-amber-400 ring-2 ring-emerald-500/60 shadow-[2px_2px_0px_0px_rgba(0,0,0,0.85)]'
+                        : 'border-slate-900 dark:border-slate-600 hover:border-black dark:hover:border-slate-400'
                     }`}
                     title={av.nombre}
                   >
                     <img
                       src={av.src}
                       alt={av.nombre}
-                      className="w-full h-full rounded-lg object-cover"
+                      className="w-full h-full object-cover"
                     />
                     {esActivo && (
-                      <div className="absolute inset-0 bg-rdc-accent/30 rounded-xl flex items-center justify-center">
-                        <Check className="w-3.5 h-3.5 text-white drop-shadow-sm stroke-[3]" />
+                      <div className="absolute inset-0 bg-emerald-600/30 dark:bg-amber-500/30 flex items-center justify-center">
+                        <Check className="w-4 h-4 text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] stroke-[3]" />
                       </div>
                     )}
                   </button>

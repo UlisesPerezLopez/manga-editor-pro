@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import Modal from '../UI/Modal'
 import useCharacterStore from '../../store/characterStore'
+import { getRoleBadge } from '../../assets/avatars'
 
 export default function CharacterModal({
   abierto,
@@ -19,10 +20,10 @@ export default function CharacterModal({
   } = useCharacterStore()
 
   const ROLES = [
-    { id: 'protagonista', label: `⭐ ${t('characters.protagonist')}` },
-    { id: 'antagonista',  label: `💀 ${t('characters.antagonist')}` },
-    { id: 'apoyo',        label: `🤝 ${t('characters.support')}` },
-    { id: 'secundario',   label: `👥 ${t('characters.secondary')}` },
+    { id: 'protagonista', label: t('characters.protagonist') || 'Protagonista' },
+    { id: 'antagonista',  label: t('characters.antagonist') || 'Antagonista' },
+    { id: 'apoyo',        label: t('characters.support') || 'Personaje de Apoyo' },
+    { id: 'secundario',   label: t('characters.secondary') || 'Secundario' },
   ]
 
   const FORM_INICIAL = {
@@ -147,12 +148,17 @@ export default function CharacterModal({
                 key={r.id}
                 type="button"
                 onClick={() => setForm(p => ({ ...p, rol: r.id }))}
-                className={`border rounded-lg p-3 text-left transition-all
+                className={`border rounded-xl p-3 text-left transition-all flex items-center gap-2.5 cursor-pointer
                   ${form.rol === r.id
-                    ? 'border-rdc-accent bg-rdc-accent bg-opacity-10'
-                    : 'border-rdc-border hover:border-rdc-muted'
+                    ? 'border-rdc-accent bg-rdc-accent/15 shadow-xs'
+                    : 'border-rdc-border hover:border-rdc-muted bg-rdc-card/40'
                   }`}
               >
+                <img
+                  src={getRoleBadge(r.id)}
+                  alt={r.label}
+                  className="w-5 h-5 object-contain select-none pointer-events-none"
+                />
                 <p className="text-rdc-text text-sm font-semibold font-titulo">{r.label}</p>
               </button>
             ))}

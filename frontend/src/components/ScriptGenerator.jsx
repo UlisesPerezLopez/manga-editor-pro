@@ -5,8 +5,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
-  BookOpen,
-  ScrollText,
   Sparkles,
   Pencil,
   Check,
@@ -26,6 +24,7 @@ import {
 import useProjectStore from '../store/projectStore'
 import useAiStore from '../store/aiStore'
 import { charactersAPI, chaptersAPI } from '../services/api'
+import MangaIcon from './common/MangaIcon'
 
 const GENEROS = [
   "Aventura", "Acción", "Romance", "Terror", "Ciencia ficción",
@@ -220,10 +219,9 @@ export default function ScriptGenerator({ proyecto, onPersonajeCreado, onCapitul
       {/* Selector de modo sin borrado destructivo */}
       <div className="grid grid-cols-2 gap-3">
         {[
-          { id: 'sinopsis', icon: BookOpen,   label: t('scriptGenerator.tabSinopsis') || 'Sinopsis y Arcos' },
-          { id: 'capitulo', icon: ScrollText, label: t('scriptGenerator.tabCapitulo') || 'Guion de Capítulo' },
+          { id: 'sinopsis', iconName: 'contador_capitulos', label: t('scriptGenerator.tabSinopsis') || 'Sinopsis y Arcos', desc: 'Estructura general y personajes' },
+          { id: 'capitulo', iconName: 'guionista_ia',       label: t('scriptGenerator.tabCapitulo') || 'Guion de Capítulo', desc: 'Desglose detallado de viñetas' },
         ].map((m) => {
-          const Icon = m.icon
           const activo = modo === m.id
           return (
             <button
@@ -235,13 +233,13 @@ export default function ScriptGenerator({ proyecto, onPersonajeCreado, onCapitul
                   : 'border-rdc-border hover:border-rdc-muted text-rdc-muted hover:text-rdc-text bg-rdc-card/50'
               }`}
             >
-              <div className={`p-2.5 rounded-xl ${activo ? 'bg-rdc-accent text-white' : 'bg-rdc-secondary text-rdc-muted'}`}>
-                <Icon className="w-5 h-5" />
+              <div className={`p-2.5 rounded-xl flex items-center justify-center ${activo ? 'bg-rdc-accent text-white' : 'bg-rdc-secondary text-rdc-muted'}`}>
+                <MangaIcon name={m.iconName} size={20} className="mr-2 inline-block" />
               </div>
               <div>
                 <p className="text-rdc-text text-sm font-bold leading-tight">{m.label}</p>
                 <p className="text-rdc-muted text-[11px] mt-0.5">
-                  {m.id === 'sinopsis' ? 'Estructura general y personajes' : 'Desglose detallado de viñetas'}
+                  {m.desc}
                 </p>
               </div>
             </button>
@@ -402,7 +400,7 @@ export default function ScriptGenerator({ proyecto, onPersonajeCreado, onCapitul
         <div className="space-y-6 border-t border-rdc-border pt-6 animate-in fade-in duration-300">
           <div className="flex items-center justify-between">
             <h4 className="font-titulo text-xl text-rdc-accent font-bold flex items-center gap-2">
-              <BookOpen className="w-5 h-5" />
+              <MangaIcon name="contador_capitulos" size={20} className="mr-1" />
               {t('scriptGenerator.tabSinopsis') || 'Sinopsis y Universo'}
             </h4>
             <span className="text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2.5 py-1 rounded-full font-titulo flex items-center gap-1">
@@ -679,7 +677,7 @@ export default function ScriptGenerator({ proyecto, onPersonajeCreado, onCapitul
           <div className="flex items-start justify-between">
             <div>
               <h4 className="font-titulo text-xl text-rdc-accent font-bold flex items-center gap-2">
-                <ScrollText className="w-5 h-5" />
+                <MangaIcon name="guionista_ia" size={20} className="mr-1" />
                 {guionGenerado.titulo_capitulo || 'Guion de Capítulo'}
               </h4>
               <p className="text-rdc-muted text-xs mt-1 font-titulo">

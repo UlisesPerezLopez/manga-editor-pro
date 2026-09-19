@@ -1,11 +1,9 @@
 // AiEngineToggle.jsx
 // Componente interactivo para conmutar y monitorear el motor de IA dual (Cloud Free vs Local GPU) con Lucide React.
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
-  Cloud,
-  Cpu,
   Check,
   Activity,
   Sparkles,
@@ -14,7 +12,7 @@ import {
   RefreshCw
 } from 'lucide-react'
 import useAiStore from '../../store/aiStore'
-import Modal from '../UI/Modal'
+import MangaIcon from './MangaIcon'
 
 export default function AiEngineToggle({ variant = 'default' }) {
   const { t } = useTranslation()
@@ -27,7 +25,21 @@ export default function AiEngineToggle({ variant = 'default' }) {
     verificarEstadoIA
   } = useAiStore()
 
-  const [modalAbierto, setModalAbierto] = useState(false)
+  const [menuAbierto, setMenuAbierto] = useState(false)
+  const menuRef = useRef(null)
+
+  // Cerrar menú al hacer clic fuera
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setMenuAbierto(false)
+      }
+    }
+    if (menuAbierto) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [menuAbierto])
 
   // Verificar estado del subsistema al montar el componente
   useEffect(() => {
@@ -52,15 +64,20 @@ export default function AiEngineToggle({ variant = 'default' }) {
     : 'bg-emerald-950/70 border-emerald-500/50 text-emerald-200 hover:border-emerald-400 shadow-xs'
 
   return (
-    <>
+    <div className="relative" ref={menuRef}>
+      {/* Botón trigger */}
       <button
-        onClick={() => setModalAbierto(true)}
+        onClick={() => setMenuAbierto(prev => !prev)}
         className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-titulo
                     transition-all duration-200 backdrop-blur-md hover:scale-[1.02] cursor-pointer ${badgeClasses}`}
         title={t('aiEngine.selectMode') || 'Seleccionar Motor de IA'}
       >
         <span className="flex items-center justify-center">
-          {esLocal ? <Cpu className="w-3.5 h-3.5 text-purple-400" /> : <Cloud className="w-3.5 h-3.5 text-emerald-400" />}
+          {esLocal ? (
+            <MangaIcon name="modo_local_gpu" size={18} className="mr-2" />
+          ) : (
+            <MangaIcon name="modo_cloud" size={18} className="mr-2" />
+          )}
         </span>
         <span className="font-semibold hidden sm:inline text-[11px]">
           {esLocal ? (t('aiEngine.localGpu') || 'Local GPU') : (t('aiEngine.cloudFree') || 'Cloud Free')}
@@ -93,137 +110,122 @@ export default function AiEngineToggle({ variant = 'default' }) {
         </span>
       </button>
 
-      {/* Modal de Configuración y Diagnóstico del Motor de IA */}
-      <Modal
-        abierto={modalAbierto}
-        onCerrar={() => setModalAbierto(false)}
-        titulo={`Motor de Inteligencia Artificial`}
-        ancho="max-w-xl"
-      >
-        <div className="space-y-5">
-          <p className="text-rdc-text text-xs sm:text-sm font-titulo leading-relaxed">
+      {/* Panel Desplegable Flotante hacia Abajo */}
+      {menuAbierto && (
+        <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 rounded-2xl bg-white dark:bg-slate-900 border-2 border-slate-900 dark:border-slate-700 shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] z-[9999] p-4 animate-in fade-in zoom-in-95 duration-150">
+          <div className="flex items-center justify-between pb-2.5 border-b border-slate-200 dark:border-slate-800 mb-3">
+            <h3 className="font-titulo text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-rdc-accent" />
+              <span>{t('aiEngine.title') || 'Motor de Inteligencia Artificial'}</span>
+            </h3>
+            <button
+              onClick={() => setMenuAbierto(false)}
+              className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs p-1 cursor-pointer font-bold"
+            >
+              ✕
+            </button>
+          </div>
+
+          <p className="text-slate-600 dark:text-slate-300 text-xs font-titulo leading-relaxed mb-3">
             {t('aiEngine.cloudFreeDesc') || 'Alterna entre el motor en la nube de alta disponibilidad y el motor local acelerado por GPU.'}
           </p>
 
           {/* Opciones de Motor en Tarjetas Interactivas */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <div className="space-y-2.5 mb-3">
             
             {/* Opción 1: Cloud Gratis */}
             <div
               onClick={() => handleSeleccionarModo('cloud_free')}
-              className={`p-4.5 rounded-2xl border-2 transition-all duration-300 cursor-pointer flex flex-col justify-between relative shadow-md ${
+              className={`p-3 rounded-xl border-2 transition-all duration-200 cursor-pointer flex flex-col justify-between relative ${
                 !esLocal
-                  ? 'bg-emerald-500/15 border-emerald-500 shadow-emerald-500/10 scale-[1.02]'
-                  : 'bg-rdc-card/90 border-rdc-border hover:border-emerald-500/60'
+                  ? 'bg-emerald-50 dark:bg-emerald-950/30 border-black dark:border-amber-400 shadow-[2px_2px_0px_0px_rgba(0,0,0,0.85)] ring-2 ring-emerald-600/30'
+                  : 'bg-slate-50 dark:bg-slate-800/80 border-slate-900 dark:border-slate-700 hover:border-black dark:hover:border-slate-500'
               }`}
             >
               {!esLocal && (
-                <div className="absolute top-3 right-3 bg-emerald-600 text-white text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full font-titulo shadow-sm flex items-center gap-1">
+                <div className="absolute top-2.5 right-2.5 bg-emerald-600 text-white text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full font-titulo shadow-xs flex items-center gap-0.5">
                   <Check className="w-2.5 h-2.5 stroke-[3]" /> Activo
                 </div>
               )}
-              <div>
-                <div className="flex items-center gap-2.5 mb-2.5">
-                  <div className="p-2 rounded-xl bg-emerald-500/20 text-emerald-400">
-                    <Cloud className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h4 className="font-titulo text-base font-bold text-rdc-text leading-tight">
-                      {t('aiEngine.cloudFree') || 'Cloud Free (Zero-Cost)'}
-                    </h4>
-                    <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-bold font-titulo">
-                      {t('aiEngine.recommended') || 'Recomendado'}
-                    </span>
-                  </div>
+              <div className="flex items-center gap-2.5 mb-1.5">
+                <div className="p-1.5 rounded-lg bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex-shrink-0">
+                  <MangaIcon name="modo_cloud" size={18} />
                 </div>
-
-                <p className="text-rdc-text/80 text-xs leading-relaxed mb-3">
-                  {t('aiEngine.cloudFreeDesc') || 'Generación en la nube ultrarrápida sin requerir tarjeta gráfica dedicada.'}
-                </p>
-              </div>
-
-              <div className="space-y-1.5 pt-2.5 border-t border-rdc-border/60 text-[11px] font-titulo font-medium">
-                <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
-                  <Check className="w-3.5 h-3.5 flex-shrink-0" /> {t('aiEngine.hardwareFree') || 'Sin requisitos de GPU'}
-                </div>
-                <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
-                  <Check className="w-3.5 h-3.5 flex-shrink-0" /> Gemini 2.5 Flash + Flux Pipeline
+                <div>
+                  <h4 className="font-titulo text-xs font-bold text-slate-900 dark:text-white leading-tight">
+                    {t('aiEngine.cloudFree') || 'Cloud Free (Zero-Cost)'}
+                  </h4>
+                  <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold font-titulo">
+                    {t('aiEngine.recommended') || 'Recomendado · Gemini 2.5'}
+                  </span>
                 </div>
               </div>
+              <p className="text-slate-600 dark:text-slate-400 text-[11px] leading-snug">
+                {t('aiEngine.cloudFreeDesc') || 'Generación en la nube ultrarrápida sin requerir tarjeta gráfica dedicada.'}
+              </p>
             </div>
 
             {/* Opción 2: Local GPU */}
             <div
               onClick={() => handleSeleccionarModo('local')}
-              className={`p-4.5 rounded-2xl border-2 transition-all duration-300 cursor-pointer flex flex-col justify-between relative shadow-md ${
+              className={`p-3 rounded-xl border-2 transition-all duration-200 cursor-pointer flex flex-col justify-between relative ${
                 esLocal
-                  ? 'bg-purple-500/15 border-purple-500 shadow-purple-500/10 scale-[1.02]'
-                  : 'bg-rdc-card/90 border-rdc-border hover:border-purple-500/60'
+                  ? 'bg-purple-50 dark:bg-purple-950/30 border-black dark:border-amber-400 shadow-[2px_2px_0px_0px_rgba(0,0,0,0.85)] ring-2 ring-purple-600/30'
+                  : 'bg-slate-50 dark:bg-slate-800/80 border-slate-900 dark:border-slate-700 hover:border-black dark:hover:border-slate-500'
               }`}
             >
               {esLocal && (
-                <div className="absolute top-3 right-3 bg-purple-600 text-white text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full font-titulo shadow-sm flex items-center gap-1">
+                <div className="absolute top-2.5 right-2.5 bg-purple-600 text-white text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full font-titulo shadow-xs flex items-center gap-0.5">
                   <Check className="w-2.5 h-2.5 stroke-[3]" /> Activo
                 </div>
               )}
-              <div>
-                <div className="flex items-center gap-2.5 mb-2.5">
-                  <div className="p-2 rounded-xl bg-purple-500/20 text-purple-400">
-                    <Cpu className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h4 className="font-titulo text-base font-bold text-rdc-text leading-tight">
-                      {t('aiEngine.localGpu') || 'Local GPU (Offline)'}
-                    </h4>
-                    <span className="text-[11px] text-purple-600 dark:text-purple-400 font-bold font-titulo">
-                      {t('aiEngine.unlimitedLocal') || 'Privacidad Total'}
-                    </span>
-                  </div>
+              <div className="flex items-center gap-2.5 mb-1.5">
+                <div className="p-1.5 rounded-lg bg-purple-500/20 text-purple-600 dark:text-purple-400 flex-shrink-0">
+                  <MangaIcon name="modo_local_gpu" size={18} />
                 </div>
-
-                <p className="text-rdc-text/80 text-xs leading-relaxed mb-3">
-                  {t('aiEngine.localGpuDesc') || 'Ejecución 100% offline en tu tarjeta gráfica con Ollama y ComfyUI.'}
-                </p>
-              </div>
-
-              <div className="space-y-1.5 pt-2.5 border-t border-rdc-border/60 text-[11px] font-titulo font-medium">
-                <div className="flex items-center gap-1.5 text-purple-600 dark:text-purple-400">
-                  <Check className="w-3.5 h-3.5 flex-shrink-0" /> Ollama Qwen 2.5 7B
-                </div>
-                <div className="flex items-center gap-1.5 text-purple-600 dark:text-purple-400">
-                  <Check className="w-3.5 h-3.5 flex-shrink-0" /> ComfyUI + SDXL Turbo
+                <div>
+                  <h4 className="font-titulo text-xs font-bold text-slate-900 dark:text-white leading-tight">
+                    {t('aiEngine.localGpu') || 'Local GPU (Offline)'}
+                  </h4>
+                  <span className="text-[10px] text-purple-600 dark:text-purple-400 font-bold font-titulo">
+                    {t('aiEngine.unlimitedLocal') || 'Privacidad Total · Ollama'}
+                  </span>
                 </div>
               </div>
+              <p className="text-slate-600 dark:text-slate-400 text-[11px] leading-snug">
+                {t('aiEngine.localGpuDesc') || 'Ejecución 100% offline en tu tarjeta gráfica con Ollama y ComfyUI.'}
+              </p>
             </div>
+
           </div>
 
           {/* Estado de Diagnóstico */}
-          <div className="bg-rdc-card border border-rdc-border rounded-2xl p-4 space-y-3">
+          <div className="bg-slate-100 dark:bg-slate-800/60 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 space-y-2 mb-3">
             <div className="flex items-center justify-between">
-              <span className="font-titulo text-xs uppercase tracking-wider font-bold text-rdc-muted flex items-center gap-1.5">
-                <Activity className="w-3.5 h-3.5 text-rdc-accent" />
+              <span className="font-titulo text-[10px] uppercase tracking-wider font-bold text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
+                <Activity className="w-3 h-3 text-rdc-accent" />
                 Diagnóstico de Servicios
               </span>
               <button
                 onClick={() => verificarEstadoIA()}
                 disabled={verificando}
-                className="text-rdc-accent hover:text-rdc-accent-hover text-xs font-titulo font-semibold flex items-center gap-1 cursor-pointer"
+                className="text-rdc-accent hover:text-rdc-accent-hover text-[11px] font-titulo font-semibold flex items-center gap-1 cursor-pointer"
               >
                 <RefreshCw className={`w-3 h-3 ${verificando ? 'animate-spin' : ''}`} />
                 {verificando ? 'Comprobando...' : 'Revisar'}
               </button>
             </div>
 
-            <div className="grid grid-cols-2 gap-2 text-xs font-titulo">
-              <div className="p-2.5 rounded-xl bg-rdc-secondary flex items-center justify-between">
-                <span>Ollama Local</span>
-                <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${ollamaOk ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'}`}>
+            <div className="grid grid-cols-2 gap-2 text-[11px] font-titulo">
+              <div className="p-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                <span className="text-slate-700 dark:text-slate-300">Ollama</span>
+                <span className={`text-[9px] px-1.5 py-0.2 rounded font-bold ${ollamaOk ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400' : 'bg-red-500/20 text-red-500'}`}>
                   {ollamaOk ? 'Operativo' : 'Inactivo'}
                 </span>
               </div>
-              <div className="p-2.5 rounded-xl bg-rdc-secondary flex items-center justify-between">
-                <span>ComfyUI Local</span>
-                <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${comfyOk ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'}`}>
+              <div className="p-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                <span className="text-slate-700 dark:text-slate-300">ComfyUI</span>
+                <span className={`text-[9px] px-1.5 py-0.2 rounded font-bold ${comfyOk ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400' : 'bg-red-500/20 text-red-500'}`}>
                   {comfyOk ? 'Operativo' : 'Inactivo'}
                 </span>
               </div>
@@ -231,17 +233,17 @@ export default function AiEngineToggle({ variant = 'default' }) {
           </div>
 
           {/* Botón de cierre "Listo" */}
-          <div className="flex justify-end pt-1">
+          <div className="flex justify-end">
             <button
               type="button"
-              onClick={() => setModalAbierto(false)}
-              className="bg-rdc-accent hover:bg-rdc-accent-hover text-white font-titulo font-semibold text-xs sm:text-sm px-6 py-2 rounded-xl transition-all duration-200 shadow-md hover:scale-105 cursor-pointer"
+              onClick={() => setMenuAbierto(false)}
+              className="bg-rdc-accent hover:bg-rdc-accent-hover text-white font-titulo font-semibold text-xs px-4 py-1.5 rounded-xl transition-all shadow-xs cursor-pointer"
             >
               {t('common.done') || 'Listo'}
             </button>
           </div>
         </div>
-      </Modal>
-    </>
+      )}
+    </div>
   )
 }

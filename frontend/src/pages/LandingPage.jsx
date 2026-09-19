@@ -7,7 +7,6 @@ import { useTranslation } from 'react-i18next'
 import {
   Palette,
   Zap,
-  Dices,
   ScrollText,
   Users,
   LayoutGrid,
@@ -19,6 +18,7 @@ import useAuthStore from '../store/authStore'
 import useThemeStore, { TEMAS } from '../store/themeStore'
 import LanguageSelector from '../components/common/LanguageSelector'
 import ThemeToggle from '../components/common/ThemeToggle'
+import MangaIcon from '../components/common/MangaIcon'
 
 // Carga dinámica de Vite: obtiene todos los PNG que coincidan con el patrón
 const modulosFondos = import.meta.glob('../assets/fondo_login_*.png', { eager: true, query: '?url', import: 'default' })
@@ -45,37 +45,37 @@ export default function LandingPage() {
 
   const MODOS = [
     {
-      icon: Palette,
+      iconName: 'creacion_propia',
       titulo: t('landing.modes.custom.title') || 'Tu Propio Estilo',
       desc: t('landing.modes.custom.desc') || 'Sube 3 a 5 páginas de tu arte para clonar tu firma visual con IA.',
-      ghibliClasses: 'bg-white/90 border-2 border-purple-200 hover:border-purple-300 shadow-sm hover:shadow-md',
-      cosmosClasses: 'bg-[#0e1322] border-2 border-purple-500/40 hover:border-purple-400 text-white shadow-lg shadow-purple-950/20',
-      badgeGhibli: 'bg-purple-100 text-purple-700',
+      ghibliClasses: 'bg-[#FCFAF6] border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.85)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-0.5 transition-all',
+      cosmosClasses: 'bg-[#0e1322] border-2 border-purple-500/40 hover:border-purple-400 text-white shadow-lg shadow-purple-950/20 hover:-translate-y-0.5 transition-all',
+      badgeGhibli: 'bg-[#F3E8FF] border border-purple-300 text-purple-900',
       badgeCosmos: 'bg-purple-950/60 text-purple-400 border border-purple-500/30',
-      btnGhibli: 'bg-purple-100 hover:bg-purple-200 text-purple-900 font-semibold py-2 px-3 text-xs sm:text-sm rounded-lg transition-colors',
-      btnCosmos: 'bg-purple-600 hover:bg-purple-500 text-white shadow-md font-semibold py-2 px-3 text-xs sm:text-sm rounded-lg transition-colors',
+      btnGhibli: 'bg-[#8B5CF6] hover:bg-[#7C3AED] text-white font-bold py-2 px-4 rounded-xl border border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] transition-all',
+      btnCosmos: 'bg-purple-600 hover:bg-purple-500 text-white shadow-md font-semibold py-2 px-4 text-xs sm:text-sm rounded-xl transition-colors',
     },
     {
-      icon: Zap,
+      iconName: 'modo_legendario',
       titulo: t('landing.modes.legendary.title') || 'Estilos Legendarios',
       desc: t('landing.modes.legendary.desc') || 'Crea en el estilo visual de los grandes mangakas de la historia.',
-      ghibliClasses: 'bg-white/90 border-2 border-amber-200 hover:border-amber-300 shadow-sm hover:shadow-md',
-      cosmosClasses: 'bg-[#0e1322] border-2 border-amber-500/40 hover:border-amber-400 text-white shadow-lg shadow-amber-950/20',
-      badgeGhibli: 'bg-amber-100 text-amber-700',
+      ghibliClasses: 'bg-[#FCFAF6] border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.85)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-0.5 transition-all',
+      cosmosClasses: 'bg-[#0e1322] border-2 border-amber-500/40 hover:border-amber-400 text-white shadow-lg shadow-amber-950/20 hover:-translate-y-0.5 transition-all',
+      badgeGhibli: 'bg-[#FEF3C7] border border-amber-300 text-amber-900',
       badgeCosmos: 'bg-amber-950/60 text-amber-400 border border-amber-500/30',
-      btnGhibli: 'bg-amber-100 hover:bg-amber-200 text-amber-900 font-semibold py-2 px-3 text-xs sm:text-sm rounded-lg transition-colors',
-      btnCosmos: 'bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-md font-bold py-2 px-3 text-xs sm:text-sm rounded-lg transition-colors',
+      btnGhibli: 'bg-[#F59E0B] hover:bg-[#D97706] text-slate-950 font-bold py-2 px-4 rounded-xl border border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] transition-all',
+      btnCosmos: 'bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-md font-bold py-2 px-4 text-xs sm:text-sm rounded-xl transition-colors',
     },
     {
-      icon: Dices,
+      iconName: 'modo_aleatorio',
       titulo: t('landing.modes.random.title') || 'Estilo Sorpresa',
       desc: t('landing.modes.random.desc') || 'Deja que la IA combine técnicas y cree un estilo único para ti.',
-      ghibliClasses: 'bg-white/90 border-2 border-emerald-200 hover:border-emerald-300 shadow-sm hover:shadow-md',
-      cosmosClasses: 'bg-[#0e1322] border-2 border-emerald-500/40 hover:border-emerald-400 text-white shadow-lg shadow-emerald-950/20',
-      badgeGhibli: 'bg-emerald-100 text-emerald-700',
+      ghibliClasses: 'bg-[#FCFAF6] border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.85)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-0.5 transition-all',
+      cosmosClasses: 'bg-[#0e1322] border-2 border-emerald-500/40 hover:border-emerald-400 text-white shadow-lg shadow-emerald-950/20 hover:-translate-y-0.5 transition-all',
+      badgeGhibli: 'bg-[#D1FAE5] border border-emerald-300 text-emerald-900',
       badgeCosmos: 'bg-emerald-950/60 text-emerald-400 border border-emerald-500/30',
-      btnGhibli: 'bg-emerald-100 hover:bg-emerald-200 text-emerald-900 font-semibold py-2 px-3 text-xs sm:text-sm rounded-lg transition-colors',
-      btnCosmos: 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-md font-semibold py-2 px-3 text-xs sm:text-sm rounded-lg transition-colors',
+      btnGhibli: 'bg-[#10B981] hover:bg-[#059669] text-white font-bold py-2 px-4 rounded-xl border border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] transition-all',
+      btnCosmos: 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-md font-semibold py-2 px-4 text-xs sm:text-sm rounded-xl transition-colors',
     },
   ]
 
@@ -170,25 +170,26 @@ export default function LandingPage() {
         </div>
       </nav>
 
-      {/* ── HERO SECTION RESTAURADO ── */}
-      <section className="relative px-4 sm:px-6 min-h-[380px] sm:min-h-[420px] lg:min-h-[440px] flex flex-col items-center justify-center text-center overflow-hidden">
-        {/* Fondo dinámico aleatorio con overlay */}
+      {/* ── HERO & MODOS WRAPPER (Full Viewport Composition) ── */}
+      <section className="relative w-full min-h-[calc(100vh-64px)] overflow-hidden flex flex-col justify-between pb-8 border-b border-slate-300 dark:border-slate-800">
+        {/* Fondo dinámico aleatorio sin degradados intermedios que tapen la ilustración */}
         {fondoAleatorio && (
-          <div
-            className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-all duration-1000 scale-105"
-            style={{ backgroundImage: `url(${fondoAleatorio})` }}
+          <img
+            src={fondoAleatorio}
+            alt="Hero Background"
+            className="absolute inset-0 w-full h-full object-cover z-0 pointer-events-none select-none scale-105 transition-all duration-1000"
           />
         )}
         <div
-          className={`absolute inset-0 transition-colors duration-500 ${
+          className={`absolute inset-0 z-0 transition-colors duration-500 pointer-events-none ${
             esGhibli
-              ? 'bg-black/20'
+              ? 'bg-black/15'
               : 'bg-black/40 backdrop-blur-[0.5px]'
           }`}
         />
 
-        <div className="relative z-10 max-w-3xl mx-auto space-y-2">
-          {/* ── Cartel Central Manga / Narrator Box Opaco ── */}
+        {/* Superior: Cartel MEP centrado */}
+        <div className="pt-4 sm:pt-6 relative z-10 max-w-3xl mx-auto px-4 text-center">
           <div
             className={`relative mx-auto max-w-lg px-6 sm:px-8 py-3.5 sm:py-4 rounded-2xl border-2 border-black transition-all duration-300 ${
               esGhibli
@@ -236,61 +237,59 @@ export default function LandingPage() {
             </p>
           </div>
         </div>
-      </section>
 
-      {/* ── SECCIÓN: TRES FORMAS DE CREAR TU CÓMIC ── */}
-      <section className="w-full px-4 sm:px-6 relative z-10">
-        <div className="text-center pt-3 sm:pt-4">
-          <h2 className={`font-titulo text-xl sm:text-2xl font-extrabold mb-0.5 ${
-            esGhibli ? 'text-slate-900' : 'text-white'
-          }`}>
+        {/* Centro: Viñeta rectangular "Tres formas de crear tu cómic" */}
+        <div
+          className={`relative z-10 my-auto max-w-sm mx-auto px-6 py-2 rounded-xl border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] text-center ${
+            esGhibli ? 'bg-white' : 'bg-[#0B0F19]'
+          }`}
+        >
+          <h2 className="font-titulo text-base sm:text-lg font-black text-slate-900 dark:text-white leading-tight">
             {t('landing.threeModesTitle')}
           </h2>
+          <p className="font-titulo text-[11px] sm:text-xs text-slate-600 dark:text-slate-300 font-medium mt-0.5">
+            {t('landing.threeModesSubtitle')}
+          </p>
         </div>
-        <p className="text-center text-xs sm:text-sm mb-4 font-titulo max-w-xl mx-auto text-slate-500 dark:text-slate-400">
-          {t('landing.threeModesSubtitle')}
-        </p>
 
-        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 px-4 pb-8 sm:pb-12">
-          {MODOS.map((modo, i) => {
-            const ModoIcon = modo.icon
-            return (
-              <div
-                key={i}
-                className={`min-h-[250px] sm:min-h-[270px] flex flex-col justify-between p-4 sm:p-5 rounded-2xl transition-all duration-300 hover:scale-[1.02] hover:shadow-xl ${
-                  esGhibli ? modo.ghibliClasses : modo.cosmosClasses
+        {/* Inferior: Grid de las 3 tarjetas de modo ancladas abajo */}
+        <div className="relative z-10 w-full max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-10 px-6 mt-auto">
+          {MODOS.map((modo, i) => (
+            <div
+              key={i}
+              className={`min-h-[250px] sm:min-h-[270px] flex flex-col justify-between p-4 sm:p-5 rounded-2xl transition-all duration-300 ${
+                esGhibli ? modo.ghibliClasses : modo.cosmosClasses
+              }`}
+            >
+              <div>
+                <div className={`w-9 h-9 p-1 rounded-lg flex items-center justify-center mb-2.5 ${
+                  esGhibli ? modo.badgeGhibli : modo.badgeCosmos
+                }`}>
+                  <MangaIcon name={modo.iconName} size={22} />
+                </div>
+                <h3 className={`font-titulo text-base sm:text-lg font-bold mb-1 ${
+                  esGhibli ? 'text-slate-900' : 'text-white'
+                }`}>
+                  {modo.titulo}
+                </h3>
+                <p className={`text-xs sm:text-sm leading-snug mb-3 font-titulo ${
+                  esGhibli ? 'text-slate-600' : 'text-slate-300'
+                }`}>
+                  {modo.desc}
+                </p>
+              </div>
+
+              <button
+                onClick={() => navigate(isAuthenticated ? '/new-project' : '/register')}
+                className={`w-full font-titulo cursor-pointer flex items-center justify-center gap-1.5 ${
+                  esGhibli ? modo.btnGhibli : modo.btnCosmos
                 }`}
               >
-                <div>
-                  <div className={`w-9 h-9 p-2 rounded-lg flex items-center justify-center mb-2.5 ${
-                    esGhibli ? modo.badgeGhibli : modo.badgeCosmos
-                  }`}>
-                    <ModoIcon className="w-5 h-5" />
-                  </div>
-                  <h3 className={`font-titulo text-base sm:text-lg font-bold mb-1 ${
-                    esGhibli ? 'text-slate-900' : 'text-white'
-                  }`}>
-                    {modo.titulo}
-                  </h3>
-                  <p className={`text-xs sm:text-sm leading-snug mb-3 font-titulo ${
-                    esGhibli ? 'text-slate-600' : 'text-slate-300'
-                  }`}>
-                    {modo.desc}
-                  </p>
-                </div>
-
-                <button
-                  onClick={() => navigate(isAuthenticated ? '/new-project' : '/register')}
-                  className={`w-full font-titulo cursor-pointer flex items-center justify-center gap-1.5 ${
-                    esGhibli ? modo.btnGhibli : modo.btnCosmos
-                  }`}
-                >
-                  <span>{t('landing.getStarted')}</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            )
-          })}
+                <span>{t('landing.getStarted')}</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          ))}
         </div>
       </section>
 

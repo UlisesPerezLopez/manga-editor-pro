@@ -2,8 +2,8 @@
 // Conmutador Día (Studio Ghibli) / Noche (Saint Seiya Cosmos) con Lucide React.
 
 import { useTranslation } from 'react-i18next'
-import { Sparkles, Leaf } from 'lucide-react'
 import useThemeStore, { TEMAS } from '../../store/themeStore'
+import MangaIcon from './MangaIcon'
 
 export default function ThemeToggle({ className = '', variant = 'default' }) {
   const { t } = useTranslation()
@@ -27,11 +27,11 @@ export default function ThemeToggle({ className = '', variant = 'default' }) {
                   text-rdc-text select-none ${baseClasses} ${className}`}
     >
       {/* Contenedor del icono con microanimación */}
-      <div className="relative w-4 h-4 flex items-center justify-center overflow-hidden">
+      <div className="relative flex items-center justify-center">
         {esGhibli ? (
-          <Leaf className="w-4 h-4 text-emerald-500 transition-transform duration-300 group-hover:scale-110" />
+          <MangaIcon name="tema_ghibli" size={18} className="mr-2 transition-transform duration-300 group-hover:scale-110" />
         ) : (
-          <Sparkles className="w-4 h-4 text-amber-400 transition-transform duration-300 group-hover:scale-110" />
+          <MangaIcon name="tema_cosmos" size={18} className="mr-2 transition-transform duration-300 group-hover:scale-110" />
         )}
       </div>
 

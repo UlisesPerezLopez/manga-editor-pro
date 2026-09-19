@@ -15,16 +15,16 @@ export default function Modal({ abierto, onCerrar, titulo, children, ancho = "ma
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto animate-in fade-in duration-200"
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs overflow-y-auto animate-in fade-in duration-200"
       onClick={onCerrar}
     >
       <div
-        className={`relative w-full ${ancho} bg-rdc-secondary border border-rdc-border
+        className={`relative w-full ${ancho} bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 bg-rdc-secondary border-rdc-border
                     rounded-2xl shadow-2xl max-h-[90vh] flex flex-col transition-colors duration-300 overflow-hidden animate-in zoom-in-95 duration-200`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header del modal */}
-        <div className="flex items-center justify-between p-5 border-b border-rdc-border transition-colors duration-300 flex-shrink-0">
+        <div className="flex items-center justify-between p-5 border-b border-slate-200 dark:border-slate-700 border-rdc-border transition-colors duration-300 flex-shrink-0">
           <h3 className="font-titulo text-lg text-rdc-text font-semibold">{titulo}</h3>
           <button
             onClick={onCerrar}

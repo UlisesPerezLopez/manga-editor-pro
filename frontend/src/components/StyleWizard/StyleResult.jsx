@@ -3,6 +3,7 @@
 // Permite validar y bloquear el estilo o descartar y repetir.
 
 import { useTranslation } from 'react-i18next'
+import MangaIcon from '../common/MangaIcon'
 
 export default function StyleResult({
   perfil,
@@ -18,7 +19,7 @@ export default function StyleResult({
 
       {/* Cabecera */}
       <div className="text-center">
-        <p className="text-4xl mb-2">🎨</p>
+        <MangaIcon name="firma_visual" size={40} className="mx-auto mb-2" />
         <h3 className="font-titulo text-xl text-rdc-text font-semibold">
           {t('styleWizard.resultTitle')}
         </h3>

@@ -27,7 +27,7 @@ load_dotenv()
 
 from contextlib import asynccontextmanager
 from database.init_db import init_db
-from routers import auth, projects, chapters, generate, style, characters, export
+from routers import auth, projects, chapters, generate, style, characters, export, ai_test
 
 # ─── CONFIGURACIÓN ───────────────────────────────────────────────────────────
 
@@ -157,6 +157,7 @@ app.include_router(generate.router)
 app.include_router(style.router)
 app.include_router(characters.router)
 app.include_router(export.router)
+app.include_router(ai_test.router)
 
 # ─── ENDPOINTS BÁSICOS ───────────────────────────────────────────────────────
 

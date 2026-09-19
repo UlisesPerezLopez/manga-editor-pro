@@ -1,10 +1,8 @@
-// AuthorAnalyticsPanel.jsx
-// Panel de analítica avanzada y métricas de engagement para autores y creadores de manga.
-
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { projectsAPI } from '../../services/api'
 import Spinner from '../UI/Spinner'
+import MangaIcon from '../common/MangaIcon'
 
 export default function AuthorAnalyticsPanel({ proyectoId, proyecto }) {
   const { t } = useTranslation()
@@ -125,8 +123,9 @@ export default function AuthorAnalyticsPanel({ proyectoId, proyecto }) {
       {/* ── Tabla de Rendimiento por Capítulo ── */}
       <div className="bg-rdc-card border border-rdc-border rounded-xl p-4 shadow-sm space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="font-bold text-rdc-text text-sm flex items-center gap-2">
-            <span>📖</span> {t('analytics.chapterPerformance')}
+          <h4 className="font-bold text-rdc-text text-sm flex items-center">
+            <MangaIcon name="contador_capitulos" size={18} className="mr-2 inline-block" />
+            <span>{t('analytics.chapterPerformance')}</span>
           </h4>
           <button
             onClick={cargarDatos}

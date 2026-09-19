@@ -1,22 +1,39 @@
 // BackgroundSlideshow.jsx
-// Slideshow animado para fondos de pantalla con transiciones suaves de opacidad (Tailwind).
+// Slideshow animado aleatorio para fondos de pantalla con cross-fade suave (1000ms) y ciclo de 17 segundos.
 
 import { useState, useEffect } from 'react'
+
+// Carga dinámica automática de todas las ilustraciones de fondo como fallback
+const modulosFondos = import.meta.glob('../../assets/fondo_login_*.png', { eager: true, query: '?url', import: 'default' })
+const FONDOS_DEFAULT = Object.values(modulosFondos)
 
 export default function BackgroundSlideshow({
   imagenes = [],
   images = [],
-  intervalo = 5000,
-  overlayClassName = 'bg-black/50',
+  intervalo = 17000,
+  overlayClassName = '',
 }) {
-  const listaImagenes = (imagenes && imagenes.length > 0) ? imagenes : images
-  const [indiceActivo, setIndiceActivo] = useState(0)
+  const listaRaw = (imagenes && imagenes.length > 0) ? imagenes : images
+  const listaImagenes = (listaRaw && listaRaw.length > 0) ? listaRaw : FONDOS_DEFAULT
 
+  // 1. Estado inicial aleatorio (randomizado)
+  const [currentIndex, setCurrentIndex] = useState(() => {
+    if (!listaImagenes || listaImagenes.length === 0) return 0
+    return Math.floor(Math.random() * listaImagenes.length)
+  })
+
+  // 2. Rotación continua aleatoria sin repetir la imagen inmediatamente anterior
   useEffect(() => {
     if (!listaImagenes || listaImagenes.length <= 1) return
 
     const timer = setInterval(() => {
-      setIndiceActivo((prev) => (prev + 1) % listaImagenes.length)
+      setCurrentIndex((prevIndex) => {
+        let nextIndex
+        do {
+          nextIndex = Math.floor(Math.random() * listaImagenes.length)
+        } while (nextIndex === prevIndex)
+        return nextIndex
+      })
     }, intervalo)
 
     return () => clearInterval(timer)
@@ -25,16 +42,14 @@ export default function BackgroundSlideshow({
   if (!listaImagenes || listaImagenes.length === 0) return null
 
   return (
-    <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10 select-none">
-      {listaImagenes.map((url, idx) => (
-        <img
-          key={url || idx}
-          src={url}
-          alt={`Background Slide ${idx + 1}`}
-          className={`absolute inset-0 object-cover w-full h-full -z-10 transition-opacity duration-1000 ease-in-out ${
-            idx === indiceActivo ? 'opacity-100 scale-100' : 'opacity-0 scale-105'
+    <div className="fixed inset-0 pointer-events-none overflow-hidden select-none z-0">
+      {listaImagenes.map((imgSrc, index) => (
+        <div
+          key={imgSrc + index}
+          className={`absolute inset-0 w-full h-full bg-cover bg-center transition-opacity duration-1000 ease-in-out ${
+            index === currentIndex ? 'opacity-100' : 'opacity-0 pointer-events-none'
           }`}
-          style={{ willChange: 'opacity, transform' }}
+          style={{ backgroundImage: `url(${imgSrc})` }}
         />
       ))}
       {overlayClassName && (

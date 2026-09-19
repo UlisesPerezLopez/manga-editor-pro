@@ -27,6 +27,7 @@ Mako==1.4.1
 MarkupSafe==3.0.3
 packaging==26.3
 passlib==1.7.4
+openai>=1.0.0
 pillow==12.3.0
 pyasn1==0.6.4
 pyasn1_modules==0.4.2

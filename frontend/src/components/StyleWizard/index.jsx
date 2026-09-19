@@ -8,6 +8,7 @@ import { styleAPI } from '../../services/api'
 import UploadZone from './UploadZone'
 import AnalysisProgress from './AnalysisProgress'
 import StyleResult from './StyleResult'
+import MangaIcon from '../common/MangaIcon'
 
 const PASOS = {
   SUBIR: 'subir',
@@ -137,8 +138,9 @@ export default function StyleWizard({ proyecto, onEstiloBloqueado }) {
         <div className="space-y-5">
           <div className="bg-purple-500 bg-opacity-10 border border-purple-500
                           border-opacity-30 rounded-xl p-4">
-            <h3 className="font-titulo text-lg text-purple-300 font-semibold mb-1">
-              🎨 {t('styleWizard.title')}
+            <h3 className="font-titulo text-lg text-purple-300 font-semibold mb-1 flex items-center gap-2">
+              <MangaIcon name="firma_visual" size={20} />
+              <span>{t('styleWizard.title')}</span>
             </h3>
             <p className="text-rdc-muted text-sm">
               {t('styleWizard.desc')}

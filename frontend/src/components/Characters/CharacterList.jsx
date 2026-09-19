@@ -3,19 +3,12 @@
 
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import {
-  Users,
-  UserPlus,
-  Star,
-  Skull,
-  HeartHandshake,
-  UserCheck,
-  Plus
-} from 'lucide-react'
+import { Users, UserPlus } from 'lucide-react'
 import useCharacterStore from '../../store/characterStore'
 import CharacterCard from './CharacterCard'
 import CharacterModal from './CharacterModal'
 import Spinner from '../UI/Spinner'
+import { getRoleBadge } from '../../assets/avatars'
 
 export default function CharacterList({ proyecto }) {
   const { t } = useTranslation()
@@ -126,20 +119,23 @@ export default function CharacterList({ proyecto }) {
             if (lista.length === 0) return null
 
             const rolConfig = {
-              protagonista: { label: t('characters.protagonist') || 'Protagonistas', icon: Star, color: 'text-amber-400' },
-              antagonista:  { label: t('characters.antagonist') || 'Antagonistas',   icon: Skull, color: 'text-red-400' },
-              apoyo:        { label: t('characters.support') || 'Personajes de Apoyo', icon: HeartHandshake, color: 'text-emerald-400' },
-              secundario:   { label: t('characters.secondary') || 'Secundarios',    icon: Users, color: 'text-rdc-muted' },
+              protagonista: { label: t('characters.protagonist') || 'Protagonistas' },
+              antagonista:  { label: t('characters.antagonist') || 'Antagonistas' },
+              apoyo:        { label: t('characters.support') || 'Personajes de Apoyo' },
+              secundario:   { label: t('characters.secondary') || 'Secundarios' },
             }
 
             const config = rolConfig[rol] || rolConfig.secundario
-            const RolHeaderIcon = config.icon
 
             return (
               <div key={rol}>
                 <h3 className="font-titulo text-base text-rdc-text font-semibold
                                mb-4 flex items-center gap-2">
-                  <RolHeaderIcon className={`w-4 h-4 ${config.color}`} />
+                  <img
+                    src={getRoleBadge(rol)}
+                    alt={config.label}
+                    className="w-5 h-5 inline-block mr-2 object-contain select-none pointer-events-none"
+                  />
                   <span>{config.label}</span>
                   <span className="text-xs bg-rdc-card text-rdc-muted
                                    px-2.5 py-0.5 rounded-full font-mono border border-rdc-border">

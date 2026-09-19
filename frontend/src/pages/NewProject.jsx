@@ -1,25 +1,13 @@
 // NewProject.jsx
-// Wizard de creación de nuevo proyecto con los 3 modos, paleta pastel Ghibli vs Cosmos, slideshow de fondo animado y Lucide React.
+// Wizard de creación de nuevo proyecto con los 3 modos, paleta pastel Ghibli vs Cosmos,
+// slideshow de fondo animado continuo, selector de formato con bandera oficial y cuadrícula de 25 Estilos Legendarios.
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import {
-  Palette,
-  Zap,
-  Dices,
-  BookOpen,
-  Globe,
-  Flame,
-  Heart,
-  Sword,
-  Bot,
   Sparkles,
-  Smile,
-  Shield,
-  Coffee,
   ArrowLeft,
-  CheckCircle2,
   AlertTriangle
 } from 'lucide-react'
 import { projectsAPI } from '../services/api'
@@ -31,22 +19,13 @@ import AiEngineToggle from '../components/common/AiEngineToggle'
 import BackgroundSlideshow from '../components/common/BackgroundSlideshow'
 import ThemeBackgroundAnimation from '../components/common/ThemeBackgroundAnimation'
 import ErrorBoundary from '../components/UI/ErrorBoundary'
+import MangaIcon from '../components/common/MangaIcon'
+import ReadingFormatSelector from '../components/common/ReadingFormatSelector'
+import StyleSelectorGrid from '../components/common/StyleSelectorGrid'
 
 // Carga dinámica de todas las ilustraciones de fondo
 const modulosFondos = import.meta.glob('../assets/fondo_login_*.png', { eager: true, query: '?url', import: 'default' })
 const fondosDisponibles = Object.values(modulosFondos)
-
-const ICONOS_ESTILOS = {
-  shonen_action:     { icon: Flame,    color: 'text-amber-500' },
-  shojo_romance:     { icon: Heart,    color: 'text-pink-400' },
-  seinen_dark:       { icon: Sword,    color: 'text-slate-300' },
-  cyberpunk_manga:   { icon: Bot,      color: 'text-cyan-400' },
-  isekai_fantasy:    { icon: Sparkles, color: 'text-purple-400' },
-  kodomomuke:        { icon: Smile,    color: 'text-yellow-400' },
-  franco_belge:      { icon: Palette,  color: 'text-blue-400' },
-  marvel_western:    { icon: Shield,   color: 'text-red-500' },
-  indie_underground: { icon: Coffee,   color: 'text-amber-700' },
-}
 
 function NewProjectContent() {
   const navigate = useNavigate()
@@ -56,7 +35,6 @@ function NewProjectContent() {
 
   const [paso, setPaso] = useState(1) // 1: modo, 2: detalles, 3: creando
   const [modoSeleccionado, setModoSeleccionado] = useState(null)
-  const [estilosLegendarios, setEstilosLegendarios] = useState([])
   const [estiloSeleccionado, setEstiloSeleccionado] = useState(null)
   const [form, setForm] = useState({
     nombre: '',
@@ -68,45 +46,41 @@ function NewProjectContent() {
   const MODOS = [
     {
       id: 'propio',
-      icon: Palette,
-      iconColor: 'text-purple-400',
+      iconName: 'creacion_propia',
       titulo: t('landing.modes.custom.title') || 'Tu Propio Estilo',
       descripcion: t('landing.modes.custom.desc') || 'Sube 3 a 5 páginas de tu arte para clonar tu firma visual con IA.',
-      ghibliClasses: 'bg-[#FDFBF7]/95 border-emerald-200/80 text-[#1B2D23] shadow-md hover:border-emerald-300 hover:shadow-lg',
-      cosmosClasses: 'bg-purple-950/40 border-purple-500/80 text-white shadow-purple-900/20 hover:border-purple-400',
-      accentGhibli: 'group-hover:text-emerald-700',
+      ghibliClasses: 'bg-[#FCFAF6] border-2 border-slate-900 text-slate-900 shadow-[4px_4px_0px_0px_rgba(30,41,59,0.9)] hover:shadow-[6px_6px_0px_0px_rgba(30,41,59,1)] hover:-translate-y-0.5',
+      cosmosClasses: 'bg-[#0e1322] border-2 border-purple-500/40 text-white shadow-lg shadow-purple-950/20 hover:border-purple-400 hover:-translate-y-0.5',
+      badgeGhibli: 'bg-[#F3E8FF] border border-purple-300 text-purple-900',
+      badgeCosmos: 'bg-purple-950/60 text-purple-400 border border-purple-500/30',
+      accentGhibli: 'group-hover:text-purple-700',
       accentCosmos: 'group-hover:text-purple-400',
     },
     {
       id: 'legendario',
-      icon: Zap,
-      iconColor: 'text-amber-400',
+      iconName: 'modo_legendario',
       titulo: t('landing.modes.legendary.title') || 'Estilos Legendarios',
       descripcion: t('landing.modes.legendary.desc') || 'Crea en el estilo visual de los grandes mangakas de la historia.',
-      ghibliClasses: 'bg-[#FDFBF7]/95 border-amber-200/80 text-[#1B2D23] shadow-md hover:border-amber-300 hover:shadow-lg',
-      cosmosClasses: 'bg-blue-950/40 border-rdc-accent/80 text-white shadow-blue-900/20 hover:border-blue-400',
+      ghibliClasses: 'bg-[#FCFAF6] border-2 border-slate-900 text-slate-900 shadow-[4px_4px_0px_0px_rgba(30,41,59,0.9)] hover:shadow-[6px_6px_0px_0px_rgba(30,41,59,1)] hover:-translate-y-0.5',
+      cosmosClasses: 'bg-[#0e1322] border-2 border-amber-500/40 text-white shadow-lg shadow-amber-950/20 hover:border-amber-400 hover:-translate-y-0.5',
+      badgeGhibli: 'bg-[#FEF3C7] border border-amber-300 text-amber-900',
+      badgeCosmos: 'bg-amber-950/60 text-amber-400 border border-amber-500/30',
       accentGhibli: 'group-hover:text-amber-700',
-      accentCosmos: 'group-hover:text-blue-400',
+      accentCosmos: 'group-hover:text-amber-400',
     },
     {
       id: 'aleatorio',
-      icon: Dices,
-      iconColor: 'text-emerald-400',
+      iconName: 'modo_aleatorio',
       titulo: t('landing.modes.random.title') || 'Estilo Sorpresa',
       descripcion: t('landing.modes.random.desc') || 'Deja que la IA combine técnicas y cree un estilo único para ti.',
-      ghibliClasses: 'bg-[#FDFBF7]/95 border-rose-200/80 text-[#1B2D23] shadow-md hover:border-rose-300 hover:shadow-lg',
-      cosmosClasses: 'bg-green-950/40 border-green-500/80 text-white shadow-green-900/20 hover:border-green-400',
-      accentGhibli: 'group-hover:text-[#D97736]',
-      accentCosmos: 'group-hover:text-green-400',
+      ghibliClasses: 'bg-[#FCFAF6] border-2 border-slate-900 text-slate-900 shadow-[4px_4px_0px_0px_rgba(30,41,59,0.9)] hover:shadow-[6px_6px_0px_0px_rgba(30,41,59,1)] hover:-translate-y-0.5',
+      cosmosClasses: 'bg-[#0e1322] border-2 border-emerald-500/40 text-white shadow-lg shadow-emerald-950/20 hover:border-emerald-400 hover:-translate-y-0.5',
+      badgeGhibli: 'bg-[#D1FAE5] border border-emerald-300 text-emerald-900',
+      badgeCosmos: 'bg-emerald-950/60 text-emerald-400 border border-emerald-500/30',
+      accentGhibli: 'group-hover:text-emerald-700',
+      accentCosmos: 'group-hover:text-emerald-400',
     },
   ]
-
-  // Cargar estilos legendarios al montar
-  useEffect(() => {
-    projectsAPI.estilosLegendarios()
-      .then(r => setEstilosLegendarios(r?.data?.estilos || []))
-      .catch(console.error)
-  }, [])
 
   const { setProyectoActivo } = useProjectStore()
 
@@ -149,21 +123,23 @@ function NewProjectContent() {
   }
 
   const renderModoIconoPaso2 = () => {
-    if (modoSeleccionado === 'legendario') return <Zap className="w-7 h-7 text-amber-400" />
-    if (modoSeleccionado === 'aleatorio') return <Dices className="w-7 h-7 text-emerald-400" />
-    return <Palette className="w-7 h-7 text-purple-400" />
+    if (modoSeleccionado === 'legendario') return <MangaIcon name="modo_legendario" size={28} />
+    if (modoSeleccionado === 'aleatorio') return <MangaIcon name="modo_aleatorio" size={28} />
+    return <MangaIcon name="creacion_propia" size={28} />
   }
 
   return (
     <div className="min-h-screen bg-rdc-primary flex flex-col justify-between transition-colors duration-300 relative overflow-x-hidden">
-      {/* Slideshow animado de fondo con transición cada 5000ms */}
-      <BackgroundSlideshow
-        imagenes={fondosDisponibles}
-        intervalo={5000}
-        overlayClassName={esGhibli ? 'bg-black/20' : 'bg-black/40 backdrop-blur-[0.5px]'}
-      />
+      {/* Slideshow animado continuo aleatorio de fondo con transición cross-fade (17s) y overlay cinematográfico */}
+      <div className="fixed inset-0 w-full h-full overflow-hidden pointer-events-none z-0">
+        <BackgroundSlideshow
+          imagenes={fondosDisponibles}
+          intervalo={17000}
+        />
+        <div className="absolute inset-0 bg-slate-950/70 backdrop-blur-[2px]" />
+      </div>
 
-      {/* Animación de partículas detrás del contenido (Cosmos vs Ghibli) */}
+      {/* Animación de partículas detrás del contenido */}
       <ThemeBackgroundAnimation />
 
       {/* Header */}
@@ -191,59 +167,65 @@ function NewProjectContent() {
         </div>
       </nav>
 
-      <main className="flex-1 flex items-center justify-center p-6 relative z-10">
-        <div className="w-full max-w-3xl">
+      <main className="flex-1 flex items-center justify-center p-4 sm:p-6 relative z-10">
+        <div className={`w-full transition-all duration-300 ${
+          paso === 2 && modoSeleccionado === 'legendario' ? 'max-w-5xl' : 'max-w-3xl'
+        }`}>
 
           {/* ── PASO 1: Selección de modo ── */}
           {paso === 1 && (
             <div className="animate-in fade-in zoom-in-95 duration-200">
-              <h2 className="font-titulo text-3xl text-rdc-text font-semibold
-                             text-center mb-2 drop-shadow-md">
-                {t('newProject.howToCreate') || '¿Cómo deseas crear tu manga?'}
-              </h2>
-              <p className="text-rdc-muted text-center mb-10 drop-shadow-sm font-titulo">
-                {t('newProject.subtitle') || 'Selecciona el método de creación que mejor se adapte a tu flujo creativo.'}
-              </p>
+              <div className={`relative z-10 max-w-lg mx-auto my-4 px-6 py-3 rounded-2xl text-center shadow-[3px_3px_0px_0px_rgba(0,0,0,0.8)] border-2 border-black mb-8 ${
+                esGhibli ? 'bg-white' : 'bg-[#0B0F19]'
+              }`}>
+                <h2 className="font-titulo text-2xl font-black text-slate-900 dark:text-white leading-tight">
+                  {t('newProject.howToCreate') || '¿Cómo deseas crear tu manga?'}
+                </h2>
+                <p className="font-titulo text-xs sm:text-sm text-slate-600 dark:text-slate-300 font-medium mt-1">
+                  {t('newProject.subtitle') || 'Selecciona el método de creación que mejor se adapte a tu flujo creativo.'}
+                </p>
+              </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                {MODOS.map((modo) => {
-                  const ModoIcon = modo.icon
-                  return (
-                    <button
-                      key={modo.id}
-                      onClick={() => {
-                        setModoSeleccionado(modo.id)
-                        setPaso(2)
-                      }}
-                      className={`border-2 rounded-2xl p-6 text-left transition-all duration-300 hover:scale-105 group cursor-pointer backdrop-blur-md flex flex-col justify-between ${
-                        esGhibli ? modo.ghibliClasses : modo.cosmosClasses
-                      }`}
-                    >
-                      <div>
-                        <div className="w-14 h-14 rounded-2xl bg-black/20 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
-                          <ModoIcon className={`w-8 h-8 ${modo.iconColor}`} />
-                        </div>
-                        <h3 className={`font-titulo text-xl font-bold mb-2 transition-colors ${
-                          esGhibli ? modo.accentGhibli : modo.accentCosmos
-                        }`}>
-                          {modo.titulo}
-                        </h3>
-                        <p className="text-sm leading-relaxed opacity-85 font-titulo">
-                          {modo.descripcion}
-                        </p>
+                {MODOS.map((modo) => (
+                  <button
+                    key={modo.id}
+                    onClick={() => {
+                      setModoSeleccionado(modo.id)
+                      setPaso(2)
+                    }}
+                    className={`rounded-2xl p-6 text-left transition-all duration-300 group cursor-pointer flex flex-col justify-between ${
+                      esGhibli ? modo.ghibliClasses : modo.cosmosClasses
+                    }`}
+                  >
+                    <div>
+                      <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-5 group-hover:scale-105 transition-transform ${
+                        esGhibli ? modo.badgeGhibli : modo.badgeCosmos
+                      }`}>
+                        <MangaIcon name={modo.iconName} size={32} />
                       </div>
-                    </button>
-                  )
-                })}
+                      <h3 className={`font-titulo text-xl font-bold mb-2 transition-colors ${
+                        esGhibli ? modo.accentGhibli : modo.accentCosmos
+                      }`}>
+                        {modo.titulo}
+                      </h3>
+                      <p className={`text-sm leading-relaxed font-titulo ${
+                        esGhibli ? 'text-slate-600' : 'text-slate-300'
+                      }`}>
+                        {modo.descripcion}
+                      </p>
+                    </div>
+                  </button>
+                ))}
               </div>
             </div>
           )}
 
           {/* ── PASO 2: Detalles del proyecto ── */}
           {paso === 2 && (
-            <div className={`border rounded-2xl p-8 shadow-2xl backdrop-blur-md animate-in fade-in zoom-in-95 duration-200 ${
+            <div className={`border-2 rounded-2xl p-6 sm:p-8 shadow-2xl backdrop-blur-md animate-in fade-in zoom-in-95 duration-200 ${
               esGhibli
-                ? 'bg-[#FDFBF7]/95 border-[#DFE7DB] text-[#1B2D23]'
+                ? 'bg-[#FCFAF6] border-slate-900 text-slate-900 shadow-[4px_4px_0px_0px_rgba(30,41,59,0.9)]'
                 : 'bg-rdc-secondary/95 border-rdc-border text-rdc-text'
             }`}>
               <div className="flex items-center gap-3.5 mb-6">
@@ -287,86 +269,28 @@ function NewProjectContent() {
                   />
                 </div>
 
-                {/* Formato de lectura */}
+                {/* Formato de lectura con iconografía oficial */}
                 <div>
                   <label className="block text-rdc-muted text-sm mb-3 font-titulo font-semibold">
                     {t('newProject.readingFormat') || 'Formato de lectura'}
                   </label>
-                  <div className="grid grid-cols-2 gap-3">
-                    {[
-                      { id: 'manga', label: t('newProject.manga') || 'Manga Tradicional', sub: t('newProject.mangaDesc') || 'Lectura de derecha a izquierda (Japón)', icon: BookOpen },
-                      { id: 'occidental', label: t('newProject.western') || 'Cómic Occidental', sub: t('newProject.westernDesc') || 'Lectura de izquierda a derecha', icon: Globe },
-                    ].map((fmt) => {
-                      const FmtIcon = fmt.icon
-                      const activo = form.formato_lectura === fmt.id
-                      return (
-                        <button
-                          key={fmt.id}
-                          type="button"
-                          onClick={() => setForm(p => ({ ...p, formato_lectura: fmt.id }))}
-                          className={`border-2 rounded-xl p-4 text-left transition-all duration-200 cursor-pointer ${
-                            activo
-                              ? esGhibli
-                                ? 'border-emerald-600 bg-emerald-50 shadow-sm'
-                                : 'border-rdc-accent bg-rdc-accent/15 shadow-sm'
-                              : esGhibli
-                                ? 'border-[#DFE7DB] hover:border-emerald-300 bg-white/70'
-                                : 'border-rdc-border hover:border-rdc-muted bg-rdc-card/50'
-                          }`}
-                        >
-                          <div className="flex items-center gap-2 mb-1">
-                            <FmtIcon className={`w-4 h-4 ${activo ? 'text-rdc-accent' : 'text-rdc-muted'}`} />
-                            <p className="font-semibold text-sm font-titulo">{fmt.label}</p>
-                          </div>
-                          <p className="text-rdc-muted text-xs font-titulo">{fmt.sub}</p>
-                        </button>
-                      )
-                    })}
-                  </div>
+                  <ReadingFormatSelector
+                    value={form.formato_lectura}
+                    onChange={(fmtId) => setForm(p => ({ ...p, formato_lectura: fmtId }))}
+                    isGhibli={esGhibli}
+                  />
                 </div>
 
-                {/* Selector de estilo legendario */}
+                {/* Selector de 25 Estilos Legendarios */}
                 {modoSeleccionado === 'legendario' && (
                   <div>
                     <label className="block text-rdc-muted text-sm mb-3 font-titulo font-semibold">
-                      {t('newProject.legendaryStyle') || 'Selecciona el estilo artístico maestro'}
+                      {t('newProject.legendaryStyle') || 'Selecciona el estilo artístico maestro'} (25 disponibles)
                     </label>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-64 overflow-y-auto pr-1">
-                      {estilosLegendarios.map((estilo) => {
-                        const config = ICONOS_ESTILOS[estilo.id] || { icon: Sparkles, color: 'text-amber-400' }
-                        const StyleIcon = config.icon
-                        const seleccionado = estiloSeleccionado === estilo.id
-
-                        return (
-                          <button
-                            key={estilo.id}
-                            type="button"
-                            onClick={() => setEstiloSeleccionado(estilo.id)}
-                            className={`border rounded-xl p-3 text-left transition-all duration-200 cursor-pointer flex items-start gap-2.5 ${
-                              seleccionado
-                                ? esGhibli
-                                  ? 'border-amber-600 bg-amber-50 shadow-sm'
-                                  : 'border-rdc-accent bg-rdc-accent/15 shadow-sm'
-                                : esGhibli
-                                  ? 'border-[#DFE7DB] hover:border-amber-300 bg-white/70'
-                                  : 'border-rdc-border hover:border-rdc-muted bg-rdc-card/40'
-                            }`}
-                          >
-                            <div className="p-1.5 rounded-lg bg-rdc-secondary border border-rdc-border mt-0.5 flex-shrink-0">
-                              <StyleIcon className={`w-4 h-4 ${config.color}`} />
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <p className="text-sm font-semibold font-titulo leading-tight">
-                                {estilo.nombre}
-                              </p>
-                              <p className="text-rdc-muted text-xs leading-snug mt-0.5 line-clamp-2">
-                                {estilo.descripcion}
-                              </p>
-                            </div>
-                          </button>
-                        )
-                      })}
-                    </div>
+                    <StyleSelectorGrid
+                      estiloSeleccionado={estiloSeleccionado}
+                      onSeleccionar={setEstiloSeleccionado}
+                    />
                   </div>
                 )}
 
@@ -389,7 +313,7 @@ function NewProjectContent() {
                     ? 'bg-amber-500/15 border border-amber-500/30 text-amber-900 rounded-xl p-4 flex items-start gap-2.5'
                     : 'bg-emerald-500/15 border border-emerald-500/30 text-emerald-200 rounded-xl p-4 flex items-start gap-2.5'
                   }>
-                    <Dices className="w-4 h-4 flex-shrink-0 mt-0.5 text-emerald-400" />
+                    <MangaIcon name="modo_aleatorio" size={18} className="flex-shrink-0 mt-0.5" />
                     <p className="text-xs font-titulo font-medium leading-relaxed">
                       {t('newProject.randomNote') || 'La IA generará un conjunto de directivas visuales y pesos de arte equilibrados para tu proyecto.'}
                     </p>

@@ -15,82 +15,40 @@ from models.schemas import (
     MensajeRespuesta
 )
 from utils.dependencies import get_current_user
+from services.legendary_presets import LEGENDARY_PRESETS
 
 router = APIRouter(prefix="/projects", tags=["Proyectos"])
 
-# Estilos legendarios predefinidos con sus System Prompts Maestros
+# Estilos legendarios predefinidos mapeados desde LEGENDARY_PRESETS
 ESTILOS_LEGENDARIOS = {
-    "shonen_action": {
-        "nombre": "Shonen Action",
-        "descripcion": "Estilo épico de acción, líneas gruesas, dinamismo extremo",
-        "emoji": "⚡",
-        "system_prompt": "Manga shonen action style, thick bold outlines, dynamic action lines speed effects, highly expressive faces with exaggerated emotions, high contrast black and white ink, screentone shading patterns, dramatic perspective angles, influenced by Dragon Ball and Naruto, professional manga artwork"
-    },
-    "shojo_romance": {
-        "nombre": "Shojo Romance",
-        "descripcion": "Delicado y elegante, ojos grandes, atmósfera romántica",
-        "emoji": "🌸",
-        "system_prompt": "Manga shojo style, delicate thin elegant lines, floral and sparkle decorations, large sparkling detailed eyes, soft screentone shading, elegant fashion and flowing hair, soft romantic atmosphere, influenced by Sailor Moon and Fruits Basket, professional manga artwork"
-    },
-    "seinen_dark": {
-        "nombre": "Seinen Dark",
-        "descripcion": "Oscuro y realista, proporciones detalladas, atmósfera gritty",
-        "emoji": "🗡️",
-        "system_prompt": "Dark seinen manga style, highly realistic proportions, heavy crosshatching shadows, gritty detailed textures, cinematic dramatic composition, intense emotional expression, detailed environments, influenced by Berserk and Vagabond, professional manga artwork"
-    },
-    "cyberpunk_manga": {
-        "nombre": "Cyberpunk Manga",
-        "descripcion": "Futurista y oscuro, neones sobre sombras, estético urbano",
-        "emoji": "🤖",
-        "system_prompt": "Cyberpunk manga aesthetic, neon light accents on dark backgrounds, mechanical and technological details, urban dystopian environments, clean futuristic lines mixed with gritty textures, influenced by Ghost in the Shell and Akira, professional manga artwork"
-    },
-    "isekai_fantasy": {
-        "nombre": "Isekai Fantasy",
-        "descripcion": "Fantasía moderna, proporciones anime, magia y aventura",
-        "emoji": "✨",
-        "system_prompt": "Modern isekai manga style, clean precise lines, fantasy magical elements, anime proportions, detailed armor weapons and magic spell effects, adventurous dynamic composition, influenced by Re Zero and Sword Art Online, professional manga artwork"
-    },
-    "kodomomuke": {
-        "nombre": "Kodomomuke",
-        "descripcion": "Adorable y amigable, formas redondeadas, para todos",
-        "emoji": "🌟",
-        "system_prompt": "Cute kodomomuke manga style, simplified rounded friendly shapes, bright cheerful expressions, simple clear linework, friendly approachable characters, minimal detail, bright colors, influenced by Doraemon and Pokemon, professional manga artwork"
-    },
-    "franco_belge": {
-        "nombre": "Franco-Belge",
-        "descripcion": "Ligne claire europea, colores planos brillantes, clásico",
-        "emoji": "🎨",
-        "system_prompt": "Franco-Belgian comic style, clear ligne claire precise linework, bright flat bold colors, realistic human proportions, clean European aesthetic, detailed backgrounds, influenced by Tintin and Asterix, professional comic artwork"
-    },
-    "marvel_western": {
-        "nombre": "Marvel Western",
-        "descripcion": "Superhéroes americanos, musculatura dinámica, colores fuertes",
-        "emoji": "🦸",
-        "system_prompt": "American Marvel Comics superhero style, dynamic powerful poses, muscular exaggerated anatomy, bold vibrant colors, dramatic lighting and deep shadows, action packed compositions, influenced by classic Marvel artwork, professional comic artwork"
-    },
-    "indie_underground": {
-        "nombre": "Indie Underground",
-        "descripcion": "Expresivo, trazo libre y sucio, narrativa de autor",
-        "emoji": "☕",
-        "system_prompt": "Indie alternative comic style, expressive raw hand drawn ink lines, gritty texture and crosshatching, personal artistic voice, unconventional composition, atmospheric moody shadows, influenced by underground graphic novels, professional comic artwork"
-    },
+    clave: {
+        "nombre": datos["nombre_ui"],
+        "descripcion": datos["subtitulo"],
+        "escuela": datos.get("escuela", "manga"),
+        "icono": datos.get("icono", ""),
+        "system_prompt": datos.get("prompt_imagen", ""),
+        "prompt_guion": datos.get("prompt_guion", ""),
+    }
+    for clave, datos in LEGENDARY_PRESETS.items()
 }
 
 
 @router.get("/estilos-legendarios")
 async def listar_estilos_legendarios():
     """
-    Devuelve el catálogo de estilos legendarios disponibles.
+    Devuelve el catálogo completo de los 25 estilos legendarios disponibles.
     No requiere autenticación para que el wizard pueda mostrarlos.
     """
     estilos = [
         {
             "id": clave,
-            "nombre": datos["nombre"],
-            "descripcion": datos["descripcion"],
-            "emoji": datos["emoji"],
+            "nombre": datos["nombre_ui"],
+            "descripcion": datos["subtitulo"],
+            "escuela": datos.get("escuela", "manga"),
+            "icono": datos.get("icono", ""),
+            "system_prompt": datos.get("prompt_imagen", ""),
         }
-        for clave, datos in ESTILOS_LEGENDARIOS.items()
+        for clave, datos in LEGENDARY_PRESETS.items()
     ]
     return {"estilos": estilos, "total": len(estilos)}
 
