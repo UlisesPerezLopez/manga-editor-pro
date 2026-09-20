@@ -23,7 +23,7 @@ class ImageTestRequest(BaseModel):
 
 
 @router.post("/test-chat")
-async def test_chat(datos: Optional[ChatTestRequest] = None):
+async def ai_test_chat(datos: Optional[ChatTestRequest] = None):
     """
     Envía un ping/mensaje a Gemini 3.7 Flash o modelo configurado vía FreeLLMAPI.
     Devuelve: { "status": "ok", "provider": "FreeLLMAPI", "result": respuesta }
@@ -53,7 +53,7 @@ async def test_chat(datos: Optional[ChatTestRequest] = None):
 
 
 @router.post("/test-image")
-async def test_image(datos: Optional[ImageTestRequest] = None):
+async def ai_test_image(datos: Optional[ImageTestRequest] = None):
     """
     Envía una solicitud de viñeta a @cf/black-forest-labs/flux-1-schnell y devuelve la URL generada.
     Devuelve: { "status": "ok", "provider": "FreeLLMAPI", "result": url, "image_url": url }

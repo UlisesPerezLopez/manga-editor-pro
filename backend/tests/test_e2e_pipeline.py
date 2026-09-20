@@ -87,7 +87,7 @@ class TestE2EPipeline:
         nuevo_proyecto = {
             "nombre": "Crónicas de Ceniza",
             "modo_creacion": "legendario",
-            "estilo_legendario": "shonen_action",
+            "estilo_legendario": "shonen_legendario",
             "formato_lectura": "manga"
         }
         res_proj = client.post("/projects", json=nuevo_proyecto, headers=headers)
@@ -154,7 +154,7 @@ class TestE2EPipeline:
         res_proj = client.post("/projects", json={
             "nombre": "Manga Canvas Test",
             "modo_creacion": "legendario",
-            "estilo_legendario": "shonen_action",
+            "estilo_legendario": "shonen_legendario",
             "formato_lectura": "manga"
         }, headers=headers)
         proj_id = res_proj.json()["id"]
@@ -204,7 +204,7 @@ class TestE2EPipeline:
         res_proj = client.post("/projects", json={
             "nombre": "Manga Analytics Test",
             "modo_creacion": "legendario",
-            "estilo_legendario": "shonen_action",
+            "estilo_legendario": "shonen_legendario",
             "formato_lectura": "manga"
         }, headers=headers)
         proj_id = res_proj.json()["id"]
