@@ -43,8 +43,11 @@ class Proyecto(Base):
     modo_creacion = Column(String(20), nullable=True)
     estilo_legendario = Column(String(100), nullable=True)
 
-    # Firma Visual - Sistema Prompt Maestro (se bloquea tras validación)
+    # Firma Visual - Sistema Prompt Maestro y Diagnóstico Estructurado
     system_prompt_maestro = Column(Text, nullable=True)
+    style_prompt = Column(Text, nullable=True)  # Prompt maestro compilado para inyección en FLUX
+    firma_visual_extraida = Column(JSON, nullable=True)  # Diagnóstico JSON con 4 atributos técnicos
+    imagenes_referencia = Column(JSON, nullable=True)  # Array de rutas/URLs de muestras de referencia
     paleta_colores = Column(JSON, nullable=True)  # Array de hex: ["#1A1A1A", ...]
     tecnica_linea = Column(String(50), nullable=True)
     estilo_sombreado = Column(String(50), nullable=True)
@@ -54,6 +57,13 @@ class Proyecto(Base):
 
     # Formato de lectura del cómic
     formato_lectura = Column(String(20), default="manga")  # 'manga' o 'occidental'
+
+    # Campos narrativos del guionista
+    sinopsis = Column(Text, nullable=True)
+    premisa = Column(Text, nullable=True)
+    genero = Column(String(50), nullable=True)
+    tono = Column(String(50), nullable=True)
+    num_capitulos = Column(Integer, default=5, nullable=True)
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True),
@@ -85,6 +95,10 @@ class Personaje(Base):
 
     # Prompt optimizado para IA generado automáticamente por Gemini
     prompt_ia = Column(Text, nullable=True)
+    prompt_visual = Column(Text, nullable=True)
+
+    # Avatar / Retrato oficial del personaje
+    avatar_url = Column(String(500), nullable=True)
 
     # JSON con URLs de expresiones: {"feliz": "url", "triste": "url", ...}
     expresiones_json = Column(JSON, nullable=True)
@@ -106,6 +120,19 @@ class Personaje(Base):
     # Relaciones
     proyecto = relationship("Proyecto", back_populates="personajes")
 
+    @property
+    def vestimenta(self):
+        return self.ropa_tipica
+
+    @vestimenta.setter
+    def vestimenta(self, value):
+        self.ropa_tipica = value
+
+    @property
+    def proyecto_id(self):
+        return self.id_proyecto
+
+
 
 class Capitulo(Base):
     """Tabla de capítulos dentro de un proyecto"""
@@ -116,6 +143,7 @@ class Capitulo(Base):
     numero = Column(Integer, nullable=False)
     titulo = Column(String(200), nullable=True)
     sinopsis = Column(Text, nullable=True)
+    guion_json = Column(JSON, nullable=True)  # Desglose estructurado de páginas, viñetas y diálogos
     
     # Publicación digital, monetización y métricas
     is_published = Column(Boolean, default=False, nullable=False)
@@ -164,12 +192,18 @@ class Vineta(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     id_pagina = Column(Integer, ForeignKey("paginas.id"), nullable=False)
+    numero_vineta = Column(Integer, default=1, nullable=True)
 
     # Posición y dimensiones en el canvas (en píxeles)
     posicion_x = Column(Float, default=0.0)
     posicion_y = Column(Float, default=0.0)
     width = Column(Float, default=200.0)
     height = Column(Float, default=200.0)
+
+    # Contenido narrativo y cinematográfico
+    plano = Column(String(50), nullable=True)
+    descripcion_escena = Column(Text, nullable=True)
+    dialogo = Column(Text, nullable=True)
 
     # Imagen generada para esta viñeta
     imagen_url = Column(String(500), nullable=True)

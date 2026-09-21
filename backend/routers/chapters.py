@@ -10,6 +10,7 @@ from database.database import get_db
 from database.models import Capitulo, Pagina, Proyecto, Usuario
 from models.schemas import (
     CapituloCrearRequest,
+    CapituloActualizarRequest,
     CapituloRespuesta,
     CapituloConPaginasRespuesta,
     CapituloPublishStatusRequest,
@@ -57,7 +58,8 @@ async def crear_capitulo(
         id_proyecto=proyecto_id,
         numero=datos.numero,
         titulo=datos.titulo or f"Capítulo {datos.numero}",
-        sinopsis=datos.sinopsis
+        sinopsis=datos.sinopsis,
+        guion_json=datos.guion_json
     )
     db.add(nuevo)
     db.commit()
@@ -88,6 +90,42 @@ async def listar_capitulos(
     ).order_by(Capitulo.numero).all()
 
     return capitulos
+
+
+@router.patch("/{proyecto_id}/capitulo/{capitulo_id}",
+              response_model=CapituloRespuesta)
+async def actualizar_capitulo(
+    proyecto_id: int,
+    capitulo_id: int,
+    datos: CapituloActualizarRequest,
+    usuario_actual: Usuario = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Actualiza los datos de un capítulo (título, sinopsis/guion, desglose JSON)."""
+    proyecto = db.query(Proyecto).filter(
+        Proyecto.id == proyecto_id,
+        Proyecto.id_usuario == usuario_actual.id
+    ).first()
+    if not proyecto:
+        raise HTTPException(status_code=404, detail="Proyecto no encontrado")
+
+    capitulo = db.query(Capitulo).filter(
+        Capitulo.id == capitulo_id,
+        Capitulo.id_proyecto == proyecto_id
+    ).first()
+    if not capitulo:
+        raise HTTPException(status_code=404, detail="Capítulo no encontrado")
+
+    if datos.titulo is not None:
+        capitulo.titulo = datos.titulo
+    if datos.sinopsis is not None:
+        capitulo.sinopsis = datos.sinopsis
+    if datos.guion_json is not None:
+        capitulo.guion_json = datos.guion_json
+
+    db.commit()
+    db.refresh(capitulo)
+    return capitulo
 
 
 @router.delete("/{proyecto_id}/capitulo/{capitulo_id}",

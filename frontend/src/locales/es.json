@@ -498,5 +498,14 @@
     "zh": "简体中文",
     "fr": "Français",
     "it": "Italiano"
+  },
+  "projectStudio": {
+    "scriptWriter": "Guionista IA",
+    "visualSignature": "Firma Visual",
+    "characters": "Personajes",
+    "panelGenerator": "Generador de Viñetas",
+    "pageEditor": "Editor de Páginas",
+    "export": "Exportar",
+    "styleLocked": "Firma Bloqueada"
   }
 }

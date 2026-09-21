@@ -6,6 +6,15 @@ import axios from 'axios'
 
 const BASE_URL = 'http://localhost:8000'
 
+export const obtenerUrlImagen = (ruta) => {
+  if (!ruta) return null
+  if (ruta.startsWith('http://') || ruta.startsWith('https://') || ruta.startsWith('data:')) {
+    return ruta
+  }
+  const backendBase = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
+  return `${backendBase}${ruta.startsWith('/') ? '' : '/'}${ruta}`
+}
+
 const api = axios.create({
   baseURL: BASE_URL,
   headers: { 'Content-Type': 'application/json' },
@@ -61,10 +70,24 @@ export const projectsAPI = {
     return api.post('/projects', payload)
   },
   obtener: (id) => api.get(`/projects/${id}`),
+  actualizar: (id, datos) => api.patch(`/projects/${id}`, datos),
   eliminar: (id) => api.delete(`/projects/${id}`),
   actualizarPortada: (id, portadaUrl) => api.patch(`/projects/${id}/portada`, { portada_url: portadaUrl }),
   estilosLegendarios: () => api.get('/projects/estilos-legendarios'),
   obtenerAnalytics: (id) => api.get(`/projects/analytics/${id}`),
+
+  // Firma Visual & Portadas
+  obtenerFirmaVisual: (id) => api.get(`/projects/${id}/firma-visual`),
+  subirReferenciasFirma: (id, formData) =>
+    api.post(`/projects/${id}/firma-visual/upload`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }),
+  analizarFirmaVisual: (id) => api.post(`/projects/${id}/firma-visual/analizar`),
+  actualizarFirmaVisual: (id, datos) => api.patch(`/projects/${id}/firma-visual`, datos),
+  sortearEstiloAleatorio: (id) => api.post(`/projects/${id}/firma-visual/sortear-aleatorio`),
+  eliminarReferenciasFirma: (id) => api.delete(`/projects/${id}/firma-visual/referencias`),
+  generarPortada: (id, datos) => api.post(`/projects/${id}/generar-portada`, datos),
+  obtenerDetalleEstilo: (styleId) => api.get(`/projects/styles/${styleId}`),
 }
 
 // ─── GENERACIÓN IA ────────────────────────────────────────────────────────
@@ -78,29 +101,41 @@ export const generateAPI = {
   estadoProveedores: () => api.get('/generate/estado-proveedores'),
 }
 
-// ─── FIRMA VISUAL ─────────────────────────────────────────────────────────
+// ─── FIRMA VISUAL (ALIAS STYLE API) ───────────────────────────────────────
 export const styleAPI = {
   // Obtener estado actual de la firma visual del proyecto
   obtenerEstado: (idProyecto) =>
-    api.get(`/style/estado/${idProyecto}`),
+    api.get(`/projects/${idProyecto}/firma-visual`),
 
   // Subir imágenes de referencia (FormData con archivos)
   subirReferencias: (idProyecto, formData) =>
-    api.post(`/style/upload-referencias/${idProyecto}`, formData, {
+    api.post(`/projects/${idProyecto}/firma-visual/upload`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     }),
 
   // Iniciar análisis de imágenes con Gemini Vision
   analizarEstilo: (idProyecto) =>
-    api.post(`/style/analizar/${idProyecto}`),
+    api.post(`/projects/${idProyecto}/firma-visual/analizar`),
+
+  // Bloquear o actualizar el estilo
+  actualizarFirma: (idProyecto, datos) =>
+    api.patch(`/projects/${idProyecto}/firma-visual`, datos),
 
   // Bloquear el estilo como definitivo
-  bloquearEstilo: (idProyecto) =>
-    api.post(`/style/bloquear/${idProyecto}`),
+  bloquearEstilo: (idProyecto, datos = {}) =>
+    api.patch(`/projects/${idProyecto}/firma-visual`, { ...datos, style_locked: true }),
+
+  // Re-sorteo de estilo aleatorio
+  sortearAleatorio: (idProyecto) =>
+    api.post(`/projects/${idProyecto}/firma-visual/sortear-aleatorio`),
 
   // Eliminar todas las referencias y reiniciar análisis
   eliminarReferencias: (idProyecto) =>
-    api.delete(`/style/referencias/${idProyecto}`),
+    api.delete(`/projects/${idProyecto}/firma-visual/referencias`),
+
+  // Obtener detalles de la biblia de estilos y galería de referencias
+  obtenerDetalleEstilo: (styleId) =>
+    api.get(`/projects/styles/${styleId}`),
 }
 
 // ─── PERSONAJES ───────────────────────────────────────────────────────────
@@ -120,9 +155,32 @@ export const charactersAPI = {
   eliminar: (idProyecto, idPersonaje) =>
     api.delete(`/characters/${idProyecto}/${idPersonaje}`),
 
+  generarAvatar: (idProyecto, idPersonaje, datos = {}) =>
+    api.post(`/characters/${idProyecto}/${idPersonaje}/generar-avatar`, datos),
+
+  importarDelGuion: (idProyecto, datos = {}) =>
+    api.post(`/characters/${idProyecto}/importar-del-guion`, datos),
+
+  generarIdea: (idProyecto, datos = {}) =>
+    api.post(`/characters/${idProyecto}/generar-idea`, datos),
+
   regenerarFicha: (idProyecto, idPersonaje) =>
     api.post(`/characters/${idProyecto}/${idPersonaje}/regenerar-ficha`),
 }
+
+
+// ─── GENERADOR DE VIÑETAS (PANEL ART STUDIO API) ──────────────────────────
+export const vinetasAPI = {
+  generarImagen: (idProyecto, datos) =>
+    api.post(`/projects/${idProyecto}/vinetas/generar-imagen`, datos),
+
+  guardarVineta: (idProyecto, datos) =>
+    api.patch(`/projects/${idProyecto}/vinetas/guardar`, datos),
+
+  listarVinetas: (idProyecto) =>
+    api.get(`/projects/${idProyecto}/vinetas`),
+}
+
 
 // ─── GENERACIÓN DE IMÁGENES ──────────────────────────────────────────────
 export const imageAPI = {
@@ -172,6 +230,9 @@ export const chaptersAPI = {
 
   crearCapitulo:   (idProyecto, datos) =>
     api.post(`/chapters/${idProyecto}`, datos),
+
+  actualizarCapitulo: (idProyecto, idCapitulo, datos) =>
+    api.patch(`/chapters/${idProyecto}/capitulo/${idCapitulo}`, datos),
 
   eliminarCapitulo: (idProyecto, idCapitulo) =>
     api.delete(`/chapters/${idProyecto}/capitulo/${idCapitulo}`),

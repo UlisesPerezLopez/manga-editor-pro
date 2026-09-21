@@ -5,91 +5,156 @@ export const LEGENDARY_STYLES = [
     name: "Shōnen Legendario",
     subtitle: "Espíritu marcial, superación y energía cinética",
     school: "manga",
-    icon: "/assets/legendary_styles/shonen_legendario.png"
+    icon: "/assets/legendary_styles/shonen_legendario.png",
+    tecnica_linea: "Líneas de tinta enérgicas con plumilla G-Pen y líneas de velocidad cinéticas",
+    estilo_sombreado: "Tramado screentone contrastado y zonas de negro pleno de impacto",
+    paleta_colores: ["#000000", "#1E293B", "#64748B", "#E2E8F0", "#FFFFFF"],
+    prompt_imagen: "manga artstyle, dynamic action shonen panel, bold energetic ink lines, speed lines, screentone shading, high contrast black and white inks, intense facial expressions, kinetic impact frame, Japanese graphic novel masterpiece",
+    prompt_guion: "Tono heroico juvenil de artes marciales y superación. Enfoque en la perseverancia, vínculos inquebrantables, determinación visceral y remates de alto impacto emocional."
   },
   {
     id: "fantasia_oscura",
     name: "Fantasía Oscura",
     subtitle: "Trama densa de plumilla, crueldad y destinos trágicos",
     school: "manga",
-    icon: "/assets/legendary_styles/fantasia_oscura.png"
+    icon: "/assets/legendary_styles/fantasia_oscura.png",
+    tecnica_linea: "Plumilla fina con micro-texturas orgánicas y trazo visceral detallado",
+    estilo_sombreado: "Cross-hatching denso, tramas oscuras y sombras profundas de tinta negra",
+    paleta_colores: ["#0A0A0A", "#1C1917", "#44403C", "#A8A29E", "#FAFAF9"],
+    prompt_imagen: "dark fantasy manga style, intricate cross-hatching, heavy black ink shadows, gritty medieval textures, grim atmospheric lighting, visceral detailed lineart, masterfully inked panels, gothic masterpiece",
+    prompt_guion: "Tono de fantasía oscura y cruda. Dilemas morales sin salida, atmósfera opresiva, supervivencia extrema y reflexiones internas sobre la ambición desmedida."
   },
   {
     id: "cyberpunk_209X",
     name: "Cyberpunk 209X",
     subtitle: "Cables expuestos, neón monocromo y cibernética",
     school: "manga",
-    icon: "/assets/legendary_styles/cyberpunk_209X.png"
+    icon: "/assets/legendary_styles/cyberpunk_209X.png",
+    tecnica_linea: "Líneas técnicas mecánicas precisas de estilo anime retro años 90",
+    estilo_sombreado: "Puntos de semitono halftone, contrastes arquitectónicos y tintas sólidas",
+    paleta_colores: ["#030712", "#111827", "#374151", "#9CA3AF", "#F3F4F6"],
+    prompt_imagen: "cyberpunk manga aesthetic, 90s anime linework, ultra-detailed mechanical cables, cybernetic augmentations, harsh architectural cityscapes, solid ink blacks with halftone dot screens, mechanical sci-fi masterpiece",
+    prompt_guion: "Ciencia ficción distópica y ciberpunk filosófico. Transhumanismo, corporaciones omnipresentes, soledad urbana, argot marginal y conversaciones existenciales."
   },
   {
     id: "anime_pastoral",
     name: "Naturaleza Espiritual",
     subtitle: "Espíritus del bosque, melancolía y entornos orgánicos",
     school: "manga",
-    icon: "/assets/legendary_styles/anime_pastoral.png"
+    icon: "/assets/legendary_styles/anime_pastoral.png",
+    tecnica_linea: "Contornos orgánicos dibujados a mano con sensibilidad pictórica",
+    estilo_sombreado: "Aguadas suaves, texturas de vegetación exuberante y tramas etéreas",
+    paleta_colores: ["#14532D", "#15803D", "#86EFAC", "#FEF08A", "#F0FDF4"],
+    prompt_imagen: "hand-drawn pastoral anime style, organic clean ink outlines, painterly background feeling, lush greenery textures, whimsical spirit creatures, soft clean comic lines, atmospheric pastoral visual feeling",
+    prompt_guion: "Narrativa contemplativa y pastoral. Convivencia entre la civilización y las fuerzas naturales, determinación pacífica y asombro infantil."
   },
   {
     id: "mecha_clasico",
     name: "Mecha Clásico",
     subtitle: "Blindajes angulares, robots gigantes y guerra táctica",
     school: "manga",
-    icon: "/assets/legendary_styles/mecha_clasico.png"
+    icon: "/assets/legendary_styles/mecha_clasico.png",
+    tecnica_linea: "Entintado industrial audaz, perspectivas isométricas forzadas y juntas mecánicas",
+    estilo_sombreado: "Brillos metálicos, sombreado plano de alto impacto y tramas mecánicas",
+    paleta_colores: ["#0F172A", "#1E293B", "#3B82F6", "#93C5FD", "#F8FAFC"],
+    prompt_imagen: "retro mecha manga style, angular giant robot plating, hydraulic joints, forced dynamic isometric perspective, bold industrial inking, metallic sheen lineart, classic anime mechanical design",
+    prompt_guion: "Guerra biomecánica y drama bélico. Pilotos bajo presión psicológica extrema, jerarquías militares estrictas y advertencias tácticas."
   },
   {
     id: "gotico_vampirico",
     name: "Gótico Vampírico",
     subtitle: "Claroscuro radical, sombras puras y elegancia",
     school: "manga",
-    icon: "/assets/legendary_styles/gotico_vampirico.png"
+    icon: "/assets/legendary_styles/gotico_vampirico.png",
+    tecnica_linea: "Siluetas extremadamente afiladas, ornamentación victoriana y trazo estilizado",
+    estilo_sombreado: "Claroscuro absoluto con negro brea puro y zonas blancas de alto contraste",
+    paleta_colores: ["#000000", "#450A0A", "#7F1D1D", "#E5E5E5", "#FFFFFF"],
+    prompt_imagen: "high-contrast gothic manga inking, pure solid pitch-black shadows, extreme sharp silhouettes, Victorian collar details, stylized sinister eyes, radical noir balance, occult graphic novel panel",
+    prompt_guion: "Terror gótico de acción aristocrática. Cazadores de monstruos implacables, maldiciones ancestrales, monólogos mordaces y refinamiento teatral."
   },
   {
     id: "jidaigeki_samurai",
     name: "Jidaigeki Samurai",
     subtitle: "Pinceladas sumi-e, honor marcial y filos al alba",
     school: "manga",
-    icon: "/assets/legendary_styles/jidaigeki_samurai.png"
+    icon: "/assets/legendary_styles/jidaigeki_samurai.png",
+    tecnica_linea: "Pinceladas sumi-e de tinta china tradicional, salpicaduras y caligrafía viva",
+    estilo_sombreado: "Degradados de aguada de pincel, texturas de bambú y claroscuro zen",
+    paleta_colores: ["#09090B", "#27272A", "#71717A", "#D4D4D8", "#FAFAFA"],
+    prompt_imagen: "jidaigeki samurai comic style, traditional sumi-e ink splatter strokes, dynamic katana cut arcs, bamboo forest atmosphere, delicate brushwork, historical Edo period manga art",
+    prompt_guion: "Drama histórico de samuráis y ninjas. Código del Bushido, lealtad quebrantada, silencios significativos y máxima tensión previa al desenfunde."
   },
   {
     id: "shojo_mistico",
     name: "Shōjo Místico",
     subtitle: "Transformaciones mágicas, romance etéreo y destellos",
     school: "manga",
-    icon: "/assets/legendary_styles/shojo_mistico.png"
+    icon: "/assets/legendary_styles/shojo_mistico.png",
+    tecnica_linea: "Líneas finas primorosas, siluetas gráciles y ojos estelares detallados",
+    estilo_sombreado: "Tramas de pétalos, reflejos cristalinos, brillos cósmicos y degradados suaves",
+    paleta_colores: ["#3B0764", "#701A75", "#F472B6", "#FDE047", "#FFFFFF"],
+    prompt_imagen: "classic shojo manga aesthetic, slender graceful silhouettes, celestial stars and floating rose petals, luminous crystal reflections, ornate fine ink linework, large expressive starry eyes",
+    prompt_guion: "Magical girl y romance lírico. Destino cósmico, sacrificio por amor, elegancia etérea y confesiones emotivas."
   },
   {
     id: "seinen_psicologico",
     name: "Seinen Psicológico",
     subtitle: "Tensión mental, encuadres realistas y sobriedad",
     school: "manga",
-    icon: "/assets/legendary_styles/seinen_psicologico.png"
+    icon: "/assets/legendary_styles/seinen_psicologico.png",
+    tecnica_linea: "Plumilla técnica hiper-precisa con proporciones faciales anatómicas realistas",
+    estilo_sombreado: "Rayado fino quirúrgico, iluminación dramática de interrogatorio y sobriedad",
+    paleta_colores: ["#020617", "#0F172A", "#334155", "#94A3B8", "#F8FAFC"],
+    prompt_imagen: "cinematic seinen manga panels, realistic facial proportions, intense psychological gazes, meticulous hatching, dramatic interrogation room lighting, fine technical pen precision",
+    prompt_guion: "Thriller intelectual y suspenso criminal. Manipulación psicológica, deducción fría y monólogos internos minuciosos."
   },
   {
     id: "cosmos_mitologico",
     name: "Cosmos Mitológico",
     subtitle: "Armaduras sagradas, constelaciones y mitos",
     school: "manga",
-    icon: "/assets/legendary_styles/cosmos_mitologico.png"
+    icon: "/assets/legendary_styles/cosmos_mitologico.png",
+    tecnica_linea: "Trazo angular heroico retro años 80 con poses dinámicas escultóricas",
+    estilo_sombreado: "Reflejos de metal pulido en armaduras y auras de polvo estelar cósmico",
+    paleta_colores: ["#1E1B4B", "#312E81", "#818CF8", "#FDE047", "#FFFFFF"],
+    prompt_imagen: "mythological anime warrior style, reflective ornate metallic armor plating, constellation star map auras, angular dynamic heroic poses, retro 80s heroic linework aesthetic",
+    prompt_guion: "Epopeya mitológica caballeresca. Guerreros juramentados protegiendo a deidades benevolentes y combates basados en cosmos estelares."
   },
   {
     id: "belleza_melancolica",
     name: "Belleza Melancólica",
     subtitle: "Detalle textil primoroso, luz crepuscular y cartas",
     school: "manga",
-    icon: "/assets/legendary_styles/belleza_melancolica.png"
+    icon: "/assets/legendary_styles/belleza_melancolica.png",
+    tecnica_linea: "Plumilla de micro-precisión, pliegues textiles minuciosos y mechones de cabello etéreos",
+    estilo_sombreado: "Iluminación ambiental cálida con profundidad de campo sutil y tramas tenues",
+    paleta_colores: ["#292524", "#78350F", "#B45309", "#FDE68A", "#FFFBEB"],
+    prompt_imagen: "ultra-detailed Kyoto studio inspired artstyle, exquisite fabric folds, delicate hair strands, warm ambient lighting, shallow depth of field, tender emotional expressions, masterpiece linework",
+    prompt_guion: "Drama intimista posbélico. Búsqueda del significado del amor, redención emocional y diálogos ceremoniosos."
   },
   {
     id: "isekai_fantasia",
     name: "Isekai Fantasía",
     subtitle: "Gremios de aventureros, magia arcana y mazmorras",
     school: "manga",
-    icon: "/assets/legendary_styles/isekai_fantasia.png"
+    icon: "/assets/legendary_styles/isekai_fantasia.png",
+    tecnica_linea: "Líneas digitales nítidas contemporáneas de estilo novela ligera moderna",
+    estilo_sombreado: "Tramas vibrantes de screentone, runas arcanas luminosas y cel-shading limpio",
+    paleta_colores: ["#042F2E", "#0D9488", "#2DD4BF", "#A7F3D0", "#F0FDFA"],
+    prompt_imagen: "modern fantasy light novel manga style, crisp clean digital lines, glowing magic summoning runes, charming medieval fantasy equipment, vibrant screentones, contemporary anime art",
+    prompt_guion: "Aventura de rol y fantasía medieval estilizada. Leyes mágicas, rangos de aventureros y balance entre humor y táctica."
   },
   {
     id: "kodomo_aventura",
     name: "Kodomo Aventura",
     subtitle: "Criaturas adorables, humor entrañable y optimismo",
     school: "manga",
-    icon: "/assets/legendary_styles/kodomo_aventura.png"
+    icon: "/assets/legendary_styles/kodomo_aventura.png",
+    tecnica_linea: "Contornos redondeados gruesos y anatomía elástica simpática",
+    estilo_sombreado: "Planos limpios de alto contraste con texturas visuales sencillas y directas",
+    paleta_colores: ["#7C2D12", "#EA580C", "#F97316", "#FDE047", "#FEFCE8"],
+    prompt_imagen: "kodomo manga style, rounded adorable shapes, thick cheerful cartoon outlines, expressive bouncy anatomy, whimsical creature companion, bright flat textures, clean readable panels",
+    prompt_guion: "Narrativa para todos los públicos. Compañeros fantásticos, optimismo y resolución pacífica de conflictos."
   },
 
   // Europeo
@@ -98,42 +163,72 @@ export const LEGENDARY_STYLES = [
     name: "Humor Bruguera",
     subtitle: "Disfraces absurdos, dinamita y slapstick ibérico",
     school: "europeo",
-    icon: "/assets/legendary_styles/mortadela_y_salchichon.png"
+    icon: "/assets/legendary_styles/mortadela_y_salchichon.png",
+    tecnica_linea: "Trazo caricaturesco expresivo y flexible con extremidades gomosas",
+    estilo_sombreado: "Colores planos saturados con nubes de polvo y líneas de movimiento frenético",
+    paleta_colores: ["#7F1D1D", "#DC2626", "#FACC15", "#1E3A8A", "#FFFFFF"],
+    prompt_imagen: "classic Spanish caricature comic style, Escuela Bruguera aesthetic, Francisco Ibáñez cartoon art, thick expressive black ink contours, clean flat primary colors, humorous dynamic cartoon character, lively comic panel composition, traditional European comic coloring",
+    prompt_guion: "Comedia de enredo absurdo y slapstick ibérico. Malentendidos continuos, insultos castizos y huidas finales."
   },
   {
     id: "superperez",
     name: "Superhéroe Cotidiano",
     subtitle: "Parodia de oficina, vuelos torpes y villanos caseros",
     school: "europeo",
-    icon: "/assets/legendary_styles/superperez.png"
+    icon: "/assets/legendary_styles/superperez.png",
+    tecnica_linea: "Líneas de tinta curvas dinámicas con fondo urbano abigarrado",
+    estilo_sombreado: "Impresión de cómic europeo vintage con sombreado expresivo y capa flameante",
+    paleta_colores: ["#1E3A8A", "#2563EB", "#DC2626", "#FEF08A", "#FFFFFF"],
+    prompt_imagen: "expressive satirical comic art, lively curving ink stroke, slouching heroic posture with oversized flowing cape, bustling detailed city backdrop, cartoonish charm, vintage European comic printing",
+    prompt_guion: "Sátira social y parodia heroica. Oficinista anodino con capa lidiando con amenazas interplanetarias y vida doméstica."
   },
   {
     id: "el_capitan_rayo",
     name: "Cruzada Aventurera",
     subtitle: "Caballería andante, lealtad y travesías marítimas",
     school: "europeo",
-    icon: "/assets/legendary_styles/el_capitan_rayo.png"
+    icon: "/assets/legendary_styles/el_capitan_rayo.png",
+    tecnica_linea: "Rayado fino clásico a pluma con proporciones heroicas y armaduras heráldicas",
+    estilo_sombreado: "Tramas cruzadas artesanales y texturas de piedra medieval",
+    paleta_colores: ["#1C1917", "#44403C", "#854D0E", "#D97706", "#FFFBEB"],
+    prompt_imagen: "classic mid-century European adventure comic, detailed pen and ink hatching, muscular chivalric knights, heraldic shields, dramatic broadsword fencing clashes, historic castle backgrounds, realistic pulp lineart",
+    prompt_guion: "Aventura clásica de espadachines y caballeros andantes. Defensa del desfavorecido, honor y travesías épicas."
   },
   {
     id: "galos_y_druidas",
     name: "Bande Dessinée Gala",
     subtitle: "Aldeas indomables, pócimas mágicas y banquetes",
     school: "europeo",
-    icon: "/assets/legendary_styles/galos_y_druidas.png"
+    icon: "/assets/legendary_styles/galos_y_druidas.png",
+    tecnica_linea: "Variación magistral del peso de línea con caricatura anatómica vibrante",
+    estilo_sombreado: "Coloración estilo gouache con ricos fondos de bosque e interiores cálidos",
+    paleta_colores: ["#14532D", "#166534", "#B45309", "#FDE047", "#FFFFFF"],
+    prompt_imagen: "classic Franco-Belgian master comic art, bouncy expressive caricatures, historical Celtic iron helmets, magnificent ink line weight variations, rich lively crowd scenes, clean gouache coloring",
+    prompt_guion: "Comedia histórica ingeniosa y aventuras galas. Astucia combinada con pócimas de fuerza prodigiosa y banquetes al jabalí."
   },
   {
     id: "franco_belga",
     name: "Línea Clara Clásica",
     subtitle: "Contornos geométricos, expedición formal y rigor",
     school: "europeo",
-    icon: "/assets/legendary_styles/franco_belga.png"
+    icon: "/assets/legendary_styles/franco_belga.png",
+    tecnica_linea: "Línea clara pura: grosor de trazo uniforme, sin gradientes ni sombras confusas",
+    estilo_sombreado: "Planos geométricos de color impecables con rigor arquitectónico documental",
+    paleta_colores: ["#0F172A", "#0369A1", "#0284C7", "#E0F2FE", "#FFFFFF"],
+    prompt_imagen: "pure Ligne Claire comic style, uniform black line weight without shading or gradients, architectural geometric precision, perfect flat colors, realistic vehicles and environments, vintage European album aesthetic",
+    prompt_guion: "Misterio detectivesco y expedición documental rigurosa. Diálogos meticulosos, sobrios y cultos."
   },
   {
     id: "indie_underground",
     name: "Novela Gráfica Gritty",
     subtitle: "Plumilla libre, existencialismo urbano y autor",
     school: "europeo",
-    icon: "/assets/legendary_styles/indie_underground.png"
+    icon: "/assets/legendary_styles/indie_underground.png",
+    tecnica_linea: "Plumilla de inmersión áspera y sangrado de tinta crudo sobre papel mate",
+    estilo_sombreado: "Manchas de tinta negra espesa, pinceladas desgarradas y atmósfera de autor",
+    paleta_colores: ["#18181B", "#27272A", "#52525B", "#A1A1AA", "#F4F4F5"],
+    prompt_imagen: "gritty indie graphic novel art, scratchy unrefined dip-pen hatching, heavy ink bleed textures, raw expressive brushwork, moody underground comic feeling, matte off-white paper tone",
+    prompt_guion: "Realismo sucio y memoria autobiográfica. Soledad urbana, reflexiones poéticas cotidianas y honestidad descarnada."
   },
 
   // Americano
@@ -142,41 +237,71 @@ export const LEGENDARY_STYLES = [
     name: "Justiciero Mutante",
     subtitle: "Perspectivas forzadas, agilidad y dilema moral",
     school: "americano",
-    icon: "/assets/legendary_styles/hero_vintage_modern.png"
+    icon: "/assets/legendary_styles/hero_vintage_modern.png",
+    tecnica_linea: "Anatomía muscular enérgica, escorzos dinámicos y trazos de pincel elásticos",
+    estilo_sombreado: "Cross-hatching de la Edad de Bronce americana con telarañas de sombras",
+    paleta_colores: ["#1E1B4B", "#DC2626", "#2563EB", "#FDE047", "#FFFFFF"],
+    prompt_imagen: "classic American bronze-age comic book art, dynamic foreshortening, detailed muscle anatomy, dramatic cross-hatch shading, striking primary colored spandex, webbed and armored textures, energetic superhero composition",
+    prompt_guion: "Drama heroico de gran responsabilidad y rechazo social. Monólogos dinámicos en combate y dilemas éticos."
   },
   {
     id: "vigilante_nocturno",
     name: "Vigilante de la Noche",
     subtitle: "Gárgolas bajo lluvia, mente fría y noir implacable",
     school: "americano",
-    icon: "/assets/legendary_styles/vigilante_nocturno.png"
+    icon: "/assets/legendary_styles/vigilante_nocturno.png",
+    tecnica_linea: "Siluetas picudas afiladas en negro absoluto y lluvia estilizada",
+    estilo_sombreado: "Noir radical de alto contraste, gárgolas góticas y claroscuro tenebrista",
+    paleta_colores: ["#000000", "#111827", "#1F2937", "#4B5563", "#9CA3AF"],
+    prompt_imagen: "noir superhero comic art, deep pitch black ink shadows, jagged cowl silhouettes against rain, architectural gothic spires, high-contrast moody cityscapes, classic graphic novel noir masterpiece",
+    prompt_guion: "Vigilantismo detectivesco en metrópolis corruptas. Prosa seca, análisis criminal deductivo y sombras implacables."
   },
   {
     id: "reloj_del_juicio",
     name: "Realismo Deconstructivo",
     subtitle: "Retícula estricta, geopolítica y tiempo roto",
     school: "americano",
-    icon: "/assets/legendary_styles/reloj_del_juicio.png"
+    icon: "/assets/legendary_styles/reloj_del_juicio.png",
+    tecnica_linea: "Composición de retícula sobria de 9 viñetas con entintado realista milimétrico",
+    estilo_sombreado: "Colores apagados matizados con degradados sobrios y anatomía humana verosímil",
+    paleta_colores: ["#1C1917", "#44403C", "#854D0E", "#CA8A04", "#FEF08A"],
+    prompt_imagen: "sober realistic comic book art, strict balanced panel composition, calculated precise inking, unexaggerated human anatomy, subdued realistic colors, graphic novel narrative masterpiece",
+    prompt_guion: "Deconstrucción psicológica del arquetipo superheroico. Cinismo geopolítico, diarios personales y citas filosóficas."
   },
   {
     id: "heroe_miltru",
     name: "Fuerza Devastadora",
     subtitle: "Líneas ultra-limpias, violencia cinética y drama",
     school: "americano",
-    icon: "/assets/legendary_styles/heroe_miltru.png"
+    icon: "/assets/legendary_styles/heroe_miltru.png",
+    tecnica_linea: "Líneas de contorno audaces ultra-limpias con impacto cinético visceral",
+    estilo_sombreado: "Rellenos planos vibrantes con ondas de choque lumínicas y sombras limpias",
+    paleta_colores: ["#1E3A8A", "#DC2626", "#EAB308", "#38BDF8", "#FFFFFF"],
+    prompt_imagen: "modern dynamic superhero comic style, ultra-clean bold contour lines, vibrant flat color fills, explosive kinetic shockwaves, pristine line precision with visceral combat power",
+    prompt_guion: "Narrativa contemporánea de superhéroes viscerales. Consecuencias físicas letales, drama familiar e invasiones cósmicas."
   },
   {
     id: "barabaros",
     name: "Espada y Brujería Bárbara",
     subtitle: "Furia primitiva, anatomía hercúlea y ruinas",
     school: "americano",
-    icon: "/assets/legendary_styles/barabaros.png"
+    icon: "/assets/legendary_styles/barabaros.png",
+    tecnica_linea: "Pincel grueso pesado, texturas ásperas de cuero y pieles con anatomía hercúlea",
+    estilo_sombreado: "Sombreado denso a pincel de los años 70 y templos ancestrales en ruinas",
+    paleta_colores: ["#1C1917", "#451A03", "#9A3412", "#D97706", "#FEF3C7"],
+    prompt_imagen: "epic 70s sword and sorcery fantasy comic art, heavy ink brushwork, raw leather and fur textures, towering ancient ruined temples, muscular brutal combat stance, heroic fantasy linework",
+    prompt_guion: "Supervivencia primitiva contra sacerdotes hechiceros y deidades arcaicas. Filo de espada, juramentos y combate salvaje."
   },
   {
     id: "us_vintage",
     name: "Edad Dorada Gráfica",
     subtitle: "Puntos Ben-Day, tramas retro y dinamismo pop",
     school: "americano",
-    icon: "/assets/legendary_styles/us_vintage.png"
+    icon: "/assets/legendary_styles/us_vintage.png",
+    tecnica_linea: "Tintas planas primarias retro con patrones visibles de semitono Ben-Day",
+    estilo_sombreado: "Textura de papel de pulpa envejecido con efectos cósmicos pop vintage",
+    paleta_colores: ["#1E3A8A", "#B91C1C", "#CA8A04", "#FACC15", "#FEF9C3"],
+    prompt_imagen: "vintage 1960s pop comic book style, visible Ben-Day halftone dot printing pattern, bold flat primary inks, aged pulp paper background texture, dynamic cosmic krackle effects, retro classic comic cover",
+    prompt_guion: "Heroísmo altruista de la Edad de Oro y Plata. Invasiones espaciales, bases secretas y optimismo ante el progreso."
   }
 ];

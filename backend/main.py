@@ -148,6 +148,10 @@ uploads_path = Path("uploads")
 uploads_path.mkdir(exist_ok=True)
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
+style_refs_path = Path(__file__).resolve().parent / "data" / "style_references"
+if style_refs_path.exists():
+    app.mount("/assets/style_references", StaticFiles(directory=str(style_refs_path)), name="style_references")
+
 # ─── ROUTERS ─────────────────────────────────────────────────────────────────
 
 app.include_router(auth.router)

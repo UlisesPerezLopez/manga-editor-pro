@@ -137,6 +137,7 @@ async def generar_capitulo(
             if capitulo_existente:
                 capitulo_existente.titulo = resultado.get("titulo_capitulo", "")
                 capitulo_existente.sinopsis = resultado.get("sinopsis", "")
+                capitulo_existente.guion_json = resultado
                 db.commit()
                 capitulo_id = capitulo_existente.id
             else:
@@ -144,7 +145,8 @@ async def generar_capitulo(
                     id_proyecto=datos.id_proyecto,
                     numero=datos.numero_capitulo,
                     titulo=resultado.get("titulo_capitulo", ""),
-                    sinopsis=resultado.get("sinopsis", "")
+                    sinopsis=resultado.get("sinopsis", ""),
+                    guion_json=resultado
                 )
                 db.add(nuevo_capitulo)
                 db.commit()

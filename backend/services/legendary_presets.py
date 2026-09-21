@@ -199,8 +199,9 @@ LEGENDARY_PRESETS = {
             "torpes y directores coléricos. Insultos castizos tradicionales, explicaciones ridículas y huidas finales."
         ),
         "prompt_imagen": (
-            "classic Spanish caricature comic style, dynamic bendy rubbery limbs, frantic motion dust clouds, "
-            "exaggerated facial bruises, vibrant flat primary color fills, thick lively ink outlines"
+            "classic Spanish caricature comic style, Escuela Bruguera aesthetic, Francisco Ibáñez cartoon art, "
+            "thick expressive black ink contours, clean flat primary colors, humorous dynamic cartoon character, "
+            "lively comic panel composition, traditional European comic coloring"
         )
     },
     "superperez": {

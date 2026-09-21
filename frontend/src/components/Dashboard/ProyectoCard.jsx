@@ -2,7 +2,7 @@
 // Tarjeta de proyecto para el Dashboard con soporte de portada, subida rápida,
 // badges de estado, estadísticas y acciones con iconos Lucide React.
 
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   ImagePlus,
@@ -17,7 +17,7 @@ import {
   Sparkles,
   Calendar
 } from 'lucide-react'
-import { projectsAPI } from '../../services/api'
+import { projectsAPI, obtenerUrlImagen } from '../../services/api'
 import useProjectStore from '../../store/projectStore'
 
 const COLORES_MODO = {
@@ -39,6 +39,10 @@ export default function ProyectoCard({
   const fileInputRef = useRef(null)
   const [subiendoPortada, setSubiendoPortada] = useState(false)
   const [portadaLocal, setPortadaLocal] = useState(proyecto?.portada_url || stats?.portada_url || null)
+
+  useEffect(() => {
+    setPortadaLocal(proyecto?.portada_url || stats?.portada_url || null)
+  }, [proyecto?.portada_url, stats?.portada_url])
 
   const modo = proyecto.modo_creacion || 'propio'
   const gradiente = COLORES_MODO[modo] || COLORES_MODO.propio
@@ -95,9 +99,12 @@ export default function ProyectoCard({
                        flex items-center justify-center relative overflow-hidden`}>
         {portadaLocal ? (
           <img
-            src={portadaLocal}
+            src={obtenerUrlImagen(portadaLocal)}
             alt={proyecto.nombre}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            onError={(e) => {
+              e.target.style.display = 'none'
+            }}
           />
         ) : (
           <div className="flex flex-col items-center justify-center text-center p-4">

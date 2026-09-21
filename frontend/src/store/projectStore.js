@@ -10,7 +10,11 @@ const useProjectStore = create((set, get) => ({
   proyectoActivo: null,
   capitulos: [],
   guionGenerado: null,
+  capitulosGuiones: {}, // Mapeo de desglose técnico por número de capítulo: { [num]: { titulo_capitulo, sinopsis, escenas: [...] } }
   sinopsisGenerada: null,
+
+  // Mapa indexado por: `${proyectoId}_${capNum}_${pagNum}_${vinNum}`
+  vinetasEstudio: {},
 
   // Estados de carga
   cargandoProyecto: false,
@@ -81,11 +85,16 @@ const useProjectStore = create((set, get) => ({
         tono,
         guardar_en_bd: true
       })
-      set({
-        guionGenerado: respuesta.data.datos,
+      const datosGuion = respuesta.data.datos
+      set(state => ({
+        guionGenerado: datosGuion,
+        capitulosGuiones: {
+          ...state.capitulosGuiones,
+          [numeroCapitulo]: datosGuion
+        },
         generandoGuion: false
-      })
-      return { exito: true, datos: respuesta.data.datos }
+      }))
+      return { exito: true, datos: datosGuion }
     } catch (error) {
       const status = error.response?.status
       let msg = error.response?.data?.detail
@@ -121,6 +130,60 @@ const useProjectStore = create((set, get) => ({
     }
   },
 
+  actualizarProyecto: async (idProyectoOrObj, datos) => {
+    if (typeof idProyectoOrObj === 'object' && idProyectoOrObj !== null) {
+      const obj = idProyectoOrObj.data || idProyectoOrObj
+      set(state => ({
+        proyectoActivo: state.proyectoActivo?.id === obj.id
+          ? { ...state.proyectoActivo, ...obj }
+          : (state.proyectoActivo || obj)
+      }))
+      return { exito: true, proyecto: obj }
+    }
+    const idProyecto = idProyectoOrObj
+    try {
+      const res = await projectsAPI.actualizar(idProyecto, datos)
+      if (res?.data) {
+        set(state => ({
+          proyectoActivo: state.proyectoActivo?.id === idProyecto
+            ? { ...state.proyectoActivo, ...res.data }
+            : state.proyectoActivo
+        }))
+        return { exito: true, proyecto: res.data }
+      }
+      return { exito: false }
+    } catch (e) {
+      console.warn('Error backend al actualizar proyecto, aplicando local:', e)
+      set(state => ({
+        proyectoActivo: state.proyectoActivo?.id === idProyecto
+          ? { ...state.proyectoActivo, ...datos }
+          : state.proyectoActivo
+      }))
+      return { exito: true, local: true }
+    }
+  },
+
+
+  setGuionCapitulo: (numeroCapitulo, guion) => set(state => ({
+    capitulosGuiones: {
+      ...state.capitulosGuiones,
+      [numeroCapitulo]: guion
+    },
+    guionGenerado: guion
+  })),
+
+  actualizarGuionCapitulo: (numeroCapitulo, updater) => set(state => {
+    const actual = state.capitulosGuiones[numeroCapitulo] || null
+    const nuevo = typeof updater === 'function' ? updater(actual) : updater
+    return {
+      capitulosGuiones: {
+        ...state.capitulosGuiones,
+        [numeroCapitulo]: nuevo
+      },
+      guionGenerado: nuevo
+    }
+  }),
+
   setSinopsisGenerada: (sinopsis) => set({ sinopsisGenerada: sinopsis }),
   setGuionGenerado: (guion) => set({ guionGenerado: guion }),
 
@@ -132,11 +195,20 @@ const useProjectStore = create((set, get) => ({
     guionGenerado: typeof updater === 'function' ? updater(state.guionGenerado) : updater
   })),
 
+  setVinetaEstudio: (clave, datos) => set(state => ({
+    vinetasEstudio: {
+      ...state.vinetasEstudio,
+      [clave]: { ...(state.vinetasEstudio[clave] || {}), ...datos }
+    }
+  })),
+
   limpiarGuion: () => set({ guionGenerado: null, errorGuion: null }),
   limpiarSinopsis: () => set({ sinopsisGenerada: null, errorSinopsis: null }),
   limpiarTodo: () => set({
     proyectoActivo: null,
     capitulos: [],
+    capitulosGuiones: {},
+    vinetasEstudio: {},
     guionGenerado: null,
     sinopsisGenerada: null,
     errorProyecto: null,

@@ -41,9 +41,29 @@ def _migrar_columnas():
                     conn.commit()
                     print("✅ Columna 'ai_mode' añadida correctamente a 'usuarios'.")
 
+            if "proyectos" in tablas:
+                columnas_proyectos = [col["name"] for col in inspector.get_columns("proyectos")]
+                cols_proj = [
+                    ("sinopsis", "TEXT"),
+                    ("premisa", "TEXT"),
+                    ("genero", "VARCHAR(50)"),
+                    ("tono", "VARCHAR(50)"),
+                    ("num_capitulos", "INTEGER DEFAULT 5"),
+                    ("firma_visual_extraida", "JSON"),
+                    ("style_prompt", "TEXT"),
+                    ("imagenes_referencia", "JSON"),
+                ]
+                for col_name, col_type in cols_proj:
+                    if col_name not in columnas_proyectos:
+                        print(f"🔄 Migrando tabla 'proyectos': añadiendo columna '{col_name}'...")
+                        conn.execute(text(f"ALTER TABLE proyectos ADD COLUMN {col_name} {col_type}"))
+                        conn.commit()
+                        print(f"✅ Columna '{col_name}' añadida correctamente a 'proyectos'.")
+
             if "capitulos" in tablas:
                 columnas_capitulos = [col["name"] for col in inspector.get_columns("capitulos")]
                 cols_to_add = [
+                    ("guion_json", "JSON"),
                     ("is_published", "BOOLEAN DEFAULT 0"),
                     ("is_premium", "BOOLEAN DEFAULT 0"),
                     ("early_access", "BOOLEAN DEFAULT 0"),
@@ -56,8 +76,40 @@ def _migrar_columnas():
                         conn.execute(text(f"ALTER TABLE capitulos ADD COLUMN {col_name} {col_type}"))
                         conn.commit()
                         print(f"✅ Columna '{col_name}' añadida correctamente a 'capitulos'.")
+
+            if "personajes" in tablas:
+                columnas_personajes = [col["name"] for col in inspector.get_columns("personajes")]
+                cols_pers = [
+                    ("avatar_url", "VARCHAR(500)"),
+                    ("prompt_visual", "TEXT"),
+                    ("vestimenta", "TEXT"),
+                ]
+                for col_name, col_type in cols_pers:
+                    if col_name not in columnas_personajes:
+                        print(f"🔄 Migrando tabla 'personajes': añadiendo columna '{col_name}'...")
+                        conn.execute(text(f"ALTER TABLE personajes ADD COLUMN {col_name} {col_type}"))
+                        conn.commit()
+                        print(f"✅ Columna '{col_name}' añadida correctamente a 'personajes'.")
+
+            if "vinetas" in tablas:
+                columnas_vinetas = [col["name"] for col in inspector.get_columns("vinetas")]
+                cols_vin = [
+                    ("numero_vineta", "INTEGER DEFAULT 1"),
+                    ("plano", "VARCHAR(50)"),
+                    ("descripcion_escena", "TEXT"),
+                    ("dialogo", "TEXT"),
+                    ("imagen_url", "VARCHAR(500)"),
+                    ("prompt_usado", "TEXT"),
+                ]
+                for col_name, col_type in cols_vin:
+                    if col_name not in columnas_vinetas:
+                        print(f"🔄 Migrando tabla 'vinetas': añadiendo columna '{col_name}'...")
+                        conn.execute(text(f"ALTER TABLE vinetas ADD COLUMN {col_name} {col_type}"))
+                        conn.commit()
+                        print(f"✅ Columna '{col_name}' añadida correctamente a 'vinetas'.")
     except Exception as e:
         print(f"ℹ️ Verificación de migración: {e}")
+
 
 
 def init_db():

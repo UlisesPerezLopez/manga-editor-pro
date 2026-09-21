@@ -15,11 +15,13 @@ import useProjectStore from '../store/projectStore'
 import useAuthStore from '../store/authStore'
 import { generateAPI, chaptersAPI } from '../services/api'
 import ScriptGenerator from '../components/ScriptGenerator'
+import FirmaVisual from '../components/FirmaVisual'
 import Modal from '../components/UI/Modal'
 import Spinner from '../components/UI/Spinner'
 import ErrorBoundary from '../components/UI/ErrorBoundary'
 import StyleWizard from '../components/StyleWizard'
-import CharacterList from '../components/Characters/CharacterList'
+import Personajes from '../components/Personajes'
+import PanelArtStudio from '../components/PanelArtStudio'
 import ExportPanel from '../components/Export/ExportPanel'
 import LanguageSelector from '../components/common/LanguageSelector'
 import ThemeToggle from '../components/common/ThemeToggle'
@@ -56,6 +58,7 @@ function ProjectStudioContent() {
     { id: 'guiones',      iconName: 'guionista_ia',         label: t('projectStudio.scriptWriter') || 'Guionista IA', proximamente: false },
     { id: 'firma-visual', iconName: 'firma_visual',         label: t('projectStudio.visualSignature') || 'Firma Visual', proximamente: false },
     { id: 'personajes',   iconName: 'personajes',           label: t('projectStudio.characters') || 'Personajes', proximamente: false },
+    { id: 'vinetas',      iconName: 'imagenes_ia_generadas', label: t('projectStudio.panelGenerator') || 'Generador de Viñetas', proximamente: false },
     { id: 'editor',       iconName: 'editor_paginas',       label: t('projectStudio.pageEditor') || 'Editor de Páginas', proximamente: false }, 
     { id: 'analitica',    iconName: 'analitica_engagement', label: t('analytics.title') || 'Analítica y Engagement', proximamente: false },
     { id: 'exportar',     iconName: 'exportar',             label: t('projectStudio.export') || 'Exportar', proximamente: false },
@@ -306,27 +309,29 @@ function ProjectStudioContent() {
 
           {/* Info del proyecto en el sidebar */}
           <div className="mt-auto px-4 pt-4 border-t border-rdc-border">
-            <p className="text-rdc-muted text-xs mb-2 font-titulo">{t('projectStudio.visualSignature') || 'Firma Visual'}</p>
+            <p className="text-rdc-muted text-xs mb-2 font-titulo uppercase tracking-wider font-semibold">
+              {t('projectStudio.visualSignature') || 'Firma Visual'}
+            </p>
             {proyectoActivo?.style_locked ? (
-              <div className="bg-rdc-accent/10 border border-rdc-accent/30 rounded-xl p-3">
-                <div className="flex items-center gap-1.5 text-rdc-accent text-xs font-titulo font-semibold">
+              <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-3 shadow-xs">
+                <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 text-xs font-titulo font-bold">
                   <CheckCircle2 className="w-3.5 h-3.5" />
-                  <span>{t('projectStudio.styleLocked') || 'Firma Bloqueada'}</span>
+                  <span>Firma Calibrada</span>
                 </div>
                 {proyectoActivo?.estilo_legendario && (
-                  <p className="text-rdc-muted text-xs mt-1 capitalize font-titulo">
-                    {proyectoActivo.estilo_legendario.replace(/_/g, ' ')}
+                  <p className="text-rdc-muted text-xs mt-1 capitalize font-titulo truncate">
+                    {proyectoActivo.estilo_legendario.replace('aleatorio_', '').replace(/_/g, ' ')}
                   </p>
                 )}
               </div>
             ) : (
-              <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-3">
-                <div className="flex items-center gap-1.5 text-yellow-500 dark:text-yellow-400 text-xs font-titulo font-semibold">
+              <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 shadow-xs">
+                <div className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400 text-xs font-titulo font-bold">
                   <AlertTriangle className="w-3.5 h-3.5" />
-                  <span>{t('projectStudio.stylePending') || 'Pendiente'}</span>
+                  <span>Sin Firma Visual</span>
                 </div>
-                <p className="text-rdc-muted text-xs mt-1">
-                  {t('projectStudio.pendingSetup') || 'Configura la firma visual'}
+                <p className="text-rdc-muted text-[11px] mt-1">
+                  Pendiente de calibración
                 </p>
               </div>
             )}
@@ -348,28 +353,19 @@ function ProjectStudioContent() {
                   {t('projectStudio.scriptSectionDesc') || 'Genera y estructura sinopsis, arcos argumentales y guiones técnicos para tus capítulos.'}
                 </p>
               </div>
-              {modoActual === 'propio' && !proyectoActivo?.style_locked && (
-                <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-2xl p-4 mb-4 flex items-start gap-3">
-                  <AlertTriangle className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-yellow-500 dark:text-yellow-400 text-sm font-semibold font-titulo">
-                      {t('projectStudio.stylePending') || 'Firma Visual Pendiente'}
-                    </p>
-                    <p className="text-rdc-muted text-xs mt-0.5">
-                      {t('newProject.customNote') || 'Puedes crear tu firma de arte en la pestaña de Firma Visual para guiar el estilo de los personajes.'}
-                    </p>
-                  </div>
-                </div>
-              )}
               <div className="bg-rdc-secondary border border-rdc-border rounded-2xl p-6 shadow-xl">
-                <ScriptGenerator proyecto={proyectoActivo} />
+                <ScriptGenerator
+                  proyecto={proyectoActivo}
+                  onIrAFirmaVisual={() => setSeccionActiva('firma-visual')}
+                  onCapitulosCreados={() => cargarCapitulos(projectIdNumber)}
+                />
               </div>
             </div>
           )}
 
           {/* Sección: Firma Visual */}
           {seccionActiva === 'firma-visual' && (
-            <div className="max-w-3xl mx-auto">
+            <div className="max-w-4xl mx-auto">
               <div className="mb-6">
                 <h2 className="text-2xl font-black flex items-center gap-3 font-titulo text-slate-900 dark:text-white">
                   <MangaIcon name="firma_visual" size={28} />
@@ -377,68 +373,47 @@ function ProjectStudioContent() {
                 </h2>
                 <p className="text-rdc-muted text-sm mt-1">
                   {modoActual === 'propio'
-                    ? (t('projectStudio.styleSectionDescOwn') || 'Define la paleta de tinta, tramas y parámetros visuales de tu obra.')
-                    : (t('projectStudio.styleSectionDescLegendary') || 'Estilo legendario maestro asignado a tu obra.')
+                    ? (t('projectStudio.styleSectionDescOwn') || 'Define y calibra la paleta de tinta, tramas y parámetros visuales de tu obra.')
+                    : (t('projectStudio.styleSectionDescLegendary') || 'Estilo y parámetros maestros asignados a tu obra.')
                   }
                 </p>
               </div>
 
-              {modoActual === 'propio' ? (
-                <div className="bg-rdc-secondary border border-rdc-border rounded-2xl p-6 shadow-xl">
-                  <StyleWizard
-                    proyecto={proyectoActivo}
-                    onEstiloBloqueado={() => {
-                      if (projectIdNumber) cargarProyecto(projectIdNumber)
-                    }}
-                  />
-                </div>
-              ) : (
-                <div className="bg-rdc-secondary border border-rdc-border rounded-2xl p-6 shadow-xl">
-                  <div className="text-center py-6">
-                    <div className="w-16 h-16 mx-auto mb-3 flex items-center justify-center rounded-2xl border-2 border-slate-900 bg-amber-50 shadow-[2px_2px_0px_0px_rgba(0,0,0,0.85)]">
-                      <MangaIcon name="modo_legendario" size={32} />
-                    </div>
-                    <h3 className="font-titulo text-xl text-rdc-text font-semibold mb-2">
-                      {t('projectStudio.legendaryActiveTitle') || 'Estilo Legendario Activado'}
-                    </h3>
-                    <p className="text-rdc-muted text-sm mb-4">
-                      {t('projectStudio.legendaryActiveDesc') || 'Este proyecto utiliza los pesos de arte maestro configurados globalmente.'}
-                    </p>
-                    <span className="bg-rdc-accent/20 text-rdc-accent
-                                     border border-rdc-accent/40
-                                     px-4 py-2 rounded-xl font-titulo capitalize inline-block text-sm font-semibold">
-                      {proyectoActivo?.estilo_legendario?.replace(/_/g, ' ') || 'Estilo legendario'}
-                    </span>
-                    <div className="mt-6 bg-rdc-card rounded-xl p-4 text-left border border-rdc-border">
-                      <p className="text-rdc-muted text-xs uppercase mb-2 font-titulo font-semibold">
-                        {t('projectStudio.masterPromptActive') || 'Prompt Maestro del Proyecto'}
-                      </p>
-                      <p className="text-rdc-text text-xs font-mono leading-relaxed">
-                        {proyectoActivo?.system_prompt_maestro?.slice(0, 250) || 'Prompt maestro configurado.'}...
-                      </p>
-                    </div>
-                    <p className="text-rdc-muted text-xs mt-4">
-                      {t('projectStudio.signatureActive') || 'Firma de arte activa en todas las generaciones.'}
-                    </p>
-                  </div>
-                </div>
-              )}
+              <div className="bg-rdc-secondary border border-rdc-border rounded-2xl p-6 shadow-xl">
+                <FirmaVisual
+                  proyecto={proyectoActivo}
+                  onActualizar={() => {
+                    if (projectIdNumber) cargarProyecto(projectIdNumber)
+                  }}
+                />
+              </div>
             </div>
           )}
 
           {/* Sección: Personajes */}
           {seccionActiva === 'personajes' && (
             <div className="max-w-5xl mx-auto">
-              <div className="mb-6">
-                <h2 className="font-titulo text-2xl text-rdc-text font-semibold flex items-center">
-                  <MangaIcon name="personajes" size={28} className="mr-3 inline-block" />
-                  <span>{t('projectStudio.charactersSectionTitle') || 'Personajes'}</span>
-                </h2>
-                <p className="text-rdc-muted text-sm mt-1">
-                  {t('projectStudio.charactersSectionDesc') || 'Administra los diseños, consistencia facial y perfiles de tus protagonistas.'}
-                </p>
-              </div>
-              <CharacterList proyecto={proyectoActivo} />
+              <Personajes
+                proyecto={proyectoActivo}
+                onActualizar={() => {
+                  if (projectIdNumber) cargarProyecto(projectIdNumber)
+                }}
+              />
+            </div>
+          )}
+
+          {/* Sección: Generador de Viñetas (Panel Art Studio) */}
+          {seccionActiva === 'vinetas' && (
+            <div className="max-w-6xl mx-auto">
+              <PanelArtStudio
+                proyecto={proyectoActivo}
+                onActualizar={() => {
+                  if (projectIdNumber) {
+                    cargarProyecto(projectIdNumber)
+                    cargarCapitulos(projectIdNumber)
+                  }
+                }}
+              />
             </div>
           )}
 

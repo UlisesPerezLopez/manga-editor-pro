@@ -1,0 +1,252 @@
+{
+  "shonen_legendario": {
+    "nombre_oficial": "Shōnen Legendario",
+    "referencia_cultural": "Dragon Ball / One Piece (Akira Toriyama, Eiichiro Oda)",
+    "linework": "Crisp confident G-pen inking, bold muscular contours, angular jawlines, clean variable line weight without feathering",
+    "shading_technique": "Sharp geometric hard cel shading, solid ink shadow pockets, intense parallel action lines, energetic impact shockwaves",
+    "color_palette": "Bright saturated anime tones, warm orange, cobalt blue, vivid yellow, turquoise highlights, clean paper whites",
+    "anatomy_acting": "Muscular athletic proportions, expressive triangular noses, fierce determined eyes with dark pupils, dynamic low-center martial arts poses",
+    "atmosphere_backgrounds": "Vast desert wastelands, rounded limestone mountains, shattered dirt craters, high-contrast open sunny skies",
+    "prompt_tokens": "classic 1990s shonen action manga panel, Akira Toriyama and Eiichiro Oda art style, crisp confident G-pen inking, bold clean lineart, vibrant flat cel shading, energetic martial arts pose, dynamic comic composition"
+  },
+  "fantasia_oscura": {
+    "nombre_oficial": "Fantasía Oscura",
+    "referencia_cultural": "Berserk / Attack on Titan (Kentarō Miura, Hajime Isayama)",
+    "linework": "Hyper-detailed fine dip-pen hatching, razor-sharp contour precision, microscopic atmospheric cross-hatching",
+    "shading_technique": "Extreme cross-hatching density, deep India ink black blocks, layered screentone textures, dramatic chiaroscuro contrast",
+    "color_palette": "Stark monochrome black and white, heavy graphite grays, selective crimson blood red accents if colored",
+    "anatomy_acting": "Grounded muscular anatomical realism, battle-scarred weathered faces, intense strained grimaces, heavy metal armor textures",
+    "atmosphere_backgrounds": "Grim medieval battlefield, towering gothic stone fortresses, stormy dark skies, visceral atmospheric despair",
+    "prompt_tokens": "masterpiece dark fantasy seinen manga panel, Kentaro Miura Berserk aesthetic, ultra-detailed fine G-pen inking, intricate micro cross-hatching shading, stark solid black contrasts, gritty medieval atmosphere"
+  },
+  "cyberpunk_209X": {
+    "nombre_oficial": "Cyberpunk 209X",
+    "referencia_cultural": "Ghost in the Shell / Akira (Masamune Shirow, Katsuhiro Otomo)",
+    "linework": "Architectural drafting precision, clean technical contours, hyper-dense mechanical and cybernetic details",
+    "shading_technique": "Traditional mechanical dot screentones, tight horizontal hatching on metal surfaces, solid deep shadows in urban alleys",
+    "color_palette": "Desaturated industrial grays, muted olive and slate, high-contrast neon cyan, toxic amber, and holographic magenta",
+    "anatomy_acting": "Realistic human proportions, intricate cybernetic augmentations with visible wires and hydraulic joints, stoic hardboiled expressions",
+    "atmosphere_backgrounds": "Towering futuristic megacity, dense web of exposed conduits and pipes, rain-slicked asphalt, neon sign reflections",
+    "prompt_tokens": "classic 1980s cyberpunk sci-fi manga panel, Katsuhiro Otomo Akira aesthetic, Masamune Shirow linework, hyper-dense mechanical detail, architectural city lineart, solid ink blacks, authentic screentone dot shading"
+  },
+  "anime_pastoral": {
+    "nombre_oficial": "Anime Pastoral - Ghibli",
+    "referencia_cultural": "El Viaje de Chihiro / La Princesa Mononoke (Studio Ghibli, Hayao Miyazaki)",
+    "linework": "Gentle organic hand-drawn brown-ink linework, soft rounded silhouettes, warm human feel",
+    "shading_technique": "Layered gouache painting, natural ambient occlusion, gentle sunlight dapples, absence of harsh hatching",
+    "color_palette": "Lush moss greens, cerulean skies, earthy terracotta, warm cream whites, peaceful pastoral warmth",
+    "anatomy_acting": "Charming grounded character anatomy, expressive button noses, honest warm smiles, determined youthful posture",
+    "atmosphere_backgrounds": "Lush rolling hills, ancient mossy stone ruins, blooming wildflowers, billowing summer cumulus clouds",
+    "prompt_tokens": "Studio Ghibli aesthetic, Hayao Miyazaki animation art style, soft organic lineart, painted gouache background, lush pastoral nature, warm sunlit atmosphere, gentle nostalgic feeling, traditional cel art"
+  },
+  "mecha_clasico": {
+    "nombre_oficial": "Mecha Clásico",
+    "referencia_cultural": "Neon Genesis Evangelion / Mazinger Z (Hideaki Anno, Go Nagai)",
+    "linework": "Bold geometric mechanical drafting lines, sharp angular armor contours, defined mechanical joint seams",
+    "shading_technique": "Hard metallic specular highlights, deep contrasting armor shadows, heat dissipation lines, engine exhaust glows",
+    "color_palette": "Striking robotic hues, royal purple, luminous neon green, crimson red, gunmetal gray, industrial yellow",
+    "anatomy_acting": "Towering robotic proportions, organic muscular armor curves, heavy ground-shaking stance, ready-for-launch tension",
+    "atmosphere_backgrounds": "Subterranean launch facility, hydraulic gantries, steam exhaust plumes, futuristic red ocean shorelines",
+    "prompt_tokens": "classic 1990s mecha anime illustration, Neon Genesis Evangelion aesthetic, sharp geometric armor linework, metallic highlights, imposing giant robot scale, industrial hangar atmosphere, bold dynamic composition"
+  },
+  "gotico_vampirico": {
+    "nombre_oficial": "Gótico Vampírico",
+    "referencia_cultural": "Hellsing / Vampire Hunter D (Kōta Hirano, Yoshitaka Amano)",
+    "linework": "Aggressive slashed inking, jagged dynamic contours, heavy brush strokes with dripping ink splatters",
+    "shading_technique": "Vast pools of pitch black shadows consuming torsos and faces, harsh rim lighting, glowing lens flare reflections",
+    "color_palette": "Deep void black, blood crimson red, antique brass gold, ghostly pale moonlight silver",
+    "anatomy_acting": "Lanky tall demonic silhouettes, gigantic manic grins with needle-sharp teeth, glowing round spectacles, billowing trench coats",
+    "atmosphere_backgrounds": "Burning Victorian London streets, silhouette crucifixes, flying bat swarms, dense cemetery fog under a blood moon",
+    "prompt_tokens": "dark gothic action manga panel, Kouta Hirano Hellsing aesthetic, massive solid black ink pools, maniacal grin with sharp teeth, glowing round glasses, deep crimson red accents, aggressive jagged ink strokes"
+  },
+  "jidaigeki_samurai": {
+    "nombre_oficial": "Jidaigeki Samurai",
+    "referencia_cultural": "Rurouni Kenshin / Ninja Scroll (Nobuhiro Watsuki, Yoshiaki Kawajiri)",
+    "linework": "Dynamic brush-pen inking, variable dry-brush strokes for swift movements, sharp katana blade reflections",
+    "shading_technique": "Spontaneous sumi ink washes, fine cross-hatching on woven kimonos, dramatic sword-flash light streaks",
+    "color_palette": "Earthy Edo-period tones, indigo blue, cherry blossom pink, bamboo green, faded paper parchment, flash of red blood",
+    "anatomy_acting": "Disciplined athletic martial postures, intense focused gazes, windblown hair, fast low sword-drawing stances",
+    "atmosphere_backgrounds": "Dense bamboo groves, rustic wooden dojos, cherry blossom petals drifting across moonlit courtyards",
+    "prompt_tokens": "historical samurai jidaigeki manga panel, Rurouni Kenshin and Ninja Scroll aesthetic, expressive brush pen inking, sharp katana blade flash, dynamic martial arts stance, traditional Edo era atmosphere"
+  },
+  "shojo_mistico": {
+    "nombre_oficial": "Shōjo Místico",
+    "referencia_cultural": "Sailor Moon / Cardcaptor Sakura (Naoko Takeuchi, CLAMP)",
+    "linework": "Delicate flowing featherweight lines, graceful curved contours, ornate filigree details",
+    "shading_technique": "Soft decorative screentones, floating sparkle clusters, floral petal gradients, lace textures, absence of harsh blacks",
+    "color_palette": "Pastel magical palette, lavender, rose pink, gold leaf accents, dreamy soft-focus luminescence",
+    "anatomy_acting": "Slender elongated limbs, large luminous expressive eyes with multi-layered star highlights, flowing gravity-defying hair",
+    "atmosphere_backgrounds": "Magical ethereal backgrounds, glowing feathers, floating ribbons, stained glass motifs, twilight skies",
+    "prompt_tokens": "ethereal classic shojo manga illustration, Naoko Takeuchi Sailor Moon and CLAMP art style, delicate flowing lineart, huge luminous eyes with star reflections, floating flower petals, pastel magical atmosphere"
+  },
+  "seinen_psicologico": {
+    "nombre_oficial": "Seinen Psicológico",
+    "referencia_cultural": "Death Note / Monster (Takeshi Obata, Naoki Urasawa)",
+    "linework": "Meticulous realistic dip-pen lineart, crisp fine lines detailing facial expressions, subtle psychological tension",
+    "shading_technique": "Precise fine-gauge screentones, deep dramatic shadows cast across eyes and foreheads, stark ambient noir lighting",
+    "color_palette": "Muted psychological tones, sepia-tinted paper, desaturated cold blues, institutional gray, sharp white highlights",
+    "anatomy_acting": "Grounded lifelike human anatomy, intense calculating stares, subtle smirk, trembling nervous fingers, tense postures",
+    "atmosphere_backgrounds": "Cold interrogation rooms, cluttered detective offices, dimly lit European streets under rain, oppressive shadows",
+    "prompt_tokens": "intense psychological thriller seinen manga panel, Takeshi Obata Death Note and Naoki Urasawa aesthetic, realistic fine pen inking, dramatic facial shadows, calculating intense expression, cinematic thriller lighting"
+  },
+  "cosmos_mitologico": {
+    "nombre_oficial": "Cosmos Mitológico",
+    "referencia_cultural": "Saint Seiya / Los Caballeros del Zodíaco (Masami Kurumada, Shingo Araki)",
+    "linework": "Classic 1980s heroic inking, sharp metallic armor edges, flowing hair strands with distinct anime linework",
+    "shading_technique": "High-sheen chrome and gold reflections, cosmic starburst flares, speed lines radiating from central impact",
+    "color_palette": "Polished metallic gold, celestial bronze, deep galaxy navy blue, nebula purples, fiery cosmic auras",
+    "anatomy_acting": "Heroic slender proportions, graceful fighting stances with arms crossed or open, expressive eyes full of burning spirit",
+    "atmosphere_backgrounds": "Ancient Greek marble temple ruins, deep starry cosmos with glowing constellations, swirling cosmic nebula dust",
+    "prompt_tokens": "classic 1980s Saint Seiya anime manga style, Shingo Araki aesthetic, gleaming metallic sacred armor, cosmic constellation energy aura, ancient Greek temple ruins background, dramatic heroic composition"
+  },
+  "belleza_melancolica": {
+    "nombre_oficial": "Belleza Melancólica",
+    "referencia_cultural": "Violet Evergarden (Kyoto Animation)",
+    "linework": "Ultra-delicate clean digital lineart, soft expressive facial contours, intricate hair strand detailing",
+    "shading_technique": "Sublime soft gradients, radiant lens flares, shimmering rim lighting, ambient dust particles caught in sunlight",
+    "color_palette": "Warm golden hour hues, emerald green, royal navy blue, pristine ivory lace, soft amber sunset lighting",
+    "anatomy_acting": "Graceful porcelain-like facial features, expressive melancholic sapphire eyes, mechanical prosthetic hands, poignant emotional acting",
+    "atmosphere_backgrounds": "Victorian European cobblestone streets, sun-drenched coastal vistas, ornate postal offices with antique typewriters",
+    "prompt_tokens": "masterpiece Kyoto Animation style, Violet Evergarden aesthetic, ultra-detailed delicate lineart, breathtaking golden hour cinematic lighting, melancholic expressive eyes, ornate Victorian clothing, poignant emotional beauty"
+  },
+  "isekai_fantasia": {
+    "nombre_oficial": "Isekai Fantasía",
+    "referencia_cultural": "Frieren: Beyond Journey's End / Re:Zero (Tsukasa Abe, Shin'ichirō Otsuka)",
+    "linework": "Clean modern fantasy manga lineart, delicate natural curves, ornate staff and spellbook details",
+    "shading_technique": "Soft digital cel shading, glowing magical rune circles, luminous particle embers, gentle atmospheric depth",
+    "color_palette": "Refreshing fantasy palette, pastel sky blue, forest green, warm wood tones, luminescent magical white and gold",
+    "anatomy_acting": "Subtle expressive acting, calm timeless expressions on elves, determined traveling postures, detailed fantasy garments",
+    "atmosphere_backgrounds": "Sunlit medieval stone towns, serene wildflower fields, ancient fantasy dungeons with glowing mana crystals",
+    "prompt_tokens": "modern high fantasy manga panel, Frieren Beyond Journeys End art style, clean elegant lineart, glowing magic rune circles, soft natural lighting, peaceful medieval fantasy background, detailed traveling attire"
+  },
+  "kodomo_aventura": {
+    "nombre_oficial": "Kodomo Aventura",
+    "referencia_cultural": "Pokémon / Doraemon (Ken Sugimori, Fujiko F. Fujio)",
+    "linework": "Thick friendly rounded black outlines, simplified clean geometry, highly readable silhouettes",
+    "shading_technique": "Minimal soft cel shading, bright glossy highlights on eyes and round surfaces, comical exclamation symbols",
+    "color_palette": "Joyful candy palette, sunny lemon yellow, vibrant sky blue, grass green, cherry red, high brightness",
+    "anatomy_acting": "Chubby endearing proportions, large circular heads, big twinkling oval eyes, wide happy grins, enthusiastic bounce",
+    "atmosphere_backgrounds": "Stylized round rolling hills, clean suburban streets, blue skies with smiling fluffy white clouds",
+    "prompt_tokens": "classic Japanese kodomo adventure manga art, Ken Sugimori vintage Pokemon style, thick friendly rounded outlines, bright cheerful primary colors, cute expressive creature and child, clean joyful comic panel"
+  },
+  "mortadela_y_salchichon": {
+    "nombre_oficial": "Humor Bruguera / Mortadela y Salchichón",
+    "referencia_cultural": "Mortadelo y Filemón / Rompetechos (Francisco Ibáñez)",
+    "linework": "Thick bold black ink outlines, expressive dip-pen contouring, dynamic line weight with rounded endpoints",
+    "shading_technique": "Minimalist flat shading, solid black shadow blocks, exaggerated comic speed lines, motion dust clouds, slapstick impact stars",
+    "color_palette": "Saturated flat primary colors, bright yellow, warm red, grass green, cobalt blue, no digital gradients",
+    "anatomy_acting": "Exaggerated Spanish cartoon caricature proportions, big round bulbous noses, screaming open mouths with simplified comedy teeth, slapstick body language",
+    "atmosphere_backgrounds": "Lively European urban neighborhood, cluttered backgrounds with humorous background gags, bright sunny daylight",
+    "prompt_tokens": "classic 1970s Spanish comic book illustration, Escuela Bruguera aesthetic, Francisco Ibanez humor cartoon art, thick bold black ink outlines, clean solid flat colors, humorous caricature anatomy, slapstick dynamic comic panel composition"
+  },
+  "superperez": {
+    "nombre_oficial": "Superperez",
+    "referencia_cultural": "Superlópez (Jan / Juan López Fernández)",
+    "linework": "Fluid expressive brush inking, elastic organic contours, distinctive caricatured noses and crumpled costume folds",
+    "shading_technique": "Clean comic book hatching, solid black shadow planes under capes, comical flight trail lines, puffing exhaust smoke",
+    "color_palette": "Bold Spanish comic album palette, bright superhero scarlet, canary yellow, denim blue, muted municipal office grays",
+    "anatomy_acting": "Caricatured middle-aged hero anatomy, big black mustache, furrowed brow, awkward ungainly flying postures, comedic resignation",
+    "atmosphere_backgrounds": "Detailed Barcelona urban streetscapes, crowded metro stations, retro-futuristic alien ships, tiny petiso creatures hiding in corners",
+    "prompt_tokens": "classic Spanish comic art style, Jan Superlopez aesthetic, fluid brush inking, caricatured parody superhero, large mustache, crumpled cape, vibrant flat colors, humorous European urban comic panel"
+  },
+  "el_capitan_rayo": {
+    "nombre_oficial": "El Capitán Rayo",
+    "referencia_cultural": "El Capitán Trueno (Ambrós / Miguel Ambrosio Zaragoza)",
+    "linework": "Heroic classic dip-pen inking, detailed anatomical cross-hatching, fine metallic texture on swords and chainmail",
+    "shading_technique": "Dense fine-line directional hatching, deep black shadows in castle dungeons, dramatic chiaroscuro moonlight",
+    "color_palette": "Vintage European comic album tones, heraldic red and yellow, steel gray chainmail, earthy forest browns, antique paper tone",
+    "anatomy_acting": "Athletic noble proportions, handsome determined jawline, confident smiling swashbuckler gaze, heroic lunging combat poses",
+    "atmosphere_backgrounds": "Medieval fortress battlements, stormy Mediterranean seas, dense ancient oak forests, flags fluttering in wind",
+    "prompt_tokens": "vintage Spanish historical adventure comic, Ambros El Capitan Trueno style, heroic classic pen and ink cross-hatching, medieval knight in chainmail, dynamic swordfight action, dramatic vintage comic panel"
+  },
+  "galos_y_druidas": {
+    "nombre_oficial": "Galos y Druidas",
+    "referencia_cultural": "Astérix y Obélix (Albert Uderzo, René Goscinny)",
+    "linework": "Masterful energetic brush-pen lineart, variable elastic contour thickness, immaculate anatomical comedy draftsmanship",
+    "shading_technique": "Soft volumetric watercolor/gouache shading, dynamic impact burst lines, flying Roman sandals and helmets",
+    "color_palette": "Rich Franco-Belgian album palette, forest green, warm ochre, tunic red, sky blue with white stripes, rich gold",
+    "anatomy_acting": "Stout comical caricatured anatomy, huge bulbous noses, magnificent walrus mustaches, hilarious slapstick fight choreography",
+    "atmosphere_backgrounds": "Lush ancient Gaul forest, thatched-roof village huts, wooden palisades, steaming magic potion cauldrons",
+    "prompt_tokens": "Franco-Belgian comic masterpiece, Albert Uderzo Asterix aesthetic, lively brush inking, caricatured Gaulish warrior, huge mustache, vibrant gouache coloring, slapstick brawl action, classic European album art"
+  },
+  "franco_belga": {
+    "nombre_oficial": "Franco-Belga / Línea Clara",
+    "referencia_cultural": "Las Aventuras de Tintín / Blake y Mortimer (Hergé, Edgar P. Jacobs)",
+    "linework": "Pristine uniform monoline ink weight, complete absence of feathering, flawless geometric draftsmanship",
+    "shading_technique": "Zero hatching, no gradients, completely flat solid color fills, clean architectural drop shadows only",
+    "color_palette": "Harmonious European matte color palette, soft gouache flat fills, olive green, warm beige, sky blue, muted mustard",
+    "anatomy_acting": "Clean readable character silhouettes, minimalist expressive dot eyes, dignified pantomime acting, crisp readable postures",
+    "atmosphere_backgrounds": "Meticulously documented architectural environments, vintage locomotives, period furniture drawn with technical precision",
+    "prompt_tokens": "Franco-Belgian Bande Dessinee, Ligne Claire art style, Herge Tintin aesthetic, pristine uniform monoline inking, zero gradients, clean flat matte colors, crisp architectural precision, clear European album composition"
+  },
+  "indie_underground": {
+    "nombre_oficial": "Indie Underground",
+    "referencia_cultural": "Ghost World / Comix Underground (Daniel Clowes, Robert Crumb)",
+    "linework": "Intentionally raw organic dip-pen lineart, slightly wobbly ink contours, idiosyncratic personal hand-drawn feel",
+    "shading_technique": "Dense obsessive cross-hatching and stippling, gritty textured ink washes, unpolished natural shadows",
+    "color_palette": "Muted melancholic newsprint colors, dirty mustard, faded turquoise, dingy olive, nicotine-stained paper tone",
+    "anatomy_acting": "Unconventional anti-heroic anatomy, slouching neurotic body language, deadpan unbothered facial expressions, realistic awkwardness",
+    "atmosphere_backgrounds": "Decaying suburban strip malls, cluttered bohemian bedrooms with coffee mugs and vinyls, quiet diner booths",
+    "prompt_tokens": "indie graphic novel art style, Daniel Clowes and Robert Crumb aesthetic, raw organic dip-pen cross-hatching, muted vintage newsprint colors, neurotic deadpan character, indie comic panel"
+  },
+  "hero_vintage_modern": {
+    "nombre_oficial": "Hero Vintage & Modern",
+    "referencia_cultural": "The Amazing Spider-Man / X-Men (Steve Ditko, Jim Lee)",
+    "linework": "Dynamic muscular comic brushwork, razor-sharp contour feathering, intricate web and muscle cross-hatching",
+    "shading_technique": "Deep ink black shadow planes, dramatic rim highlights, energetic speed trails, high-contrast chiaroscuro",
+    "color_palette": "Vibrant superhero palette, spider-red, royal cobalt blue, electric mutant yellow, deep night shadows",
+    "anatomy_acting": "Extreme foreshortened athletic anatomy, acrobatic contortions leaping toward camera, expressive dynamic mask lenses",
+    "atmosphere_backgrounds": "Dramatic New York skyscraper rooftops, gothic gargoyles, tangled suspension bridge cables, city night skyline",
+    "prompt_tokens": "classic dynamic superhero comic book art, Jim Lee and Steve Ditko aesthetic, bold muscular inking, razor-sharp feathering, extreme acrobatic foreshortening, dramatic rim lighting, iconic superhero splash panel"
+  },
+  "vigilante_nocturno": {
+    "nombre_oficial": "Vigilante Nocturno",
+    "referencia_cultural": "Batman: The Dark Knight / Detective Comics (David Mazzucchelli, Frank Miller)",
+    "linework": "Heavy gritty brush inking, razor-sharp silhouette edges, dramatic angular anatomy cuts",
+    "shading_technique": "Absolute deep India ink blacks swallowing rooms, high-contrast negative-space lighting, harsh rain slashes",
+    "color_palette": "Noir monochromatic base, midnight charcoal, cold slate blue, toxic sewer green, flash of yellow utility belt",
+    "anatomy_acting": "Imposing muscular silhouette, square determined jaw, scalloped bat-cape billowing like wings, brooding predatory stance",
+    "atmosphere_backgrounds": "Dark gothic Gotham alleyways, torrential rain cutting through searchlight beams, steam rising from manholes",
+    "prompt_tokens": "gritty dark knight detective comic panel, David Mazzucchelli Batman Year One aesthetic, heavy solid black ink shadows, driving rain streaks, brooding armored vigilante silhouette, dark noir city atmosphere"
+  },
+  "reloj_del_juicio": {
+    "nombre_oficial": "Reloj del Juicio",
+    "referencia_cultural": "Watchmen (Dave Gibbons, Alan Moore)",
+    "linework": "Disciplined objective monoline penwork, realistic everyday textures, strict nine-panel grid composition precision",
+    "shading_technique": "Subtle vintage mechanical screentone textures, naturalistic shadow casting, absence of exaggerated superhero auras",
+    "color_palette": "Iconic secondary color palette, rich purples, burnt oranges, mustard yellows, cold sickly greens, vintage newsprint feel",
+    "anatomy_acting": "Grounded realistic human anatomy with realistic weight and age, stoic trench-coated detective postures, haunting calm expressions",
+    "atmosphere_backgrounds": "Gritty 1980s New York streets, rain-drenched neon signposts, fallout shelter logos, ticking clock motifs",
+    "prompt_tokens": "Dave Gibbons Watchmen graphic novel style, disciplined clean inking, vintage 1980s secondary color palette, gritty realistic urban noir, detailed textured comic panel, cinematic psychological realism"
+  },
+  "heroe_miltru": {
+    "nombre_oficial": "Héroe Miltru",
+    "referencia_cultural": "Invincible (Ryan Ottley, Cory Walker)",
+    "linework": "Razor-clean bold digital inking, energetic contour lines, visceral kinetic impact flourishes",
+    "shading_technique": "Vibrant two-tone hard cel shading, catastrophic shockwave lines, intense visceral splatter textures during heavy combat",
+    "color_palette": "Bright saturated pop-superhero tones, canary yellow, sky blue, stark white, contrasted with intense visceral crimson",
+    "anatomy_acting": "Powerful streamlined superhero anatomy, expressive youthful face under cowl, brutal supersonic flying momentum",
+    "atmosphere_backgrounds": "Upper stratosphere over Earth, destroyed modern city skylines, shattered concrete craters, clear blue sunny skies",
+    "prompt_tokens": "Invincible comic book art style, Ryan Ottley aesthetic, crisp energetic ink lines, bright flat cel shading, supersonic flying hero pose, high impact kinetic superhero action panel"
+  },
+  "barabaros": {
+    "nombre_oficial": "Bárbaros",
+    "referencia_cultural": "Conan el Bárbaro (John Buscema, Frank Frazetta)",
+    "linework": "Muscular visceral dip-pen cross-hatching, heavy expressive brush contours, rugged fur and leather textures",
+    "shading_technique": "Dense directional cross-hatching, deep chiaroscuro campfire shadows, blood-slicked metal reflections",
+    "color_palette": "Savage earthy palette, bronzed skin, fur browns, blood crimson, bone white, torchlight amber glow",
+    "anatomy_acting": "Massive hyper-muscular barbarian anatomy, feral predatory grimace, heavy battle stance wielding broadsword and axe",
+    "atmosphere_backgrounds": "Ancient primeval ruins, pagan sacrificial altars, skulls on pikes, torchlit mountain caverns",
+    "prompt_tokens": "classic sword and sorcery comic art, John Buscema Conan aesthetic, raw muscular brush inking, dense textured cross-hatching, ferocious barbarian warrior, primeval fantasy atmosphere"
+  },
+  "us_vintage": {
+    "nombre_oficial": "US Vintage",
+    "referencia_cultural": "Captain America / Fantastic Four (Jack Kirby, Joe Simon)",
+    "linework": "Explosive powerful brushwork, heavy squarish jawlines, dynamic foreshortening bursting through panel frames",
+    "shading_technique": "Legendary Kirby Krackle (clusters of solid black dots depicting raw cosmic power), heavy blocky cast shadows",
+    "color_palette": "Vintage Golden Age 4-color process, cadmium red, lemon yellow, royal cobalt, visible aged newsprint texture",
+    "anatomy_acting": "Monumental dynamic anatomy, clenched square fists, explosive charging momentum, heroic jaw-forward determination",
+    "atmosphere_backgrounds": "Secret WWII military bunkers, giant cosmic monoliths, explosive energy burst fields with cosmic dots",
+    "prompt_tokens": "classic 1960s Jack Kirby comic book art style, bold explosive brush inking, Kirby Krackle cosmic dot energy, dynamic foreshortened heroic punch, vintage 4-color halftone print texture"
+  }
+}

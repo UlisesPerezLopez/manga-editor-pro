@@ -22,8 +22,11 @@ import detectiveCyberpunk3 from './detective_cyberpunk3.png'
 
 export const MANGA_ROLES = {
   protagonista: rolProtagonista,
+  coprotagonista: rolProtagonista,
   antagonista: rolAntagonista,
+  rival: rolAntagonista,
   apoyo: rolApoyoAliado,
+  mentor: rolApoyoAliado,
   secundario: rolSecundarioExtra,
   // Aliases de compatibilidad
   principal: rolProtagonista,
@@ -50,7 +53,7 @@ export const MANGA_AVATARS = {
 
 /**
  * Devuelve la insignia gráfica de rol manga según el identificador de rol.
- * @param {string} role - 'protagonista' | 'antagonista' | 'apoyo' | 'secundario'
+ * @param {string} role - 'protagonista' | 'coprotagonista' | 'antagonista' | 'apoyo' | 'secundario' | 'mentor' | 'rival'
  * @returns {string} URL de la imagen del badge de rol
  */
 export function getRoleBadge(role) {
@@ -61,7 +64,7 @@ export function getRoleBadge(role) {
 
 /**
  * Devuelve el avatar arquetípico por defecto según el rol del personaje.
- * @param {string} role - 'protagonista' | 'antagonista' | 'apoyo' | 'secundario'
+ * @param {string} role - 'protagonista' | 'coprotagonista' | 'antagonista' | 'apoyo' | 'secundario' | 'mentor' | 'rival'
  * @returns {string} URL de la imagen del avatar arquetípico por defecto
  */
 export function getDefaultAvatar(role) {
@@ -71,9 +74,15 @@ export function getDefaultAvatar(role) {
     case 'protagonista':
     case 'principal':
       return espadachinShonen
+    case 'coprotagonista':
+      return espadachinShonen2
     case 'antagonista':
     case 'villano':
       return villanoCerebral
+    case 'rival':
+      return villanoCerebral2
+    case 'mentor':
+      return senseiVeterano
     case 'apoyo':
     case 'aliado':
       return hechiceraMistica
@@ -83,6 +92,7 @@ export function getDefaultAvatar(role) {
       return detectiveCyberpunk2
   }
 }
+
 
 export default {
   MANGA_ROLES,
