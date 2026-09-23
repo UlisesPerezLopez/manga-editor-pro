@@ -44,9 +44,9 @@ export default function CanvasToolbar({
     {
       id: 'texto',
       icon: Type,
-      label: t('editor.tools.text') || 'Texto / Onomatopeya',
+      label: t('editor.tools.text') || 'Texto Libre / Cartela',
       tecla: 'T',
-      desc: 'Insertar texto libre u onomatopeya con un clic',
+      desc: 'Insertar cuadro de texto libre o narrativo con un clic',
     },
     {
       id: 'pincel',

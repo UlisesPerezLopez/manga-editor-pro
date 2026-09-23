@@ -283,16 +283,18 @@
       "templates": "Plantillas",
       "panels": "Viñetas",
       "balloons": "Bocadillos",
+      "fx": "Efectos & SFX",
+      "sfx": "Onomatopeyas SFX",
+      "advanced": "Ajustes Avanzados",
       "structure": "Estructura",
       "layers": "Capas",
       "filters": "Filtros",
-      "snapping": "Guías",
-      "fx": "Efectos"
+      "snapping": "Guías"
     },
     "tools": {
       "select": "Seleccionar",
       "hand": "Mano / Desplazar Lienzo",
-      "text": "Texto / Onomatopeya",
+      "text": "Texto Libre / Cartela",
       "draw": "Pincel de entintado",
       "panel": "Viñeta",
       "brush": "Pincel de tinta",

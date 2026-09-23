@@ -45,7 +45,10 @@ export const COLORES_PRESET = [
 // Función auxiliar para auto-renderizar marcos de plantilla de forma atómica en Fabric.js
 export const instanciarMarcosPlantilla = (canvas, plantillaKey = 'grid_4_regular') => {
   if (!canvas) return []
-  const plantilla = pageTemplatesData[plantillaKey] || pageTemplatesData['grid_4_regular']
+  const plantilla = pageTemplatesData[plantillaKey] || 
+    (plantillaKey === 'grid_5_dynamic' ? pageTemplatesData['grid_5_action'] : 
+    (plantillaKey === 'grid_3_horizontal' ? pageTemplatesData['grid_3_classic'] : 
+    (pageTemplatesData['grid_4_regular'] || Object.values(pageTemplatesData)[0])))
   if (!plantilla?.vinetas) return []
 
   const nuevosMarcos = []
@@ -60,7 +63,7 @@ export const instanciarMarcosPlantilla = (canvas, plantillaKey = 'grid_4_regular
       top,
       width,
       height,
-      fill: '#FFFFFF',
+      fill: 'rgba(255,255,255,0.001)',
       stroke: '#000000',
       strokeWidth: 4,
       strokeUniform: true,
@@ -71,9 +74,9 @@ export const instanciarMarcosPlantilla = (canvas, plantillaKey = 'grid_4_regular
       cornerSize: 8,
       transparentCorners: false,
       data: {
-        type: 'panel',
+        tipo: 'vineta',
         panelId: vin.id,
-        tipo: 'vineta'
+        id: vin.id
       }
     })
     canvas.add(rect)
@@ -82,6 +85,72 @@ export const instanciarMarcosPlantilla = (canvas, plantillaKey = 'grid_4_regular
 
   canvas.renderAll()
   return nuevosMarcos
+}
+
+// Algoritmo infalible de escalado cover y recorte para viñetas en Fabric.js
+export const insertarImagenEnVineta = (canvas, imagenSrc, marcoObj) => {
+  if (!canvas || !marcoObj) return
+
+  const marcoId = marcoObj.data?.panelId || marcoObj.data?.id
+
+  // 1. Purgar cualquier ilustración previa vinculada a este marco
+  const prevImg = canvas.getObjects().find(o => o.data?.tipo === 'panel_image' && o.data?.panelId === marcoId)
+  if (prevImg) canvas.remove(prevImg)
+
+  // 2. Obtener dimensiones y centro exacto del marco
+  const destW = marcoObj.getScaledWidth()
+  const destH = marcoObj.getScaledHeight()
+  const centerX = marcoObj.left + destW / 2
+  const centerY = marcoObj.top + destH / 2
+
+  // 3. Cargar la imagen y forzar modo Cover
+  fabric.Image.fromURL(imagenSrc, (img) => {
+    if (!img || !img.width || !img.height) return
+
+    // Escala para cubrir el marco sin deformar
+    const scale = Math.max(destW / img.width, destH / img.height)
+
+    img.set({
+      originX: 'center',
+      originY: 'center',
+      left: centerX,
+      top: centerY,
+      scaleX: scale,
+      scaleY: scale,
+      selectable: false,
+      evented: false,
+      data: { tipo: 'panel_image', panelId: marcoId }
+    })
+
+    // 4. Recorte estricto coincidente con el marco
+    img.clipPath = new fabric.Rect({
+      originX: 'center',
+      originY: 'center',
+      left: centerX,
+      top: centerY,
+      width: destW,
+      height: destH,
+      absolutePositioned: true
+    })
+
+    // 5. Inserción y orden Z de capas
+    canvas.add(img)
+    canvas.sendToBack(img) // El arte al fondo
+
+    // El marco perimetral negro va justo por encima de la imagen
+    marcoObj.set({ fill: 'rgba(255,255,255,0.001)' })
+    canvas.bringToFront(marcoObj)
+
+    // Traer bocadillos, textos, SFX y efectos por encima del marco
+    canvas.getObjects().forEach(obj => {
+      const t = obj.data?.tipo || obj.data?.type
+      if (t === 'balloon' || t === 'balloon_text' || t === 'balloon_shape' || t === 'free_text' || t === 'sfx' || t === 'sfx_text' || t === 'kinetic_fx' || t === 'fx_layer') {
+        canvas.bringToFront(obj)
+      }
+    })
+
+    canvas.renderAll()
+  }, { crossOrigin: 'anonymous' })
 }
 
 // Colores de borde para los diferentes tipos de objetos
@@ -103,6 +172,8 @@ const MangaCanvas = forwardRef(function MangaCanvas({
   snappingConfig = CONFIG_SNAPPING_DEFAULT,
   zoom: zoomProp,
   onZoomChange,
+  onTextoSeleccionadoChange = null,
+  onHerramientaChange = null,
 }, canvasRef) { 
 
   const elementoCanvasRef = useRef(null) 
@@ -123,52 +194,226 @@ const MangaCanvas = forwardRef(function MangaCanvas({
     puedeRehacer
   } = useCanvasHistory(30)
 
-  // ─── GESTIÓN DE PROPIEDADES TIPOGRÁFICAS FLOTANTES ───────────────────────
+  // ─── GESTIÓN DE PROPIEDADES TIPOGRÁFICAS (INSPECTOR & TOOLBAR) ─────────────
+
+  const obtenerTextoActivo = () => {
+    const canvas = fabricRef.current
+    if (!canvas) return null
+    const obj = canvas.getActiveObject()
+    if (!obj) return null
+
+    let textObj = null
+    let shapeObj = null
+
+    if (obj.type === 'textbox' || obj.type === 'i-text' || obj.type === 'text') {
+      textObj = obj
+      if (obj.data?.balloonId) {
+        shapeObj = canvas.getObjects().find(o => o.data?.type === 'balloon_shape' && o.data?.balloonId === obj.data.balloonId)
+      }
+    } else if (obj.data?.type === 'balloon_shape') {
+      shapeObj = obj
+      textObj = canvas.getObjects().find(o => o.data?.type === 'balloon_text' && o.data?.balloonId === obj.data.balloonId)
+    } else if (obj.type === 'group' && (obj.data?.type === 'balloon' || obj.data?.tipo === 'bocadillo' || obj.data?.tipo?.startsWith('bocadillo'))) {
+      textObj = obj.getObjects().find(o => o.type === 'i-text' || o.type === 'textbox' || o.type === 'text')
+      shapeObj = obj.getObjects().find(o => o !== textObj)
+    }
+
+    if (textObj) {
+      return {
+        targetObj: obj,
+        textObj,
+        shapeObj,
+        fontFamily: textObj.fontFamily || 'Comic Relief',
+        fontSize: Math.round(textObj.fontSize || 18),
+        isBold: textObj.fontWeight === 'bold' || textObj.fontWeight === 700 || textObj.fontWeight === '700',
+        isItalic: textObj.fontStyle === 'italic',
+        textAlign: textObj.textAlign || 'center',
+        color: typeof textObj.fill === 'string' ? textObj.fill : '#000000',
+        stroke: typeof textObj.stroke === 'string' ? textObj.stroke : '#000000',
+        strokeWidth: textObj.strokeWidth || 0,
+        hasShadow: !!textObj.shadow,
+        shapeFill: shapeObj?.fill || '#FFFFFF',
+        shapeStroke: shapeObj?.stroke || '#000000',
+        shapeStrokeWidth: shapeObj?.strokeWidth || 2,
+        isBalloon: !!shapeObj || obj.data?.type === 'balloon_text' || obj.data?.type === 'balloon_shape',
+        isSFX: obj.data?.type === 'sfx_text' || obj.data?.tipo === 'onomatopeya'
+      }
+    }
+    return null
+  }
 
   const actualizarPropiedadTexto = (propiedad, valor) => {
-    if (!propiedadesTexto || !fabricRef.current) return
+    const info = obtenerTextoActivo()
+    if (!info || !fabricRef.current) return
     const canvas = fabricRef.current
-    const { targetObj, textObj } = propiedadesTexto
+    const { targetObj, textObj } = info
     if (!textObj) return
 
     textObj.set(propiedad, valor)
+    if (propiedad === 'stroke' || propiedad === 'strokeWidth') {
+      textObj.set('paintFirst', 'stroke')
+    }
     if (targetObj && targetObj.type === 'group') {
       targetObj.addWithUpdate()
     }
     canvas.renderAll()
     guardarEstado(canvas)
 
-    setPropiedadesTexto(prev => {
-      if (!prev) return null
-      return {
-        ...prev,
-        [propiedad === 'fontWeight' ? 'isBold' : propiedad === 'fontStyle' ? 'isItalic' : propiedad]:
-          propiedad === 'fontWeight' ? (valor === 'bold') :
-          propiedad === 'fontStyle' ? (valor === 'italic') : valor,
-        fontSize: propiedad === 'fontSize' ? valor : prev.fontSize,
-        fontFamily: propiedad === 'fontFamily' ? valor : prev.fontFamily,
-        textAlign: propiedad === 'textAlign' ? valor : prev.textAlign,
-        color: propiedad === 'fill' ? valor : prev.color,
+    const updated = {
+      ...info,
+      [propiedad === 'fontWeight' ? 'isBold' : propiedad === 'fontStyle' ? 'isItalic' : propiedad]:
+        propiedad === 'fontWeight' ? (valor === 'bold' || valor === 700 || valor === '700') :
+        propiedad === 'fontStyle' ? (valor === 'italic') : valor,
+      fontSize: propiedad === 'fontSize' ? valor : info.fontSize,
+      fontFamily: propiedad === 'fontFamily' ? valor : info.fontFamily,
+      textAlign: propiedad === 'textAlign' ? valor : info.textAlign,
+      color: propiedad === 'fill' ? valor : info.color,
+      stroke: propiedad === 'stroke' ? valor : info.stroke,
+      strokeWidth: propiedad === 'strokeWidth' ? valor : info.strokeWidth,
+    }
+    setPropiedadesTexto(updated)
+    onTextoSeleccionadoChange?.(updated)
+  }
+
+  const setTextStroke = (color, width) => {
+    const info = obtenerTextoActivo()
+    if (!info || !fabricRef.current) return
+    const canvas = fabricRef.current
+    const { textObj } = info
+    if (!textObj) return
+
+    if (color !== undefined) textObj.set('stroke', color)
+    if (width !== undefined) textObj.set('strokeWidth', width)
+    textObj.set('paintFirst', 'stroke')
+    canvas.renderAll()
+    guardarEstado(canvas)
+
+    const updated = {
+      ...info,
+      stroke: color !== undefined ? color : info.stroke,
+      strokeWidth: width !== undefined ? width : info.strokeWidth
+    }
+    setPropiedadesTexto(updated)
+    onTextoSeleccionadoChange?.(updated)
+  }
+
+  const setTextShadow = (tipo = 'none') => {
+    const info = obtenerTextoActivo()
+    if (!info || !fabricRef.current) return
+    const canvas = fabricRef.current
+    const { textObj } = info
+    if (!textObj) return
+
+    if (tipo === 'none') {
+      textObj.set('shadow', null)
+    } else if (tipo === 'sutil') {
+      textObj.set('shadow', new fabric.Shadow({
+        color: 'rgba(0,0,0,0.35)',
+        blur: 4,
+        offsetX: 2,
+        offsetY: 2
+      }))
+    } else if (tipo === 'impacto') {
+      textObj.set('shadow', new fabric.Shadow({
+        color: 'rgba(0,0,0,0.7)',
+        blur: 8,
+        offsetX: 3,
+        offsetY: 3
+      }))
+    } else if (tipo === 'fuerte') {
+      textObj.set('shadow', new fabric.Shadow({
+        color: 'rgba(0,0,0,0.85)',
+        blur: 14,
+        offsetX: 4,
+        offsetY: 4
+      }))
+    }
+    canvas.renderAll()
+    guardarEstado(canvas)
+
+    const updated = {
+      ...info,
+      hasShadow: tipo !== 'none'
+    }
+    setPropiedadesTexto(updated)
+    onTextoSeleccionadoChange?.(updated)
+  }
+
+  const setShapeFill = (color) => {
+    const info = obtenerTextoActivo()
+    if (!info || !fabricRef.current) return
+    const canvas = fabricRef.current
+    const { shapeObj, targetObj } = info
+    const target = shapeObj || (targetObj?.data?.type === 'balloon_shape' ? targetObj : null)
+    if (!target) return
+
+    target.set('fill', color)
+    if (target.type === 'group' && target.getObjects) {
+      target.getObjects().forEach(o => o.set('fill', color))
+    }
+    canvas.renderAll()
+    guardarEstado(canvas)
+
+    const updated = {
+      ...info,
+      shapeFill: color
+    }
+    setPropiedadesTexto(updated)
+    onTextoSeleccionadoChange?.(updated)
+  }
+
+  const setShapeStroke = (color, width) => {
+    const info = obtenerTextoActivo()
+    if (!info || !fabricRef.current) return
+    const canvas = fabricRef.current
+    const { shapeObj, targetObj } = info
+    const target = shapeObj || (targetObj?.data?.type === 'balloon_shape' ? targetObj : null)
+    if (!target) return
+
+    if (color !== undefined) {
+      target.set('stroke', color)
+      if (target.type === 'group' && target.getObjects) {
+        target.getObjects().forEach(o => o.set('stroke', color))
       }
-    })
+    }
+    if (width !== undefined) {
+      target.set('strokeWidth', width)
+      if (target.type === 'group' && target.getObjects) {
+        target.getObjects().forEach(o => o.set('strokeWidth', width))
+      }
+    }
+    target.set('strokeUniform', true)
+    canvas.renderAll()
+    guardarEstado(canvas)
+
+    const updated = {
+      ...info,
+      shapeStroke: color !== undefined ? color : info.shapeStroke,
+      shapeStrokeWidth: width !== undefined ? width : info.shapeStrokeWidth
+    }
+    setPropiedadesTexto(updated)
+    onTextoSeleccionadoChange?.(updated)
   }
 
   const cambiarTamanoTexto = (delta) => {
-    if (!propiedadesTexto) return
-    const actual = propiedadesTexto.fontSize || 18
-    const nuevo = Math.max(8, Math.min(120, actual + delta))
+    const info = obtenerTextoActivo()
+    if (!info) return
+    const actual = info.fontSize || 18
+    const nuevo = Math.max(10, Math.min(120, actual + delta))
     actualizarPropiedadTexto('fontSize', nuevo)
   }
 
   const toggleNegrita = () => {
-    if (!propiedadesTexto) return
-    const nuevoValor = propiedadesTexto.isBold ? 'normal' : 'bold'
+    const info = obtenerTextoActivo()
+    if (!info) return
+    const nuevoValor = info.isBold ? 'normal' : 'bold'
     actualizarPropiedadTexto('fontWeight', nuevoValor)
   }
 
   const toggleCursiva = () => {
-    if (!propiedadesTexto) return
-    const nuevoValor = propiedadesTexto.isItalic ? 'normal' : 'italic'
+    const info = obtenerTextoActivo()
+    if (!info) return
+    const nuevoValor = info.isItalic ? 'normal' : 'italic'
     actualizarPropiedadTexto('fontStyle', nuevoValor)
   }
 
@@ -216,10 +461,47 @@ const MangaCanvas = forwardRef(function MangaCanvas({
       }
     })
 
-    // Snapping y Guías durante movimiento
+    // Snapping y sincronización de bocadillos inteligentes durante movimiento
     canvas.on('object:moving', (e) => {
+      const target = e.target
+      if (!target) return
       if (snappingConfigRef.current) {
-        procesarSnapping(canvas, e.target, snappingConfigRef.current)
+        procesarSnapping(canvas, target, snappingConfigRef.current)
+      }
+      // Sincronizar posición entre silueta y caja de texto desacoplada
+      if (target.data?.type === 'balloon_shape') {
+        const textObj = canvas.getObjects().find(o => o.data?.type === 'balloon_text' && o.data?.balloonId === target.data.balloonId)
+        if (textObj) {
+          textObj.set({ left: target.left, top: target.top })
+          textObj.setCoords()
+        }
+      } else if (target.data?.type === 'balloon_text') {
+        const shapeObj = canvas.getObjects().find(o => o.data?.type === 'balloon_shape' && o.data?.balloonId === target.data.balloonId)
+        if (shapeObj) {
+          shapeObj.set({ left: target.left, top: target.top })
+          shapeObj.setCoords()
+        }
+      }
+    })
+
+    // Sincronización al escalar la silueta del bocadillo: expande ancho de Textbox sin deformar tipografía
+    canvas.on('object:scaling', (e) => {
+      const target = e.target
+      if (!target) return
+      if (target.data?.type === 'balloon_shape') {
+        const textObj = canvas.getObjects().find(o => o.data?.type === 'balloon_text' && o.data?.balloonId === target.data.balloonId)
+        if (textObj) {
+          const currentW = target.width * target.scaleX
+          const usableW = Math.max(70, currentW * 0.72)
+          textObj.set({
+            left: target.left,
+            top: target.top,
+            width: usableW,
+            scaleX: 1,
+            scaleY: 1
+          })
+          textObj.setCoords()
+        }
       }
     })
 
@@ -227,13 +509,37 @@ const MangaCanvas = forwardRef(function MangaCanvas({
       limpiarGuias(canvas)
     })
 
-    // Edición interactiva inline de texto con doble clic en bocadillos (cero window.prompt)
+    // Edición interactiva inline de texto con doble clic (cero window.prompt)
     const alHacerDobleClic = (e) => {
       const target = e.target
       if (!target) return
       const canvasActual = fabricRef.current
       if (!canvasActual) return
 
+      // Edición nativa inmediata en Textbox o IText
+      if (target.type === 'textbox' || target.type === 'i-text' || target.type === 'text') {
+        if (target.enterEditing) {
+          canvasActual.setActiveObject(target)
+          target.enterEditing()
+          if (target.selectAll) target.selectAll()
+          canvasActual.renderAll()
+        }
+        return
+      }
+
+      // Si hace doble clic en la silueta, transferir foco a su caja de texto vinculada
+      if (target.data?.type === 'balloon_shape') {
+        const textObj = canvasActual.getObjects().find(o => o.data?.type === 'balloon_text' && o.data?.balloonId === target.data.balloonId)
+        if (textObj && textObj.enterEditing) {
+          canvasActual.setActiveObject(textObj)
+          textObj.enterEditing()
+          if (textObj.selectAll) textObj.selectAll()
+          canvasActual.renderAll()
+        }
+        return
+      }
+
+      // Compatibilidad con bocadillos legacy agrupados en fabric.Group
       const esBocadillo = target.type === 'group' && (
         target.data?.type === 'balloon' || 
         target.data?.tipo === 'bocadillo' || 
@@ -241,7 +547,7 @@ const MangaCanvas = forwardRef(function MangaCanvas({
       )
 
       if (esBocadillo) {
-        const textObj = target.getObjects().find(o => o.type === 'i-text' || o.type === 'text')
+        const textObj = target.getObjects().find(o => o.type === 'i-text' || o.type === 'textbox' || o.type === 'text')
         if (!textObj) return
 
         const savedData = { ...(target.data || {}) }
@@ -249,17 +555,14 @@ const MangaCanvas = forwardRef(function MangaCanvas({
         const objects = target.getObjects()
         const otherObjs = objects.filter(o => o !== textObj)
 
-        // Descomponer temporalmente el grupo para permitir edición directa en el lienzo
         target.toActiveSelection()
         canvasActual.discardActiveObject()
 
-        // Desactivar interacción con el vector SVG de fondo mientras se edita el texto
         otherObjs.forEach(o => {
           o.selectable = false
           o.evented = false
         })
 
-        // Activar y entrar en modo de edición de texto
         textObj.selectable = true
         textObj.evented = true
         canvasActual.setActiveObject(textObj)
@@ -308,41 +611,26 @@ const MangaCanvas = forwardRef(function MangaCanvas({
     }
     canvas.on('mouse:dblclick', alHacerDobleClic)
 
-    // Listener para notificar al padre qué viñeta está seleccionada y gestionar la barra flotante de texto
+    // Listener para notificar al padre qué viñeta está seleccionada y gestionar el inspector de texto
     const comprobarSeleccion = (e) => {
       const obj = e.selected?.[0]
       const tipoObjeto = obj?.data?.type || obj?.data?.tipo || obj?.tipo
       
-      if (obj && (tipoObjeto === 'panel' || tipoObjeto === 'vineta' || obj.type === 'rect') && onVinetaSeleccionada) {
+      if (obj && (tipoObjeto === 'panel' || tipoObjeto === 'vineta' || (obj.type === 'rect' && !obj.data?.balloonId)) && onVinetaSeleccionada) {
         onVinetaSeleccionada(obj)
       } else if (onVinetaSeleccionada) {
         onVinetaSeleccionada(null)
       }
 
-      // Detectar objeto de texto o bocadillo para barra contextual flotante
-      if (obj) {
-        let textObj = null
-        if (obj.type === 'i-text' || obj.type === 'text') {
-          textObj = obj
-        } else if (obj.type === 'group' && (obj.data?.type === 'balloon' || obj.data?.tipo === 'bocadillo' || obj.data?.tipo?.startsWith('bocadillo'))) {
-          textObj = obj.getObjects().find(o => o.type === 'i-text' || o.type === 'text')
-        }
-
-        if (textObj) {
-          setPropiedadesTexto({
-            targetObj: obj,
-            textObj: textObj,
-            fontFamily: textObj.fontFamily || 'Comic Relief',
-            fontSize: Math.round(textObj.fontSize || 18),
-            isBold: textObj.fontWeight === 'bold' || textObj.fontWeight === 700 || textObj.fontWeight === '700',
-            isItalic: textObj.fontStyle === 'italic',
-            textAlign: textObj.textAlign || 'center',
-            color: typeof textObj.fill === 'string' ? textObj.fill : '#000000'
-          })
-          return
-        }
+      // Detectar objeto de texto o bocadillo para barra contextual / inspector superior
+      const info = obtenerTextoActivo()
+      if (info) {
+        setPropiedadesTexto(info)
+        onTextoSeleccionadoChange?.(info)
+      } else {
+        setPropiedadesTexto(null)
+        onTextoSeleccionadoChange?.(null)
       }
-      setPropiedadesTexto(null)
     }
 
     canvas.on('selection:created', comprobarSeleccion)
@@ -351,6 +639,7 @@ const MangaCanvas = forwardRef(function MangaCanvas({
       limpiarGuias(canvas)
       if (onVinetaSeleccionada) onVinetaSeleccionada(null)
       setPropiedadesTexto(null)
+      onTextoSeleccionadoChange?.(null)
     })
 
     // Atajos de teclado
@@ -473,8 +762,17 @@ const MangaCanvas = forwardRef(function MangaCanvas({
 
       const onMouseUpPan = () => {
         isDragging = false
-        canvas.defaultCursor = 'grab'
+        canvas.defaultCursor = 'default'
+        canvas.selection = true
         canvas.setViewportTransform(canvas.viewportTransform)
+        canvas.forEachObject(obj => {
+          if (!obj.data?.esGuiaAlineacion) {
+            obj.selectable = true
+            obj.evented = true
+          }
+        })
+        canvas.renderAll()
+        onHerramientaChange?.('seleccionar')
       }
 
       canvas.on('mouse:down', onMouseDownPan)
@@ -483,6 +781,7 @@ const MangaCanvas = forwardRef(function MangaCanvas({
 
       return () => {
         canvas.defaultCursor = 'default'
+        canvas.selection = true
         canvas.off('mouse:down', onMouseDownPan)
         canvas.off('mouse:move', onMouseMovePan)
         canvas.off('mouse:up', onMouseUpPan)
@@ -492,6 +791,7 @@ const MangaCanvas = forwardRef(function MangaCanvas({
             obj.evented = true
           }
         })
+        canvas.renderAll()
       }
     }
 
@@ -501,20 +801,22 @@ const MangaCanvas = forwardRef(function MangaCanvas({
       canvas.defaultCursor = 'text'
 
       const onClickTexto = (opt) => {
-        if (opt.target && (opt.target.type === 'i-text' || opt.target.type === 'text')) {
+        if (opt.target && (opt.target.type === 'i-text' || opt.target.type === 'text' || opt.target.type === 'textbox')) {
           return
         }
         const pointer = canvas.getPointer(opt.e)
-        const nuevoTexto = new fabric.IText('¡BOOM!', {
+        const nuevoTexto = new fabric.Textbox('Escribe tu texto aquí...', {
           left: pointer.x,
           top: pointer.y,
-          fontFamily: 'Bangers',
-          fontSize: 32,
-          fill: '#E53E3E',
-          stroke: '#000000',
-          strokeWidth: 1.5,
-          originX: 'center',
-          originY: 'center',
+          fontFamily: 'Comic Relief',
+          fontSize: 18,
+          fill: '#000000',
+          stroke: '',
+          strokeWidth: 0,
+          width: 180,
+          splitByGrapheme: false,
+          originX: 'left',
+          originY: 'top',
           editable: true,
           selectable: true,
           cornerColor: '#E5A93C',
@@ -522,7 +824,7 @@ const MangaCanvas = forwardRef(function MangaCanvas({
           borderColor: '#E5A93C',
           cornerSize: 8,
           transparentCorners: false,
-          data: { tipo: 'texto', esOnomatopeya: true }
+          data: { tipo: 'free_text', type: 'free_text' }
         })
         canvas.add(nuevoTexto)
         canvas.setActiveObject(nuevoTexto)
@@ -532,11 +834,14 @@ const MangaCanvas = forwardRef(function MangaCanvas({
         }
         canvas.renderAll()
         guardarEstado(canvas)
+        onHerramientaChange?.('seleccionar')
       }
 
       canvas.on('mouse:down', onClickTexto)
       return () => {
         canvas.off('mouse:down', onClickTexto)
+        canvas.selection = true
+        canvas.defaultCursor = 'default'
       }
     }
 
@@ -919,7 +1224,7 @@ const MangaCanvas = forwardRef(function MangaCanvas({
           top,
           width,
           height,
-          fill: '#FFFFFF',
+          fill: 'rgba(255,255,255,0.001)',
           stroke: '#000000',
           strokeWidth: 4,
           strokeUniform: true,
@@ -930,9 +1235,9 @@ const MangaCanvas = forwardRef(function MangaCanvas({
           cornerSize: 8,
           transparentCorners: false,
           data: {
-            type: 'panel',
+            tipo: 'vineta',
             panelId: vin.id,
-            tipo: 'vineta'
+            id: vin.id
           }
         })
         canvas.add(rect)
@@ -942,7 +1247,7 @@ const MangaCanvas = forwardRef(function MangaCanvas({
       guardarEstado(canvas)
     },
 
-    // Insertar Bocadillo desde Vector SVG y Preset Tipográfico (balloonPresets.json)
+    // Insertar Bocadillo Inteligente Desacoplado (Silueta Vectorial + Textbox con word-wrap)
     insertarBocadilloPreset: (preset, posX = null, posY = null, textoInicial = '') => {
       const canvas = fabricRef.current
       if (!canvas || !preset) return
@@ -952,33 +1257,27 @@ const MangaCanvas = forwardRef(function MangaCanvas({
 
       const fontPrincipal = preset.fontFamily ? preset.fontFamily.split(',')[0].replace(/['"]/g, '').trim() : 'Comic Relief'
       const textoPorDefecto = textoInicial || (preset.tipo === 'caption' ? 'Texto de narración...' : '¡Escribe aquí!')
+      const balloonId = `balloon_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`
 
       fabric.loadSVGFromURL(
         preset.svg,
         (objects, options) => {
           if (!objects || objects.length === 0) return
 
-          const svgElement = fabric.util.groupSVGElements(objects, options)
-          svgElement.set({
-            originX: 'center',
-            originY: 'center',
+          // Silueta SVG con strokeUniform true en todos los elementos para mantener grosor al escalar
+          objects.forEach(o => {
+            o.set({
+              strokeUniform: true,
+            })
           })
 
-          const textObj = new fabric.IText(textoPorDefecto, {
-            fontFamily: fontPrincipal,
-            fontSize: preset.fontSize || 18,
-            fill: preset.textColor || '#000000',
-            originX: 'center',
-            originY: 'center',
-            textAlign: 'center',
-            editable: true,
-          })
-
-          const balloonGroup = new fabric.Group([svgElement, textObj], {
+          const svgShape = fabric.util.groupSVGElements(objects, options)
+          svgShape.set({
             left: x,
             top: y,
             originX: 'center',
             originY: 'center',
+            strokeUniform: true,
             selectable: true,
             hasControls: true,
             cornerColor: '#E5A93C',
@@ -987,15 +1286,46 @@ const MangaCanvas = forwardRef(function MangaCanvas({
             cornerSize: 8,
             transparentCorners: false,
             data: {
-              type: 'balloon',
-              tipo: 'bocadillo',
+              type: 'balloon_shape',
+              balloonId,
               presetId: preset.id,
               balloonType: preset.tipo
             }
           })
 
-          canvas.add(balloonGroup)
-          canvas.setActiveObject(balloonGroup)
+          const shapeW = svgShape.width * (svgShape.scaleX || 1)
+          const usableTextWidth = Math.max(90, shapeW * 0.72)
+
+          // Caja de texto desacoplada e inteligente (fabric.Textbox con auto word-wrap)
+          const textBox = new fabric.Textbox(textoPorDefecto, {
+            left: x,
+            top: y,
+            originX: 'center',
+            originY: 'center',
+            width: usableTextWidth,
+            fontFamily: fontPrincipal,
+            fontSize: preset.fontSize || 18,
+            fill: preset.textColor || '#000000',
+            textAlign: 'center',
+            splitByGrapheme: false,
+            editable: true,
+            selectable: true,
+            hasControls: true,
+            cornerColor: '#E5A93C',
+            cornerStyle: 'circle',
+            borderColor: '#E5A93C',
+            cornerSize: 8,
+            transparentCorners: false,
+            data: {
+              type: 'balloon_text',
+              balloonId,
+              presetId: preset.id
+            }
+          })
+
+          canvas.add(svgShape)
+          canvas.add(textBox)
+          canvas.setActiveObject(textBox)
           canvas.renderAll()
           guardarEstado(canvas)
         },
@@ -1004,199 +1334,7 @@ const MangaCanvas = forwardRef(function MangaCanvas({
       )
     },
 
-    // Exportar el canvas como dataURL PNG en alta resolución sin controles de selección
-    exportCanvas: (multiplier = 2) => {
-      const canvas = fabricRef.current
-      if (!canvas) return null
-      const activo = canvas.getActiveObject()
-      canvas.discardActiveObject()
-      canvas.renderAll()
-      const dataUrl = canvas.toDataURL({
-        format: 'png',
-        multiplier: multiplier || 2,
-        quality: 1,
-      })
-      if (activo) {
-        canvas.setActiveObject(activo)
-        canvas.renderAll()
-      }
-      return dataUrl
-    },
-
-    // Inserción de imagen con escalado 'cover' y clipPath en marco de viñeta
-    insertarImagenEnVineta: async (imagenSrc, targetObj = null, coords = null) => {
-      const canvas = fabricRef.current
-      if (!canvas) return
-
-      // Determinar viñeta destino si existe
-      let vinetaDestino = targetObj
-      if (vinetaDestino && vinetaDestino.data?.type !== 'panel' && vinetaDestino.data?.tipo !== 'vineta' && vinetaDestino.type !== 'rect') {
-        vinetaDestino = null
-      }
-
-      if (!vinetaDestino && coords) {
-        const objetos = canvas.getObjects()
-        for (let i = objetos.length - 1; i >= 0; i--) {
-          const obj = objetos[i]
-          const esPanel = !obj.data?.esGuiaAlineacion && (obj.data?.type === 'panel' || obj.data?.tipo === 'vineta' || (obj.type === 'rect' && !obj.data?.type))
-          if (esPanel) {
-            const pb = obj.getBoundingRect(true)
-            if (coords.x >= pb.left && coords.x <= pb.left + pb.width &&
-                coords.y >= pb.top && coords.y <= pb.top + pb.height) {
-              vinetaDestino = obj
-              break
-            }
-          }
-        }
-      }
-
-      if (!vinetaDestino) {
-        const activo = canvas.getActiveObject()
-        if (activo && (activo.data?.type === 'panel' || activo.data?.tipo === 'vineta' || activo.type === 'rect')) {
-          vinetaDestino = activo
-        }
-      }
-
-      if (!vinetaDestino) {
-        const paneles = canvas.getObjects().filter(o => 
-          !o.data?.esGuiaAlineacion && (o.data?.type === 'panel' || o.data?.tipo === 'vineta' || (o.type === 'rect' && !o.data?.tipo))
-        )
-        const imagenes = canvas.getObjects().filter(o => 
-          o.data?.type === 'panel_image' || o.data?.tipo === 'imagen_generada' || o.type === 'image'
-        )
-        // Buscar primer marco disponible que aún no tenga imagen
-        const panelVacio = paneles.find(p => {
-          const pId = p.data?.panelId || p.data?.id
-          if (pId) {
-            return !imagenes.some(img => (img.data?.panelId || img.data?.id) === pId)
-          }
-          const pb = p.getBoundingRect(true)
-          return !imagenes.some(img => {
-            const ib = img.getBoundingRect(true)
-            return Math.abs(ib.left - pb.left) < 15 && Math.abs(ib.top - pb.top) < 15
-          })
-        })
-        vinetaDestino = panelVacio || paneles[0] || null
-      }
-
-      return new Promise((resolve, reject) => {
-        fabric.Image.fromURL(
-          imagenSrc,
-          (img) => {
-            if (!img) {
-              reject(new Error('No se pudo cargar la imagen'))
-              return
-            }
-
-            if (vinetaDestino) {
-              const destW = vinetaDestino.width * (vinetaDestino.scaleX || 1)
-              const destH = vinetaDestino.height * (vinetaDestino.scaleY || 1)
-              const destLeft = vinetaDestino.left
-              const destTop = vinetaDestino.top
-              const targetPanelId = vinetaDestino.data?.panelId || vinetaDestino.data?.id
-
-              // Eliminar imagen previa en esta viñeta para evitar apilamiento de capas
-              const imagenesPrevias = canvas.getObjects().filter(o => {
-                if (o.data?.type === 'panel_image' || o.data?.tipo === 'imagen_generada') {
-                  if (targetPanelId && (o.data?.panelId === targetPanelId || o.data?.id === targetPanelId)) return true
-                  const ib = o.getBoundingRect(true)
-                  return Math.abs(ib.left - destLeft) < 20 && Math.abs(ib.top - destTop) < 20
-                }
-                return false
-              })
-              imagenesPrevias.forEach(prev => canvas.remove(prev))
-
-              // Escalar la imagen en modo cover exacto
-              const scaleX = destW / img.width
-              const scaleY = destH / img.height
-              const scale = Math.max(scaleX, scaleY)
-
-              const scaledW = img.width * scale
-              const scaledH = img.height * scale
-              const imgLeft = destLeft + (destW - scaledW) / 2
-              const imgTop = destTop + (destH - scaledH) / 2
-
-              img.set({
-                left: imgLeft,
-                top: imgTop,
-                originX: 'left',
-                originY: 'top',
-                scaleX: scale,
-                scaleY: scale,
-                clipPath: new fabric.Rect({
-                  left: destLeft,
-                  top: destTop,
-                  width: destW,
-                  height: destH,
-                  absolutePositioned: true
-                }),
-                selectable: true,
-                hasControls: true,
-                cornerColor: '#E5A93C',
-                cornerStyle: 'circle',
-                borderColor: '#E5A93C',
-                cornerSize: 8,
-                transparentCorners: false,
-                tipo: 'imagen_generada',
-                data: {
-                  type: 'panel_image',
-                  tipo: 'imagen_generada',
-                  panelId: targetPanelId,
-                  srcOriginal: imagenSrc
-                }
-              })
-
-              // Hacemos el fondo del marco transparente para que el arte se visualice con su borde negro superior
-              vinetaDestino.set('fill', 'transparent')
-
-              canvas.add(img)
-              const idx = canvas.getObjects().indexOf(vinetaDestino)
-              if (idx > 0) {
-                img.moveTo(idx)
-              } else {
-                canvas.sendToBack(img)
-              }
-            } else {
-              // Insertar como imagen libre en el lienzo
-              const posX = coords?.x ?? (CANVAS_W - Math.min(img.width, 350)) / 2
-              const posY = coords?.y ?? (CANVAS_H - Math.min(img.height, 350)) / 2
-              const maxDim = 350
-              const scale = Math.min(maxDim / img.width, maxDim / img.height, 1)
-
-              img.set({
-                left: posX,
-                top: posY,
-                originX: 'left',
-                originY: 'top',
-                scaleX: scale,
-                scaleY: scale,
-                selectable: true,
-                hasControls: true,
-                cornerColor: '#E5A93C',
-                cornerStyle: 'circle',
-                borderColor: '#E5A93C',
-                cornerSize: 8,
-                transparentCorners: false,
-                tipo: 'imagen_generada',
-                data: {
-                  type: 'panel_image',
-                  tipo: 'imagen_generada',
-                  srcOriginal: imagenSrc
-                }
-              })
-              canvas.add(img)
-            }
-
-            canvas.setActiveObject(img)
-            canvas.renderAll()
-            guardarEstado(canvas)
-            resolve(img)
-          },
-          { crossOrigin: 'anonymous' }
-        )
-      })
-    },
-
+    // Insertar Bocadillo de Diálogo rápido con arquitectura desacoplada
     insertarBocadilloDialogo: (texto, posX = null, posY = null) => {
       const canvas = fabricRef.current
       if (!canvas) return
@@ -1236,69 +1374,76 @@ const MangaCanvas = forwardRef(function MangaCanvas({
 
       const fontPrincipal = preset.fontFamily ? preset.fontFamily.split(',')[0].replace(/['"]/g, '').trim() : 'Comic Relief'
       const textoFinal = texto || '¡Escribe aquí!'
+      const balloonId = `balloon_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`
 
       fabric.loadSVGFromURL(
         preset.svg,
         (objects, options) => {
           if (!objects || objects.length === 0) {
-            // Fallback vectorial en caso de que el recurso SVG no responda
             const ancho = Math.max(160, Math.min(260, textoFinal.length * 8 + 40))
             const alto = 70
-            const bocadillo = new fabric.Group([
-              new fabric.Ellipse({
-                rx: ancho / 2,
-                ry: alto / 2,
-                fill: '#FFFFFF',
-                stroke: '#000000',
-                strokeWidth: 3,
-                originX: 'center',
-                originY: 'center',
-              }),
-              new fabric.IText(textoFinal, {
-                fontSize: 16,
-                fill: '#000000',
-                fontFamily: fontPrincipal,
-                originX: 'center',
-                originY: 'center',
-                textAlign: 'center',
-                editable: true,
-              })
-            ], {
+            const elipse = new fabric.Ellipse({
+              left: targetX,
+              top: targetY,
+              rx: ancho / 2,
+              ry: alto / 2,
+              fill: '#FFFFFF',
+              stroke: '#000000',
+              strokeWidth: 3,
+              strokeUniform: true,
+              originX: 'center',
+              originY: 'center',
+              selectable: true,
+              hasControls: true,
+              cornerColor: '#E5A93C',
+              cornerStyle: 'circle',
+              cornerSize: 8,
+              data: {
+                type: 'balloon_shape',
+                balloonId,
+                presetId: 'speech_fallback'
+              }
+            })
+
+            const textBox = new fabric.Textbox(textoFinal, {
               left: targetX,
               top: targetY,
               originX: 'center',
               originY: 'center',
+              width: ancho * 0.75,
+              fontSize: 16,
+              fill: '#000000',
+              fontFamily: fontPrincipal,
+              textAlign: 'center',
+              splitByGrapheme: false,
+              editable: true,
               selectable: true,
-              data: { type: 'balloon', tipo: 'bocadillo', presetId: preset.id }
+              cornerColor: '#E5A93C',
+              cornerStyle: 'circle',
+              cornerSize: 8,
+              data: {
+                type: 'balloon_text',
+                balloonId,
+                presetId: 'speech_fallback'
+              }
             })
-            canvas.add(bocadillo)
-            canvas.setActiveObject(bocadillo)
+
+            canvas.add(elipse)
+            canvas.add(textBox)
+            canvas.setActiveObject(textBox)
             canvas.renderAll()
             guardarEstado(canvas)
             return
           }
 
-          const svgElement = fabric.util.groupSVGElements(objects, options)
-          svgElement.set({
-            originX: 'center',
-            originY: 'center',
-          })
-
-          const textObj = new fabric.IText(textoFinal, {
-            fontFamily: fontPrincipal,
-            fontSize: preset.fontSize || 18,
-            fill: preset.textColor || '#000000',
-            originX: 'center',
-            originY: 'center',
-            textAlign: 'center',
-            editable: true,
-          })
-
-          const balloonGroup = new fabric.Group([svgElement, textObj], {
+          objects.forEach(o => o.set({ strokeUniform: true }))
+          const svgShape = fabric.util.groupSVGElements(objects, options)
+          svgShape.set({
             left: targetX,
             top: targetY,
             originX: 'center',
             originY: 'center',
+            strokeUniform: true,
             selectable: true,
             hasControls: true,
             cornerColor: '#E5A93C',
@@ -1307,15 +1452,45 @@ const MangaCanvas = forwardRef(function MangaCanvas({
             cornerSize: 8,
             transparentCorners: false,
             data: {
-              type: 'balloon',
-              tipo: 'bocadillo',
+              type: 'balloon_shape',
+              balloonId,
               presetId: preset.id,
               balloonType: preset.tipo
             }
           })
 
-          canvas.add(balloonGroup)
-          canvas.setActiveObject(balloonGroup)
+          const shapeW = svgShape.width * (svgShape.scaleX || 1)
+          const usableTextWidth = Math.max(90, shapeW * 0.72)
+
+          const textBox = new fabric.Textbox(textoFinal, {
+            left: targetX,
+            top: targetY,
+            originX: 'center',
+            originY: 'center',
+            width: usableTextWidth,
+            fontFamily: fontPrincipal,
+            fontSize: preset.fontSize || 18,
+            fill: preset.textColor || '#000000',
+            textAlign: 'center',
+            splitByGrapheme: false,
+            editable: true,
+            selectable: true,
+            hasControls: true,
+            cornerColor: '#E5A93C',
+            cornerStyle: 'circle',
+            borderColor: '#E5A93C',
+            cornerSize: 8,
+            transparentCorners: false,
+            data: {
+              type: 'balloon_text',
+              balloonId,
+              presetId: preset.id
+            }
+          })
+
+          canvas.add(svgShape)
+          canvas.add(textBox)
+          canvas.setActiveObject(textBox)
           canvas.renderAll()
           guardarEstado(canvas)
         },
@@ -1323,6 +1498,174 @@ const MangaCanvas = forwardRef(function MangaCanvas({
         { crossOrigin: 'anonymous' }
       )
     },
+
+    // Insertar Onomatopeya / SFX con estilo tipográfico y ángulo dinámico
+    insertarSFX: (sfx, posX = null, posY = null) => {
+      const canvas = fabricRef.current
+      if (!canvas || !sfx) return
+
+      const x = posX !== null && posX !== undefined ? posX : CANVAS_W / 2
+      const y = posY !== null && posY !== undefined ? posY : CANVAS_H / 2
+
+      const sfxObj = new fabric.IText(sfx.texto, {
+        left: x,
+        top: y,
+        originX: 'center',
+        originY: 'center',
+        fontFamily: sfx.fontFamily || 'Bangers',
+        fontSize: sfx.fontSize || 44,
+        fill: sfx.fill || '#E53E3E',
+        stroke: sfx.stroke || '#000000',
+        strokeWidth: sfx.strokeWidth || 3,
+        paintFirst: 'stroke',
+        angle: sfx.angle || 0,
+        shadow: new fabric.Shadow({
+          color: sfx.shadowColor || 'rgba(0,0,0,0.6)',
+          blur: sfx.shadowBlur || 8,
+          offsetX: 3,
+          offsetY: 3
+        }),
+        editable: true,
+        selectable: true,
+        hasControls: true,
+        cornerColor: '#E5A93C',
+        cornerStyle: 'circle',
+        borderColor: '#E5A93C',
+        cornerSize: 8,
+        transparentCorners: false,
+        data: {
+          type: 'sfx_text',
+          tipo: 'onomatopeya',
+          sfxId: sfx.id
+        }
+      })
+
+      canvas.add(sfxObj)
+      canvas.bringToFront(sfxObj)
+      canvas.setActiveObject(sfxObj)
+      canvas.renderAll()
+      guardarEstado(canvas)
+    },
+
+    // Restablecer el lienzo a plantilla limpia activa (purgando borradores corruptos)
+    reconstruirPlantilla: (plantillaKey = null) => {
+      const canvas = fabricRef.current
+      if (!canvas) return
+      canvas.clear()
+      canvas.backgroundColor = '#FFFFFF'
+      const targetPlantilla = plantillaKey || paginaActiva?.layout_template || plantillaActiva || 'grid_4_regular'
+      instanciarMarcosPlantilla(canvas, targetPlantilla)
+      canvas.renderAll()
+      guardarEstado(canvas)
+      if (paginaActiva?.id) {
+        try {
+          localStorage.removeItem(`editor_draft_${paginaActiva.id}`)
+        } catch (_) {}
+      }
+      if (onGuardar) {
+        onGuardar()
+      }
+    },
+
+    // Exportar el canvas como dataURL PNG en alta resolución sin controles de selección
+    exportCanvas: (multiplier = 2) => {
+      const canvas = fabricRef.current
+      if (!canvas) return null
+      const activo = canvas.getActiveObject()
+      canvas.discardActiveObject()
+      canvas.renderAll()
+      const dataUrl = canvas.toDataURL({
+        format: 'png',
+        multiplier: multiplier || 2,
+        quality: 1,
+      })
+      if (activo) {
+        canvas.setActiveObject(activo)
+        canvas.renderAll()
+      }
+      return dataUrl
+    },
+
+    // Inserción infalible de imagen en viñeta con modo cover y clipPath
+    insertarImagenEnVineta: async (imagenSrc, targetObjOrVineta = null, coords = null) => {
+      const canvas = fabricRef.current
+      if (!canvas) return
+
+      let marcoDestino = null
+
+      // 1. Coordenadas directas (p.ej. de Drop)
+      if (coords) {
+        marcoDestino = canvas.getObjects().find(o => {
+          if (o.data?.tipo !== 'vineta' && o.data?.type !== 'panel') return false
+          const w = o.getScaledWidth()
+          const h = o.getScaledHeight()
+          return coords.x >= o.left && coords.x <= o.left + w &&
+                 coords.y >= o.top && coords.y <= o.top + h
+        })
+      }
+
+      // 2. Si targetObjOrVineta ya es un objeto Fabric de viñeta
+      if (!marcoDestino && targetObjOrVineta && (targetObjOrVineta.type || targetObjOrVineta.getScaledWidth)) {
+        if (targetObjOrVineta.data?.tipo === 'vineta' || targetObjOrVineta.data?.type === 'panel') {
+          marcoDestino = targetObjOrVineta
+        }
+      }
+
+      // 3. Si hay un marco actualmente seleccionado en el canvas
+      if (!marcoDestino) {
+        const activo = canvas.getActiveObject()
+        if (activo && (activo.data?.tipo === 'vineta' || activo.data?.type === 'panel')) {
+          marcoDestino = activo
+        }
+      }
+
+      // 4. Si no hay selección, buscar el marco por ordinal de la viñeta o el primer marco libre
+      if (!marcoDestino) {
+        let marcos = canvas.getObjects().filter(o => o.data?.tipo === 'vineta' || o.data?.type === 'panel')
+        if (marcos.length === 0) {
+          const plantillaId = paginaActiva?.layout_template || plantillaActiva || 'grid_4_regular'
+          marcos = instanciarMarcosPlantilla(canvas, plantillaId)
+        }
+
+        // A) Buscar por vineta_num ordinal
+        const numVineta = typeof targetObjOrVineta === 'number'
+          ? targetObjOrVineta
+          : (targetObjOrVineta?.vineta_num ? Number(targetObjOrVineta.vineta_num) : null)
+
+        if (numVineta && marcos[numVineta - 1]) {
+          marcoDestino = marcos[numVineta - 1]
+        }
+
+        // B) Si no, buscar el primer marco libre (sin panel_image)
+        if (!marcoDestino) {
+          const imagenes = canvas.getObjects().filter(o => o.data?.tipo === 'panel_image' || o.data?.type === 'panel_image')
+          const marcoLibre = marcos.find(m => {
+            const mId = m.data?.panelId || m.data?.id
+            return !imagenes.some(img => (img.data?.panelId || img.data?.id) === mId)
+          })
+          marcoDestino = marcoLibre || marcos[0]
+        }
+      }
+
+      if (marcoDestino) {
+        insertarImagenEnVineta(canvas, imagenSrc, marcoDestino)
+        guardarEstado(canvas)
+      }
+    },
+
+    // Métodos tipográficos y de formato (accesibles desde EditorToolbar)
+    actualizarPropiedadTexto,
+    setTextStroke,
+    setTextShadow,
+    setShapeFill,
+    setShapeStroke,
+    cambiarTamanoTexto,
+    toggleNegrita,
+    toggleCursiva,
+    setAlineacion: (align) => actualizarPropiedadTexto('textAlign', align),
+    setColor: (color) => actualizarPropiedadTexto('fill', color),
+    setFontFamily: (font) => actualizarPropiedadTexto('fontFamily', font),
+    setFontSize: (size) => actualizarPropiedadTexto('fontSize', size),
   }))
 
   return (
@@ -1335,33 +1678,68 @@ const MangaCanvas = forwardRef(function MangaCanvas({
       onDrop={async (e) => {
         e.preventDefault()
         const canvas = fabricRef.current
-        if (!elementoCanvasRef.current || !canvas) return
+        if (!canvas) return
 
-        // Coordenadas precisas del lienzo usando canvas.getPointer
-        const pointer = canvas.getPointer(e)
-        const x = pointer.x
-        const y = pointer.y
-
-        // 1. Detección de preset de bocadillo (JSON)
+        // 1. Detección de preset de bocadillo o SFX (JSON)
         const jsonStr = e.dataTransfer.getData('application/json')
         if (jsonStr) {
           try {
             const parsed = JSON.parse(jsonStr)
             if (parsed.type === 'balloon_preset' && parsed.preset) {
+              const canvasEl = canvas.upperCanvasEl || elementoCanvasRef.current
+              const rect = canvasEl.getBoundingClientRect()
+              const x = (e.clientX - rect.left) * (canvas.width / rect.width)
+              const y = (e.clientY - rect.top) * (canvas.height / rect.height)
               if (canvasRef?.current?.insertarBocadilloPreset) {
                 canvasRef.current.insertarBocadilloPreset(parsed.preset, x, y, parsed.texto)
               }
               return
             }
-          } catch (_) {
-            // Continuar si no es un JSON de bocadillo
-          }
+            if (parsed.type === 'sfx_preset' && parsed.sfx) {
+              const canvasEl = canvas.upperCanvasEl || elementoCanvasRef.current
+              const rect = canvasEl.getBoundingClientRect()
+              const x = (e.clientX - rect.left) * (canvas.width / rect.width)
+              const y = (e.clientY - rect.top) * (canvas.height / rect.height)
+              if (canvasRef?.current?.insertarSFX) {
+                canvasRef.current.insertarSFX(parsed.sfx, x, y)
+              }
+              return
+            }
+          } catch (_) {}
         }
 
-        // 2. Viñeta o imagen desde URL
-        const url = e.dataTransfer.getData('text/plain')
-        if (url && canvasRef?.current?.insertarImagenEnVineta) {
-          await canvasRef.current.insertarImagenEnVineta(url, null, { x, y })
+        // 2. Viñeta o imagen desde URL o JSON
+        let imgSrc = ''
+        if (jsonStr) {
+          try {
+            const parsed = JSON.parse(jsonStr)
+            imgSrc = parsed.url || parsed.imagen_url || ''
+          } catch (_) {}
+        }
+        if (!imgSrc) {
+          imgSrc = e.dataTransfer.getData('text/plain')
+        }
+        if (!imgSrc) return
+
+        const canvasEl = canvas.upperCanvasEl || elementoCanvasRef.current
+        const rect = canvasEl.getBoundingClientRect()
+        const pointer = {
+          x: (e.clientX - rect.left) * (canvas.width / rect.width),
+          y: (e.clientY - rect.top) * (canvas.height / rect.height)
+        }
+
+        // Localizar el marco que contiene el punto
+        const marcoDestino = canvas.getObjects().find(o => {
+          if (o.data?.tipo !== 'vineta' && o.data?.type !== 'panel') return false
+          const w = o.getScaledWidth()
+          const h = o.getScaledHeight()
+          return pointer.x >= o.left && pointer.x <= o.left + w &&
+                 pointer.y >= o.top && pointer.y <= o.top + h
+        })
+
+        if (marcoDestino) {
+          insertarImagenEnVineta(canvas, imgSrc, marcoDestino)
+          guardarEstado(canvas)
         }
       }}
     >

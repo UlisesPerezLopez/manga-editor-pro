@@ -3,7 +3,7 @@
 // Permite arrastrar o insertar viñetas generadas en PanelArtStudio directamente en los marcos del lienzo,
 // así como generar bocadillos de diálogo con rotulación automática.
 
-import React, { useEffect, useState, useMemo } from 'react'
+import React, { useEffect, useState, useMemo, useRef } from 'react'
 import {
   Image as ImageIcon,
   Plus,
@@ -13,7 +13,8 @@ import {
   ExternalLink,
   Move,
   CheckCircle2,
-  Film
+  Film,
+  FolderUp
 } from 'lucide-react'
 import useProjectStore from '../../store/projectStore'
 import useEditorStore from '../../store/editorStore'
@@ -24,6 +25,7 @@ export default function VinetasCapituloPanel({ onInsertarImagen, onCrearBocadill
   const {
     proyectoActivo,
     cargarVinetasCatalogo,
+    subirImagenesCapitulo,
     getVinetasCapitulo,
     cargandoVinetasCatalogo,
     vinetasCatalogo,
@@ -35,6 +37,8 @@ export default function VinetasCapituloPanel({ onInsertarImagen, onCrearBocadill
   const [capituloSeleccionado, setCapituloSeleccionado] = useState(
     capituloActivo?.numero || 1
   )
+  const [subiendo, setSubiendo] = useState(false)
+  const fileInputRef = useRef(null)
 
   // Sincronizar capítulo cuando cambie la selección en el editor
   useEffect(() => {
@@ -50,6 +54,22 @@ export default function VinetasCapituloPanel({ onInsertarImagen, onCrearBocadill
     }
   }, [proyectoActivo?.id, cargarVinetasCatalogo])
 
+  // Subir / Importar imágenes locales (.png, .jpg, .webp)
+  const handleSeleccionarArchivos = async (e) => {
+    const files = e.target.files
+    if (!files || files.length === 0 || !proyectoActivo?.id) return
+    try {
+      setSubiendo(true)
+      await subirImagenesCapitulo(proyectoActivo.id, capituloSeleccionado, files)
+    } catch (err) {
+      console.error('Error al importar imágenes:', err)
+      alert('Error al importar imágenes: ' + (err.response?.data?.detail || err.message))
+    } finally {
+      setSubiendo(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }
+
   // Obtener viñetas filtradas por el capítulo seleccionado (combinando BD + memoria en tiempo real)
   const vinetas = useMemo(() => {
     return getVinetasCapitulo(capituloSeleccionado)
@@ -58,7 +78,7 @@ export default function VinetasCapituloPanel({ onInsertarImagen, onCrearBocadill
   return (
     <div className="flex flex-col h-full bg-rdc-secondary text-rdc-text">
       {/* ── Cabecera de la Bandeja ── */}
-      <div className="p-3 border-b border-rdc-border space-y-2 flex-shrink-0">
+      <div className="p-3 border-b border-rdc-border space-y-2.5 flex-shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Film className="w-4 h-4 text-rdc-accent" />
@@ -69,11 +89,11 @@ export default function VinetasCapituloPanel({ onInsertarImagen, onCrearBocadill
           <button
             type="button"
             onClick={() => proyectoActivo?.id && cargarVinetasCatalogo(proyectoActivo.id)}
-            disabled={cargandoVinetasCatalogo}
-            className="text-rdc-muted hover:text-rdc-accent transition-colors p-1 rounded-md cursor-pointer"
+            disabled={cargandoVinetasCatalogo || subiendo}
+            className="text-rdc-muted hover:text-rdc-accent transition-colors p-1 rounded-md cursor-pointer disabled:opacity-50"
             title="Recargar catálogo de viñetas"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${cargandoVinetasCatalogo ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-3.5 h-3.5 ${cargandoVinetasCatalogo || subiendo ? 'animate-spin' : ''}`} />
           </button>
         </div>
 
@@ -94,6 +114,36 @@ export default function VinetasCapituloPanel({ onInsertarImagen, onCrearBocadill
             </select>
           </div>
         )}
+
+        {/* Input y Botón de Importar / Subir Imágenes Locales */}
+        <input
+          type="file"
+          ref={fileInputRef}
+          onChange={handleSeleccionarArchivos}
+          multiple
+          accept=".png,.jpg,.jpeg,.webp"
+          className="hidden"
+        />
+
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={subiendo || cargandoVinetasCatalogo}
+          className="w-full py-1.5 px-2.5 rounded-lg bg-rdc-card hover:bg-rdc-primary border border-rdc-border hover:border-rdc-accent text-rdc-text text-xs font-titulo font-bold flex items-center justify-center gap-2 shadow-xs transition-all cursor-pointer disabled:opacity-50"
+          title="Importar imágenes locales (.png, .jpg, .webp)"
+        >
+          {subiendo ? (
+            <>
+              <RefreshCw className="w-3.5 h-3.5 animate-spin text-rdc-accent" />
+              <span>Importando imágenes...</span>
+            </>
+          ) : (
+            <>
+              <FolderUp className="w-3.5 h-3.5 text-rdc-accent" />
+              <span>📂 Subir / Importar Imágenes</span>
+            </>
+          )}
+        </button>
 
         <p className="text-[11px] text-rdc-muted leading-tight">
           Arrastra una viñeta al lienzo o pulsa <strong>Insertar</strong> para colocarla en el marco seleccionado.

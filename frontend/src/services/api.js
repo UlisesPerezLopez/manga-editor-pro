@@ -191,6 +191,11 @@ export const vinetasAPI = {
   purgarImagenesCapitulo: (id, cap) =>
     api.post(`/projects/${id}/vinetas/${cap}/purgar-imagenes`),
 
+  subirImagenes: (idProyecto, capNum, formData) =>
+    api.post(`/projects/${idProyecto}/vinetas/${capNum}/upload`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }),
+
   checkFreeLLMAPI: () =>
     api.get('/api/ai/health/freellmapi'),
 }

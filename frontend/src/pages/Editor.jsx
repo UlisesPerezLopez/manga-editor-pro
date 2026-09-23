@@ -16,7 +16,11 @@ import {
   Magnet,
   Film,
   MessageSquare,
-  Sparkles
+  Sparkles,
+  Zap,
+  Settings2,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react'
 import useEditorStore from '../store/editorStore'
 import useProjectStore from '../store/projectStore'
@@ -26,7 +30,7 @@ import EditorToolbar from '../components/Editor/EditorToolbar'
 import ChapterNavigator from '../components/Editor/ChapterNavigator'
 import TemplatesSidebar from '../components/Editor/TemplatesSidebar'
 import BalloonsSidebar from '../components/Editor/BalloonsSidebar'
-import FXSidebar from '../components/Editor/FXSidebar'
+import EfectosYSFXPanel from '../components/Editor/EfectosYSFXPanel'
 import VinetasCapituloPanel from '../components/Editor/VinetasCapituloPanel'
 import LanguageSelector from '../components/common/LanguageSelector'
 import ThemeToggle from '../components/common/ThemeToggle'
@@ -57,25 +61,33 @@ function EditorContent() {
   } = useEditorStore()
 
   const tabQuery = searchParams.get('tab')
-  const [tabDerecha, setTabDerecha] = useState(
-    tabQuery && ['plantillas', 'vinetas', 'bocadillos', 'efectos', 'estructura', 'capas', 'filtros', 'snapping'].includes(tabQuery)
-      ? tabQuery
-      : 'plantillas'
+  const [tabDerecha, setTabDerecha] = useState(() => {
+    if (!tabQuery) return 'plantillas'
+    if (tabQuery === 'sfx' || tabQuery === 'efectos') return 'efectos_sfx'
+    const valid = ['plantillas', 'vinetas', 'bocadillos', 'efectos_sfx', 'estructura', 'capas', 'filtros', 'snapping']
+    return valid.includes(tabQuery) ? tabQuery : 'plantillas'
+  })
+  const [ajustesAvanzadosAbierto, setAjustesAvanzadosAbierto] = useState(() =>
+    ['estructura', 'capas', 'filtros', 'snapping'].includes(tabQuery)
   )
   const [historial, setHistorial] = useState({ puedeDeshacer: false, puedeRehacer: false })
   const [zoom, setZoom] = useState(1)
   const [lectorAbierto, setLectorAbierto] = useState(false)
   const [snappingConfig, setSnappingConfig] = useState(CONFIG_SNAPPING_DEFAULT)
+  const [textoSeleccionado, setTextoSeleccionado] = useState(null)
 
-  const TABS_DERECHA = [
-    { id: 'plantillas', icon: LayoutGrid,    label: t('editor.tabs.templates') || 'Plantillas' },
-    { id: 'vinetas',    icon: Film,          label: t('editor.tabs.panels') || 'Viñetas' },
-    { id: 'bocadillos', icon: MessageSquare, label: t('editor.tabs.balloons') || 'Bocadillos' },
-    { id: 'efectos',    icon: Sparkles,      label: t('editor.tabs.fx') || 'Efectos' },
-    { id: 'estructura', icon: BookOpen,      label: t('editor.tabs.structure') || 'Estructura' },
-    { id: 'capas',      icon: Layers,        label: t('editor.tabs.layers') || 'Capas' },
-    { id: 'filtros',    icon: Sliders,       label: t('editor.tabs.filters') || 'Filtros' },
-    { id: 'snapping',   icon: Magnet,        label: t('editor.tabs.snapping') || 'Guías' },
+  const TABS_PRINCIPALES = [
+    { id: 'plantillas',  icon: LayoutGrid,    label: t('editor.tabs.templates') || 'Plantillas' },
+    { id: 'vinetas',     icon: Film,          label: t('editor.tabs.panels') || 'Viñetas' },
+    { id: 'bocadillos',  icon: MessageSquare, label: t('editor.tabs.balloons') || 'Bocadillos' },
+    { id: 'efectos_sfx', icon: Sparkles,      label: t('editor.tabs.fx') || 'Efectos & SFX' },
+  ]
+
+  const TABS_AVANZADOS = [
+    { id: 'estructura',  icon: BookOpen,      label: t('editor.tabs.structure') || 'Estructura' },
+    { id: 'capas',       icon: Layers,        label: t('editor.tabs.layers') || 'Capas' },
+    { id: 'filtros',     icon: Sliders,       label: t('editor.tabs.filters') || 'Filtros' },
+    { id: 'snapping',    icon: Magnet,        label: t('editor.tabs.snapping') || 'Guías' },
   ]
 
   useEffect(() => {
@@ -215,7 +227,7 @@ function EditorContent() {
 
         {/* Canvas central */}
         <div className="flex-1 overflow-hidden relative bg-rdc-primary flex flex-col">
-          {/* Barra superior de herramientas: Zoom, Capas, Historial, Exportación PNG */}
+          {/* Barra superior de herramientas: Zoom, Capas, Historial, Tipografía y Exportación PNG */}
           <EditorToolbar
             canvasRef={canvasRef}
             zoom={zoom}
@@ -228,6 +240,7 @@ function EditorContent() {
             paginaActiva={paginaActiva}
             capituloActivo={capituloActivo}
             proyectoActivo={proyectoActivo}
+            textoSeleccionado={textoSeleccionado}
           />
 
           <div className="flex-1 overflow-hidden relative">
@@ -256,25 +269,28 @@ function EditorContent() {
                 onGuardar={handleGuardar}
                 onHistorialCambio={setHistorial}
                 snappingConfig={snappingConfig}
+                onTextoSeleccionadoChange={setTextoSeleccionado}
+                onHerramientaChange={setHerramientaActiva}
               />
             )}
           </div>
         </div>
 
-        {/* Panel derecho: navegador, plantillas, viñetas, bocadillos, efectos, capas, filtros y guías */}
+        {/* Panel derecho: navegador, plantillas, viñetas, bocadillos, efectos & sfx, y ajustes avanzados */}
         <div className="w-64 sm:w-72 bg-rdc-secondary/95 border-l border-rdc-border flex flex-col flex-shrink-0 backdrop-blur-md">
 
-          {/* Botonera compacta en cuadrícula (4 columnas × 2 filas) */}
-          <div className="grid grid-cols-4 gap-1.5 p-2 bg-slate-900 border-b border-slate-800 flex-shrink-0 select-none">
-            {TABS_DERECHA.map(tab => {
+          {/* Botonera superior: 4 pestañas esenciales en una sola fila */}
+          <div className="grid grid-cols-4 gap-1 p-2 bg-slate-900 border-b border-slate-800 flex-shrink-0 select-none">
+            {TABS_PRINCIPALES.map(tab => {
               const Icon = tab.icon
-              const activo = tabDerecha === tab.id
+              const activo = tabDerecha === tab.id || (tab.id === 'efectos_sfx' && (tabDerecha === 'efectos' || tabDerecha === 'sfx'))
               return (
                 <button
                   key={tab.id}
+                  type="button"
                   onClick={() => setTabDerecha(tab.id)}
                   title={tab.label}
-                  className={`text-xs py-1.5 px-1 rounded flex flex-col items-center justify-center transition-colors cursor-pointer ${
+                  className={`text-xs py-2 px-1 rounded flex flex-col items-center justify-center transition-colors cursor-pointer ${
                     activo
                       ? 'bg-amber-500 text-slate-950 font-bold shadow-sm'
                       : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
@@ -287,8 +303,8 @@ function EditorContent() {
             })}
           </div>
 
-          {/* Contenido del tab */}
-          <div className="flex-1 overflow-hidden">
+          {/* Contenido del tab principal */}
+          <div className="flex-1 overflow-hidden flex flex-col">
             {tabDerecha === 'plantillas' && (
               <TemplatesSidebar
                 canvasRef={canvasRef}
@@ -302,9 +318,9 @@ function EditorContent() {
             )}
             {tabDerecha === 'vinetas' && (
               <VinetasCapituloPanel
-                onInsertarImagen={async (url) => {
+                onInsertarImagen={async (url, vineta) => {
                   if (canvasRef.current?.insertarImagenEnVineta) {
-                    await canvasRef.current.insertarImagenEnVineta(url)
+                    await canvasRef.current.insertarImagenEnVineta(url, vineta)
                   }
                 }}
                 onCrearBocadillo={(dialogo) => {
@@ -324,10 +340,15 @@ function EditorContent() {
                 }}
               />
             )}
-            {tabDerecha === 'efectos' && (
-              <FXSidebar
+            {(tabDerecha === 'efectos_sfx' || tabDerecha === 'efectos' || tabDerecha === 'sfx') && (
+              <EfectosYSFXPanel
                 canvasRef={canvasRef}
                 onActualizar={handleGuardarManual}
+                onInsertarSFX={(sfx) => {
+                  if (canvasRef.current?.insertarSFX) {
+                    canvasRef.current.insertarSFX(sfx)
+                  }
+                }}
               />
             )}
             {tabDerecha === 'estructura' && proyectoActivo && (
@@ -350,6 +371,50 @@ function EditorContent() {
                 config={snappingConfig}
                 onChangeConfig={setSnappingConfig}
               />
+            )}
+          </div>
+
+          {/* Cajón inferior colapsable: Ajustes Avanzados */}
+          <div className="border-t border-slate-800 bg-slate-950 flex-shrink-0">
+            <button
+              type="button"
+              onClick={() => setAjustesAvanzadosAbierto(!ajustesAvanzadosAbierto)}
+              className="w-full px-3 py-2 flex items-center justify-between text-xs font-semibold text-slate-400 hover:text-slate-200 hover:bg-slate-900 transition-colors select-none cursor-pointer"
+            >
+              <span className="flex items-center gap-1.5">
+                <Settings2 className="w-3.5 h-3.5 text-amber-500" />
+                <span>{t('editor.tabs.advanced') || 'Ajustes Avanzados'}</span>
+              </span>
+              {ajustesAvanzadosAbierto ? (
+                <ChevronDown className="w-4 h-4 text-slate-400" />
+              ) : (
+                <ChevronUp className="w-4 h-4 text-slate-400" />
+              )}
+            </button>
+
+            {ajustesAvanzadosAbierto && (
+              <div className="grid grid-cols-4 gap-1 p-2 bg-slate-900/90 border-t border-slate-800/60 select-none">
+                {TABS_AVANZADOS.map(tab => {
+                  const Icon = tab.icon
+                  const activo = tabDerecha === tab.id
+                  return (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      onClick={() => setTabDerecha(tab.id)}
+                      title={tab.label}
+                      className={`text-[10px] py-1.5 px-1 rounded flex flex-col items-center justify-center transition-colors cursor-pointer ${
+                        activo
+                          ? 'bg-amber-500 text-slate-950 font-bold shadow-xs'
+                          : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
+                      }`}
+                    >
+                      <Icon className="w-3.5 h-3.5 mb-0.5" />
+                      <span className="leading-tight truncate">{tab.label}</span>
+                    </button>
+                  )
+                })}
+              </div>
             )}
           </div>
         </div>

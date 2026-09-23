@@ -49,9 +49,32 @@ export default function LayersPanel({ canvas, onActualizar }) {
 
   // Obtener icono y etiqueta según tipo de objeto
   const getInfoObjeto = (obj, idxOriginal) => {
-    const tipo = obj.data?.tipo || obj.tipo || obj.type
-    if (tipo === 'vineta' || (obj.type === 'rect' && !obj.data?.tipo)) {
-      return { icon: '⬛', nombre: obj.data?.nombre || `${t('editor.layers.panel')} ${idxOriginal + 1}` }
+    const tipo = obj.data?.tipo || obj.data?.type || obj.tipo || obj.type
+    if (tipo === 'vineta' || tipo === 'panel') {
+      const pId = obj.data?.panelId || obj.data?.id
+      return { icon: '⬛', nombre: obj.data?.nombre || `Marco de Viñeta ${pId ? '#' + pId : idxOriginal + 1}` }
+    }
+    if (tipo === 'panel_image') {
+      const pId = obj.data?.panelId || obj.data?.id
+      return { icon: '🖼️', nombre: obj.data?.nombre || `Ilustración Viñeta ${pId ? '#' + pId : idxOriginal + 1}` }
+    }
+    if (tipo === 'balloon_shape') {
+      return { icon: '💬', nombre: obj.data?.nombre || `Silueta Bocadillo` }
+    }
+    if (tipo === 'balloon_text') {
+      const extracto = (obj.text || '').slice(0, 15)
+      return { icon: '📝', nombre: obj.data?.nombre || (extracto ? `"${extracto}..."` : `Texto Bocadillo`) }
+    }
+    if (tipo === 'free_text') {
+      const extracto = (obj.text || '').slice(0, 15)
+      return { icon: '✏️', nombre: obj.data?.nombre || (extracto ? `"${extracto}..."` : `Texto Libre / Cartela`) }
+    }
+    if (tipo === 'sfx' || tipo === 'sfx_text') {
+      const extracto = (obj.text || '').slice(0, 15)
+      return { icon: '💥', nombre: obj.data?.nombre || (extracto ? `SFX: ${extracto}` : `Onomatopeya SFX`) }
+    }
+    if (tipo === 'kinetic_fx' || tipo === 'fx_layer') {
+      return { icon: '⚡', nombre: obj.data?.nombre || `Efecto Cinético` }
     }
     if (tipo === 'bocadillo_dialogo') {
       return { icon: '💬', nombre: obj.data?.nombre || `${t('editor.layers.dialogue')} ${idxOriginal + 1}` }
@@ -62,14 +85,77 @@ export default function LayersPanel({ canvas, onActualizar }) {
     if (tipo === 'bocadillo_narracion') {
       return { icon: '📋', nombre: obj.data?.nombre || `${t('editor.layers.narration')} ${idxOriginal + 1}` }
     }
-    if (obj.type === 'i-text' || obj.type === 'text') {
+    if (obj.type === 'textbox' || obj.type === 'i-text' || obj.type === 'text') {
       const extracto = (obj.text || '').slice(0, 12)
       return { icon: '✏️', nombre: obj.data?.nombre || (extracto ? `"${extracto}..."` : t('editor.layers.text')) }
     }
     if (obj.type === 'image') {
       return { icon: '🖼️', nombre: obj.data?.nombre || t('editor.layers.image') }
     }
+    if (obj.type === 'path') {
+      return { icon: '🖌️', nombre: obj.data?.nombre || `Trazo de Pincel` }
+    }
     return { icon: '🎨', nombre: obj.data?.nombre || t('editor.layers.drawing') }
+  }
+
+  const limpiarHuerfanos = () => {
+    if (!canvas) return
+    const objetos = canvas.getObjects()
+    const marcosIds = new Set(
+      objetos
+        .filter(o => o.data?.tipo === 'vineta' || o.data?.type === 'panel')
+        .map(o => o.data?.panelId || o.data?.id)
+        .filter(Boolean)
+    )
+
+    const aEliminar = objetos.filter(o => {
+      // Ignorar guías de alineación
+      if (o.data?.esGuiaAlineacion) return false
+
+      const tipo = o.data?.tipo || o.data?.type
+
+      // 1. Marcos de viñeta
+      if (tipo === 'vineta' || tipo === 'panel') return false
+
+      // 2. Ilustración asignada a un marco existente
+      if (tipo === 'panel_image' && o.data?.panelId && marcosIds.has(o.data.panelId)) {
+        return false
+      }
+
+      // 3. Bocadillos y textos de bocadillo
+      if (
+        tipo === 'balloon' ||
+        tipo === 'balloon_shape' ||
+        tipo === 'balloon_text' ||
+        o.data?.balloonId ||
+        tipo === 'bocadillo' ||
+        tipo === 'bocadillo_dialogo' ||
+        tipo === 'bocadillo_pensamiento' ||
+        tipo === 'bocadillo_narracion'
+      ) {
+        return false
+      }
+
+      // 4. Texto libre / cartela
+      if (tipo === 'free_text') return false
+
+      // 5. Efectos cinéticos / tramas
+      if (tipo === 'kinetic_fx' || tipo === 'fx_layer') return false
+
+      // 6. Onomatopeyas SFX
+      if (tipo === 'sfx' || tipo === 'sfx_text') return false
+
+      // Cualquier otro objeto (p.ej. 'path' de pinceles fantasma, ilustraciones huérfanas) se purga
+      return true
+    })
+
+    if (aEliminar.length > 0) {
+      aEliminar.forEach(obj => canvas.remove(obj))
+      canvas.discardActiveObject()
+      canvas.renderAll()
+      sincronizarCapas()
+      onActualizar?.()
+    }
   }
 
   const seleccionarObjeto = (obj) => {
@@ -150,10 +236,18 @@ export default function LayersPanel({ canvas, onActualizar }) {
 
   return (
     <div className="flex flex-col h-full bg-rdc-secondary text-xs">
-      <div className="p-3 border-b border-rdc-border flex items-center justify-between">
-        <p className="font-titulo font-bold text-rdc-text tracking-wide text-xs">
+      <div className="p-3 border-b border-rdc-border flex items-center justify-between gap-2">
+        <p className="font-titulo font-bold text-rdc-text tracking-wide text-xs truncate">
           📑 {t('editor.layers.title')} ({objetos.length})
         </p>
+        <button
+          type="button"
+          onClick={limpiarHuerfanos}
+          className="px-2 py-1 bg-rdc-card hover:bg-rdc-primary border border-rdc-border hover:border-amber-500 text-amber-400 hover:text-amber-300 text-[11px] font-titulo font-bold rounded-lg transition-all flex items-center gap-1 cursor-pointer shadow-xs flex-shrink-0"
+          title="Elimina trazos de pincel huérfanos e ilustraciones flotantes no asignadas a viñetas"
+        >
+          <span>🧹 Limpiar Huérfanos</span>
+        </button>
       </div>
 
       <div className="flex-1 overflow-y-auto p-2 space-y-1.5">

@@ -283,16 +283,18 @@
       "templates": "Templates",
       "panels": "Panels",
       "balloons": "Balloons",
+      "fx": "Effects & SFX",
+      "sfx": "SFX Sound Effects",
+      "advanced": "Advanced Settings",
       "structure": "Structure",
       "layers": "Layers",
       "filters": "Filters",
-      "snapping": "Guides",
-      "fx": "FX"
+      "snapping": "Guides"
     },
     "tools": {
       "select": "Select",
       "hand": "Hand / Pan View",
-      "text": "Text / Onomatopoeia",
+      "text": "Free Text / Caption",
       "draw": "Ink Brush",
       "panel": "Panel",
       "brush": "Ink Brush",

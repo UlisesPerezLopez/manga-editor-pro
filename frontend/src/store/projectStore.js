@@ -318,6 +318,30 @@ const useProjectStore = create((set, get) => ({
     }
   },
 
+  // Sube imágenes locales para el capítulo y actualiza el catálogo
+  subirImagenesCapitulo: async (idProyecto, capNum, archivos) => {
+    if (!idProyecto || !capNum || !archivos || archivos.length === 0) return []
+    set({ cargandoVinetasCatalogo: true })
+    try {
+      const formData = new FormData()
+      Array.from(archivos).forEach((archivo) => {
+        formData.append('imagenes', archivo)
+      })
+
+      const res = await vinetasAPI.subirImagenes(idProyecto, capNum, formData)
+      if (res?.data?.exito) {
+        await get().cargarVinetasCatalogo(idProyecto)
+        return res.data.vinetas || []
+      }
+      set({ cargandoVinetasCatalogo: false })
+      return []
+    } catch (e) {
+      console.error('[projectStore] Error subiendo imágenes locales:', e)
+      set({ cargandoVinetasCatalogo: false })
+      throw e
+    }
+  },
+
   // Selector que consolida viñetas del capítulo actual (BD + memoria en tiempo real)
   getVinetasCapitulo: (capituloNum) => {
     const state = get()

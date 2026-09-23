@@ -13,7 +13,10 @@ import {
   Sparkles,
   Zap,
   Wind,
+  ArrowDown,
+  Radio,
   CircleDot,
+  Grid,
   Sliders,
   Check,
   Plus,
@@ -37,11 +40,32 @@ const TIPOS_EFECTOS = [
     color: 'text-sky-400'
   },
   {
-    id: 'screentone_dots',
-    nombre: 'Trama Screentone (Puntos)',
-    descripcion: 'Patrón de semitono tradicional para sombreado manga',
+    id: 'vertical_speedlines',
+    nombre: 'Speedlines Verticales',
+    descripcion: 'Trazos de tensión, caída y velocidad vertical',
+    icon: ArrowDown,
+    color: 'text-emerald-400'
+  },
+  {
+    id: 'shockwave_concentric',
+    nombre: 'Ondas de Choque Concéntricas',
+    descripcion: 'Ondas concéntricas de explosión e impacto sísmico',
+    icon: Radio,
+    color: 'text-rose-400'
+  },
+  {
+    id: 'screentone_20',
+    nombre: 'Trama Screentone (20%)',
+    descripcion: 'Semitono fino tradicional de puntos manga (20% cobertura)',
     icon: CircleDot,
     color: 'text-purple-400'
+  },
+  {
+    id: 'screentone_40',
+    nombre: 'Trama Screentone Densa (40%)',
+    descripcion: 'Sombreado denso de puntos manga para dramatismo (40% cobertura)',
+    icon: Grid,
+    color: 'text-indigo-400'
   }
 ]
 
@@ -68,6 +92,7 @@ export default function FXSidebar({ canvasRef, onActualizar }) {
     ctx.fillRect(0, 0, w, h)
 
     ctx.fillStyle = colorEfecto
+    ctx.strokeStyle = colorEfecto
 
     if (efectoActivo === 'radial_speedlines') {
       const cx = w / 2
@@ -91,7 +116,6 @@ export default function FXSidebar({ canvasRef, onActualizar }) {
     } else if (efectoActivo === 'horizontal_speedlines') {
       const numLines = Math.max(15, Math.round((densidad / 100) * 55))
       for (let i = 0; i < numLines; i++) {
-        // Generador seudoaleatorio determinista para vista previa fluida
         const y = (i / numLines) * h + (Math.sin(i * 12) * 4)
         const lineH = 1 + (i % 3) * 0.8
         const lineW = w * (0.35 + (Math.cos(i * 7) * 0.5 + 0.5) * 0.6)
@@ -105,9 +129,54 @@ export default function FXSidebar({ canvasRef, onActualizar }) {
         ctx.closePath()
         ctx.fill()
       }
-    } else if (efectoActivo === 'screentone_dots') {
-      const spacing = Math.max(6, Math.round(20 - (densidad / 100) * 12))
-      const dotR = 1.6
+    } else if (efectoActivo === 'vertical_speedlines') {
+      const numLines = Math.max(15, Math.round((densidad / 100) * 55))
+      for (let i = 0; i < numLines; i++) {
+        const x = (i / numLines) * w + (Math.sin(i * 14) * 4)
+        const lineW = 1 + (i % 3) * 0.8
+        const lineH = h * (0.35 + (Math.cos(i * 9) * 0.5 + 0.5) * 0.6)
+        const y = (Math.sin(i * 27) * 0.5 + 0.5) * (h - lineH)
+
+        ctx.beginPath()
+        ctx.moveTo(x, y)
+        ctx.lineTo(x + lineW / 2, y + lineH * 0.85)
+        ctx.lineTo(x, y + lineH)
+        ctx.lineTo(x - lineW / 2, y + lineH * 0.85)
+        ctx.closePath()
+        ctx.fill()
+      }
+    } else if (efectoActivo === 'shockwave_concentric') {
+      const cx = w / 2
+      const cy = h / 2
+      const maxR = Math.hypot(w, h) / 2
+      const numRings = Math.max(3, Math.round((densidad / 100) * 8))
+      ctx.lineWidth = 1.5
+
+      for (let i = 1; i <= numRings; i++) {
+        const r = (i / (numRings + 1)) * maxR
+        ctx.beginPath()
+        ctx.arc(cx, cy, r, 0, Math.PI * 2)
+        ctx.stroke()
+        for (let a = 0; a < 6; a++) {
+          const angle = (a / 6) * Math.PI * 2 + (i * 0.5)
+          ctx.beginPath()
+          ctx.arc(cx + Math.cos(angle) * r, cy + Math.sin(angle) * r, 1.5, 0, Math.PI * 2)
+          ctx.fill()
+        }
+      }
+    } else if (efectoActivo === 'screentone_20' || efectoActivo === 'screentone_dots') {
+      const spacing = Math.max(8, Math.round(18 - (densidad / 100) * 6))
+      const dotR = 1.3
+      for (let x = spacing / 2; x < w; x += spacing) {
+        for (let y = spacing / 2; y < h; y += spacing) {
+          ctx.beginPath()
+          ctx.arc(x, y, dotR, 0, Math.PI * 2)
+          ctx.fill()
+        }
+      }
+    } else if (efectoActivo === 'screentone_40') {
+      const spacing = Math.max(7, Math.round(14 - (densidad / 100) * 5))
+      const dotR = 2.4
       for (let x = spacing / 2; x < w; x += spacing) {
         for (let y = spacing / 2; y < h; y += spacing) {
           ctx.beginPath()
@@ -127,14 +196,14 @@ export default function FXSidebar({ canvasRef, onActualizar }) {
     const activo = canvas.getActiveObject()
     let vinetaDestino = null
 
-    if (activo && (activo.data?.type === 'panel' || activo.data?.tipo === 'vineta' || activo.type === 'rect')) {
+    if (activo && (activo.data?.type === 'panel' || activo.data?.tipo === 'vineta' || (activo.type === 'rect' && !activo.data?.balloonId))) {
       vinetaDestino = activo
     } else {
-      vinetaDestino = canvas.getObjects().find(o => o.data?.type === 'panel' || o.data?.tipo === 'vineta')
+      vinetaDestino = canvas.getObjects().find(o => !o.data?.esGuiaAlineacion && (o.data?.type === 'panel' || o.data?.tipo === 'vineta' || (o.type === 'rect' && !o.data?.balloonId)))
     }
 
-    const wResolucion = vinetaDestino ? Math.round(vinetaDestino.width * (vinetaDestino.scaleX || 1)) : 595
-    const hResolucion = vinetaDestino ? Math.round(vinetaDestino.height * (vinetaDestino.scaleY || 1)) : 842
+    const wResolucion = vinetaDestino ? Math.round(vinetaDestino.getScaledWidth ? vinetaDestino.getScaledWidth() : vinetaDestino.width * (vinetaDestino.scaleX || 1)) : 595
+    const hResolucion = vinetaDestino ? Math.round(vinetaDestino.getScaledHeight ? vinetaDestino.getScaledHeight() : vinetaDestino.height * (vinetaDestino.scaleY || 1)) : 842
 
     const offscreen = document.createElement('canvas')
     offscreen.width = Math.max(300, wResolucion)
@@ -143,6 +212,7 @@ export default function FXSidebar({ canvasRef, onActualizar }) {
 
     ctx.clearRect(0, 0, offscreen.width, offscreen.height)
     ctx.fillStyle = colorEfecto
+    ctx.strokeStyle = colorEfecto
 
     if (efectoActivo === 'radial_speedlines') {
       const cx = offscreen.width / 2
@@ -179,9 +249,54 @@ export default function FXSidebar({ canvasRef, onActualizar }) {
         ctx.closePath()
         ctx.fill()
       }
-    } else if (efectoActivo === 'screentone_dots') {
-      const spacing = Math.max(8, Math.round(24 - (densidad / 100) * 16))
-      const dotR = 2.2
+    } else if (efectoActivo === 'vertical_speedlines') {
+      const numLines = Math.max(25, Math.round((densidad / 100) * 90))
+      for (let i = 0; i < numLines; i++) {
+        const x = Math.random() * offscreen.width
+        const lineW = 1 + Math.random() * 2.5
+        const lineH = offscreen.height * (0.3 + Math.random() * 0.65)
+        const y = Math.random() * (offscreen.height - lineH)
+
+        ctx.beginPath()
+        ctx.moveTo(x, y)
+        ctx.lineTo(x + lineW / 2, y + lineH * 0.85)
+        ctx.lineTo(x, y + lineH)
+        ctx.lineTo(x - lineW / 2, y + lineH * 0.85)
+        ctx.closePath()
+        ctx.fill()
+      }
+    } else if (efectoActivo === 'shockwave_concentric') {
+      const cx = offscreen.width / 2
+      const cy = offscreen.height / 2
+      const maxR = Math.hypot(offscreen.width, offscreen.height) / 2
+      const numRings = Math.max(5, Math.round((densidad / 100) * 14))
+      ctx.lineWidth = Math.max(2, Math.round(offscreen.width / 180))
+
+      for (let i = 1; i <= numRings; i++) {
+        const r = (i / (numRings + 1)) * maxR
+        ctx.beginPath()
+        ctx.arc(cx, cy, r, 0, Math.PI * 2)
+        ctx.stroke()
+        for (let a = 0; a < 8; a++) {
+          const angle = (a / 8) * Math.PI * 2 + (i * 0.4)
+          ctx.beginPath()
+          ctx.arc(cx + Math.cos(angle) * r, cy + Math.sin(angle) * r, 2.5, 0, Math.PI * 2)
+          ctx.fill()
+        }
+      }
+    } else if (efectoActivo === 'screentone_20' || efectoActivo === 'screentone_dots') {
+      const spacing = Math.max(10, Math.round(24 - (densidad / 100) * 8))
+      const dotR = 2.0
+      for (let x = spacing / 2; x < offscreen.width; x += spacing) {
+        for (let y = spacing / 2; y < offscreen.height; y += spacing) {
+          ctx.beginPath()
+          ctx.arc(x, y, dotR, 0, Math.PI * 2)
+          ctx.fill()
+        }
+      }
+    } else if (efectoActivo === 'screentone_40') {
+      const spacing = Math.max(9, Math.round(18 - (densidad / 100) * 7))
+      const dotR = 3.2
       for (let x = spacing / 2; x < offscreen.width; x += spacing) {
         for (let y = spacing / 2; y < offscreen.height; y += spacing) {
           ctx.beginPath()
@@ -201,8 +316,8 @@ export default function FXSidebar({ canvasRef, onActualizar }) {
       if (vinetaDestino) {
         const destLeft = vinetaDestino.left
         const destTop = vinetaDestino.top
-        const destW = vinetaDestino.width * (vinetaDestino.scaleX || 1)
-        const destH = vinetaDestino.height * (vinetaDestino.scaleY || 1)
+        const destW = vinetaDestino.getScaledWidth ? vinetaDestino.getScaledWidth() : vinetaDestino.width * (vinetaDestino.scaleX || 1)
+        const destH = vinetaDestino.getScaledHeight ? vinetaDestino.getScaledHeight() : vinetaDestino.height * (vinetaDestino.scaleY || 1)
 
         img.set({
           left: destLeft,
@@ -210,6 +325,7 @@ export default function FXSidebar({ canvasRef, onActualizar }) {
           scaleX: destW / img.width,
           scaleY: destH / img.height,
           opacity: opacValor,
+          globalCompositeOperation: 'source-over',
           clipPath: new fabric.Rect({
             left: destLeft,
             top: destTop,
@@ -219,8 +335,14 @@ export default function FXSidebar({ canvasRef, onActualizar }) {
           }),
           selectable: true,
           hasControls: true,
+          cornerColor: '#E5A93C',
+          cornerStyle: 'circle',
+          borderColor: '#E5A93C',
+          cornerSize: 8,
+          transparentCorners: false,
           data: {
             type: 'fx_layer',
+            tipo: 'fx_layer',
             fxTipo: efectoActivo,
             nombre: `Efecto: ${efectoActivo}`
           }
@@ -228,11 +350,28 @@ export default function FXSidebar({ canvasRef, onActualizar }) {
 
         canvas.add(img)
 
-        // Insertar justo debajo del contorno de la viñeta si es posible
-        const idx = canvas.getObjects().indexOf(vinetaDestino)
-        if (idx > -1) {
-          img.moveTo(idx)
+        // Ubicar el efecto justo por encima de la imagen del panel si existe
+        const targetPanelId = vinetaDestino.data?.panelId || vinetaDestino.data?.id
+        const panelImg = canvas.getObjects().find(o => 
+          (o.data?.type === 'panel_image' || o.data?.tipo === 'imagen_generada') &&
+          targetPanelId && (o.data?.panelId === targetPanelId || o.data?.id === targetPanelId)
+        )
+        if (panelImg) {
+          const imgIdx = canvas.getObjects().indexOf(panelImg)
+          if (imgIdx > -1) {
+            img.moveTo(imgIdx + 1)
+          }
         }
+
+        // El marco perimetral negro de 4px se coloca por encima del arte y del efecto
+        canvas.bringToFront(vinetaDestino)
+
+        // Todos los bocadillos y textos en la capa superior absoluta
+        canvas.getObjects().forEach(o => {
+          if (o.data?.type === 'balloon_shape' || o.data?.type === 'balloon_text' || o.data?.type === 'sfx_text' || o.data?.type === 'balloon' || o.data?.tipo === 'bocadillo' || o.type === 'i-text' || o.type === 'textbox' || o.type === 'text') {
+            canvas.bringToFront(o)
+          }
+        })
       } else {
         // En centro de lienzo
         img.set({
@@ -241,10 +380,17 @@ export default function FXSidebar({ canvasRef, onActualizar }) {
           scaleX: 555 / img.width,
           scaleY: 802 / img.height,
           opacity: opacValor,
+          globalCompositeOperation: 'source-over',
           selectable: true,
           hasControls: true,
+          cornerColor: '#E5A93C',
+          cornerStyle: 'circle',
+          borderColor: '#E5A93C',
+          cornerSize: 8,
+          transparentCorners: false,
           data: {
             type: 'fx_layer',
+            tipo: 'fx_layer',
             fxTipo: efectoActivo,
             nombre: `Efecto: ${efectoActivo}`
           }

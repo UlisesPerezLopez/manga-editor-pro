@@ -8,6 +8,7 @@ from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 
 logger = logging.getLogger("mep.projects")
 
@@ -1679,3 +1680,121 @@ def purgar_imagenes_capitulo(
 
     db.commit()
     return {"status": "ok", "message": f"Todas las ilustraciones del Capítulo {cap_num} han sido purgadas"}
+
+
+@router.post("/{proyecto_id}/vinetas/{cap_num}/upload")
+async def subir_imagenes_vinetas(
+    proyecto_id: int,
+    cap_num: int,
+    imagenes: List[UploadFile] = File(...),
+    usuario_actual: Usuario = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Importa imágenes locales (.png, .jpg, .jpeg, .webp) asignándolas a viñetas del capítulo.
+    Las almacena en 'uploads/vinetas/' y sincroniza la tabla 'vinetas' y 'Capitulo.guion_json'.
+    """
+    proyecto = db.query(Proyecto).filter(
+        Proyecto.id == proyecto_id,
+        Proyecto.id_usuario == usuario_actual.id
+    ).first()
+    if not proyecto:
+        raise HTTPException(status_code=404, detail="Proyecto no encontrado")
+
+    if not imagenes:
+        raise HTTPException(status_code=400, detail="No se enviaron imágenes")
+
+    VINETAS_UPLOAD_DIR = Path("uploads/vinetas")
+    VINETAS_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+
+    # 1. Obtener o crear Capítulo
+    capitulo = db.query(models.Capitulo).filter(
+        models.Capitulo.id_proyecto == proyecto_id,
+        models.Capitulo.numero == cap_num
+    ).first()
+    if not capitulo:
+        capitulo = models.Capitulo(
+            id_proyecto=proyecto_id,
+            numero=cap_num,
+            titulo=f"Capítulo {cap_num}"
+        )
+        db.add(capitulo)
+        db.flush()
+
+    # 2. Obtener o crear Página 1
+    pagina = db.query(models.Pagina).filter(
+        models.Pagina.id_capitulo == capitulo.id,
+        models.Pagina.numero == 1
+    ).first()
+    if not pagina:
+        pagina = models.Pagina(id_capitulo=capitulo.id, numero=1)
+        db.add(pagina)
+        db.flush()
+
+    # 3. Determinar número máximo de viñeta en esta página
+    max_vin = (
+        db.query(func.max(models.Vineta.numero_vineta))
+        .filter(models.Vineta.id_pagina == pagina.id)
+        .scalar() or 0
+    )
+
+    formatos_permitidos = {".png", ".jpg", ".jpeg", ".webp"}
+    vinetas_creadas = []
+
+    for i, archivo in enumerate(imagenes):
+        ext = Path(archivo.filename or "").suffix.lower()
+        if ext not in formatos_permitidos:
+            ext = ".png"
+
+        numero_vineta = max_vin + i + 1
+        nombre_disco = f"{proyecto_id}_c{cap_num}_p1_v{numero_vineta}_{uuid.uuid4().hex[:8]}{ext}"
+        ruta_disco = VINETAS_UPLOAD_DIR / nombre_disco
+        ruta_web = f"/uploads/vinetas/{nombre_disco}"
+
+        contenido = await archivo.read()
+        with open(ruta_disco, "wb") as f:
+            f.write(contenido)
+
+        # Crear o actualizar registro de viñeta
+        vineta = models.Vineta(
+            id_pagina=pagina.id,
+            numero_vineta=numero_vineta,
+            imagen_url=ruta_web,
+            plano="Importada",
+            descripcion_escena=f"Ilustración importada: {archivo.filename or f'Viñeta {numero_vineta}'}"
+        )
+        db.add(vineta)
+        db.flush()
+
+        # Sincronizar en guion_json
+        _sincronizar_guion_json_vineta(
+            capitulo=capitulo,
+            pagina_num=1,
+            vineta_num=numero_vineta,
+            imagen_url=ruta_web,
+            prompt=f"Ilustración importada: {archivo.filename or f'Viñeta {numero_vineta}'}",
+            plano="Importada"
+        )
+
+        vinetas_creadas.append({
+            "id": vineta.id,
+            "capitulo_num": cap_num,
+            "pagina_num": 1,
+            "vineta_num": numero_vineta,
+            "plano": "Importada",
+            "descripcion_escena": f"Ilustración importada: {archivo.filename or f'Viñeta {numero_vineta}'}",
+            "imagen_url": ruta_web,
+            "dialogo": None
+        })
+
+    from sqlalchemy.orm.attributes import flag_modified
+    flag_modified(capitulo, "guion_json")
+
+    db.commit()
+
+    return {
+        "status": "ok",
+        "exito": True,
+        "vinetas": vinetas_creadas,
+        "total_subidas": len(vinetas_creadas)
+    }
