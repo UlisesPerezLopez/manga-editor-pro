@@ -1,6 +1,5 @@
-# backend/routers/ai_test.py
-# Endpoints de verificación y testeo para FreeLLMAPI (chat con Gemini 3.7 Flash y viñetas con FLUX.1 [schnell]).
-
+import os
+import httpx
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel, Field
 from typing import Optional, Any
@@ -79,3 +78,40 @@ async def ai_test_image(datos: Optional[ImageTestRequest] = None):
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail=f"Error generando imagen con FreeLLMAPI en test-image: {str(e)}"
         )
+
+
+@router.get("/health/freellmapi")
+async def health_freellmapi():
+    """
+    Verifica de forma ultraligera (timeout 500ms) si el servicio FreeLLMAPI responde en el puerto 31415.
+    """
+    base_url = os.getenv("FREELLMAPI_BASE_URL", "http://127.0.0.1:31415/v1")
+    check_url = base_url.rstrip("/").removesuffix("/v1")
+    if not check_url:
+        check_url = "http://127.0.0.1:31415"
+
+    online = False
+    detail = "Motor local no detectado en el puerto 31415"
+
+    try:
+        async with httpx.AsyncClient(timeout=0.5) as client:
+            try:
+                resp = await client.get(f"{check_url}/v1/models")
+                online = resp.status_code < 500
+                detail = "FreeLLMAPI conectado y respondiendo en el puerto 31415" if online else f"HTTP {resp.status_code}"
+            except Exception:
+                resp = await client.get(check_url)
+                online = resp.status_code < 500
+                detail = "Puerto 31415 activo" if online else f"HTTP {resp.status_code}"
+    except Exception:
+        online = False
+        detail = "Motor local FreeLLMAPI no detectado en el puerto 31415 (Desconectado)"
+
+    return {
+        "status": "ok",
+        "online": online,
+        "service": "FreeLLMAPI",
+        "url": check_url,
+        "detail": detail
+    }
+

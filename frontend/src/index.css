@@ -3,6 +3,66 @@
 @tailwind utilities;
 
 /* ═══════════════════════════════════════════════════════════════════
+   TIPOGRAFÍAS EDITORIALES DE CÓMIC & MANGA (MEP)
+   ═══════════════════════════════════════════════════════════════════ */
+
+@font-face {
+  font-family: 'Comic Relief';
+  src: url('/assets/editor/fonts/ComicRelief.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Bangers';
+  src: url('/assets/editor/fonts/Bangers-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Comic Neue';
+  src: url('/assets/editor/fonts/ComicNeue-Bold.ttf') format('truetype');
+  font-weight: bold;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Oswald';
+  src: url('/assets/editor/fonts/Oswald-Bold.ttf') format('truetype');
+  font-weight: bold;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Chango';
+  src: url('/assets/editor/fonts/Chango-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+.font-comic-relief {
+  font-family: 'Comic Relief', cursive;
+}
+
+.font-comic-neue {
+  font-family: 'Comic Neue', sans-serif;
+}
+
+.font-oswald {
+  font-family: 'Oswald', sans-serif;
+}
+
+.font-chango {
+  font-family: 'Chango', cursive;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
    SISTEMA GLOBAL DE TEMAS ARTÍSTICOS: MEP — MANGA EDITOR PRO
    Modo Día:   "Ghibli Meadow & Sky" (.theme-ghibli)
    Modo Noche: "Sanctuary & Cosmos - Saint Seiya" (.theme-seiya)

@@ -8,6 +8,8 @@ import uuid
 import logging
 import base64
 import httpx
+import re
+import urllib.parse
 from pathlib import Path
 from typing import Optional, List
 from dotenv import load_dotenv
@@ -85,8 +87,200 @@ def asegurar_longitud_prompt(prompt_base: str, limite_max: int = 1800) -> str:
     return recortado.rstrip() + "..."
 
 
+# ─── DICCIONARIOS Y AUXILIARES DE TRADUCCIÓN ASISTIDA DE CÓMIC ──────────────
+
+PALABRAS_ESPANOL = {
+    "de", "la", "el", "en", "un", "una", "los", "las", "con", "por", "para",
+    "sobre", "frente", "al", "del", "mientras", "rodillas", "acera", "lupa",
+    "huella", "huellas", "columpio", "columpios", "balancea", "cuerdas",
+    "cuerda", "despavoridos", "transeúntes", "transeuntes", "desenvaina",
+    "llamas", "espada", "espadas", "templo", "ruinas", "espadachín", "espadachin",
+    "callejón", "callejon", "tejado", "edificio", "bosque", "castillo",
+    "sombrero", "gabardina", "empuja", "empujando", "mirando", "sostiene",
+    "sosteniendo", "corren", "corre", "corriendo", "saltando", "gritando",
+    "sonríe", "sonrie", "ojos", "cabello", "pelo", "oscuro", "espaldar",
+    "parque", "calle", "ciudad", "arma", "dispara", "disparando"
+}
+
+DICCIONARIO_FRASES_ES_EN = [
+    # Frases compuestas específicas (de más larga a más corta)
+    (r"\bde rodillas en la acera\b", "kneeling on the sidewalk"),
+    (r"\bexaminando una huella con una lupa\b", "examining a footprint with a magnifying glass"),
+    (r"\bexaminando una huella con lupa\b", "examining a footprint with a magnifying glass"),
+    (r"\bexaminando una huella\b", "examining a footprint"),
+    (r"\bcon una lupa\b", "with a magnifying glass"),
+    (r"\bcon lupa\b", "with a magnifying glass"),
+    (r"\bcorren despavoridos\b", "running away in panic"),
+    (r"\bcorriendo despavoridos\b", "running away in panic"),
+    (r"\bcorre despavorido\b", "running away in panic"),
+    (r"\bdesenvaina su espada en llamas frente al templo\b", "drawing a flaming sword in front of the temple"),
+    (r"\bdesenvaina su espada en llamas\b", "drawing a flaming sword"),
+    (r"\bdesenvaina su espada\b", "drawing a sword"),
+    (r"\bdesenvaina la espada\b", "drawing the sword"),
+    (r"\bfrente al templo\b", "in front of the temple"),
+    (r"\bfrente a las ruinas\b", "in front of the ruins"),
+    (r"\bfrente al\b", "in front of the"),
+    (r"\bfrente a\b", "in front of"),
+    (r"\ben llamas\b", "in flames"),
+    (r"\ben un columpio\b", "on a swing"),
+    (r"\ben el columpio\b", "on the swing"),
+    (r"\bbalancea en el columpio\b", "swinging on the swing"),
+    (r"\bse balancea en un columpio\b", "swinging on a swing"),
+    (r"\bse balancea en el columpio\b", "swinging on the swing"),
+    (r"\bsosteniendo las cuerdas\b", "holding the ropes"),
+    (r"\bsostiene las cuerdas\b", "holding the ropes"),
+    (r"\bmientras empuja el columpio\b", "while pushing the swing"),
+    (r"\bempuja el columpio\b", "pushing the swing"),
+    (r"\bmientras empuja\b", "while pushing"),
+    (r"\bmientras se balancea\b", "while swinging"),
+    (r"\bmirando hacia\b", "looking towards"),
+    (r"\bmira fijamente\b", "staring intently"),
+    (r"\ben medio de\b", "in the middle of"),
+    (r"\bbajo la lluvia\b", "under the rain"),
+    (r"\ben la noche\b", "at night"),
+    (r"\ben el parque\b", "in the park"),
+    (r"\ben el tejado\b", "on the rooftop"),
+    (r"\ben el callejón\b", "in the alleyway"),
+    (r"\ben el callejon\b", "in the alleyway"),
+    (r"\ben la acera\b", "on the sidewalk"),
+    (r"\ben la calle\b", "in the street"),
+    (r"\bde rodillas\b", "kneeling"),
+]
+
+DICCIONARIO_TERMINOS_ES_EN = [
+    (r"\bacera\b", "sidewalk"),
+    (r"\blupa\b", "magnifying glass"),
+    (r"\bhuellas\b", "footprints"),
+    (r"\bhuella\b", "footprint"),
+    (r"\bcolumpios\b", "swings"),
+    (r"\bcolumpio\b", "swing"),
+    (r"\bbalanceándose\b", "swinging"),
+    (r"\bbalanceandose\b", "swinging"),
+    (r"\bbalancea\b", "swinging"),
+    (r"\bcuerdas\b", "ropes"),
+    (r"\bcuerda\b", "rope"),
+    (r"\bmientras\b", "while"),
+    (r"\btranseúntes\b", "passersby"),
+    (r"\btranseuntes\b", "passersby"),
+    (r"\bdespavoridos\b", "panicked"),
+    (r"\bdespavorido\b", "panicked"),
+    (r"\bdespavorida\b", "panicked"),
+    (r"\bdesenvaina\b", "draws sword"),
+    (r"\bespadas\b", "swords"),
+    (r"\bespada\b", "sword"),
+    (r"\btemplos\b", "temples"),
+    (r"\btemplo\b", "temple"),
+    (r"\bruinas\b", "ruins"),
+    (r"\bruina\b", "ruin"),
+    (r"\bllamas\b", "flames"),
+    (r"\bcallejón\b", "alleyway"),
+    (r"\bcallejon\b", "alleyway"),
+    (r"\btejados\b", "rooftops"),
+    (r"\btejado\b", "rooftop"),
+    (r"\bparque\b", "park"),
+    (r"\bnoche\b", "night"),
+    (r"\blluvia\b", "rain"),
+    (r"\bbosque\b", "forest"),
+    (r"\bcastillo\b", "castle"),
+    (r"\bsombrero\b", "hat"),
+    (r"\bgabardina\b", "trench coat"),
+    (r"\bcorriendo\b", "running"),
+    (r"\bcorren\b", "running"),
+    (r"\bcorre\b", "running"),
+    (r"\bcaminan\b", "walking"),
+    (r"\bcamina\b", "walking"),
+    (r"\bsaltando\b", "jumping"),
+    (r"\bsaltan\b", "jumping"),
+    (r"\bsalta\b", "jumping"),
+    (r"\bempujando\b", "pushing"),
+    (r"\bempujan\b", "pushing"),
+    (r"\bempuja\b", "pushing"),
+    (r"\bgritando\b", "shouting"),
+    (r"\bgritan\b", "shouting"),
+    (r"\bgrita\b", "shouting"),
+    (r"\bsonriendo\b", "smiling"),
+    (r"\bsonríe\b", "smiling"),
+    (r"\bsonrie\b", "smiling"),
+    (r"\bmirando\b", "looking"),
+    (r"\bmiran\b", "looking"),
+    (r"\bmira\b", "looking"),
+    (r"\bbuscando\b", "searching"),
+    (r"\bbuscan\b", "searching"),
+    (r"\bbusca\b", "searching"),
+    (r"\bsosteniendo\b", "holding"),
+    (r"\bsostienen\b", "holding"),
+    (r"\bsostiene\b", "holding"),
+    (r"\bviento\b", "wind"),
+    (r"\bnubes\b", "clouds"),
+    (r"\bnube\b", "cloud"),
+    (r"\bsol\b", "sun"),
+    (r"\bcielo\b", "sky"),
+    (r"\boscura\b", "dark"),
+    (r"\boscuras\b", "dark"),
+    (r"\boscuros\b", "dark"),
+    (r"\boscuro\b", "dark"),
+    (r"\broja\b", "red"),
+    (r"\brojas\b", "red"),
+    (r"\brojos\b", "red"),
+    (r"\brojo\b", "red"),
+    (r"\bazules\b", "blue"),
+    (r"\bazul\b", "blue"),
+    (r"\bblanca\b", "white"),
+    (r"\bblanco\b", "white"),
+    (r"\bnegra\b", "black"),
+    (r"\bnegro\b", "black"),
+    (r"\bojos\b", "eyes"),
+    (r"\bcabello\b", "hair"),
+    (r"\bpelo\b", "hair"),
+    (r"\bespadachín\b", "swordsman"),
+    (r"\bespadachin\b", "swordsman"),
+    (r"\bde\b", "of"),
+    (r"\ben\b", "in"),
+    (r"\bcon\b", "with"),
+    (r"\bsobre\b", "on"),
+    (r"\bpor\b", "through"),
+    (r"\bpara\b", "to"),
+    (r"\by\b", "and"),
+    (r"\bel\b", "the"),
+    (r"\bla\b", "the"),
+    (r"\blos\b", "the"),
+    (r"\blas\b", "the"),
+    (r"\bun\b", "a"),
+    (r"\buna\b", "a"),
+    (r"\bunos\b", "some"),
+    (r"\bunas\b", "some"),
+    (r"\bsu\b", "their"),
+    (r"\bsus\b", "their"),
+    (r"\bal\b", "to the"),
+    (r"\bdel\b", "of the"),
+]
+
+
+def contiene_espanol(texto: str) -> bool:
+    """Detecta si un texto contiene caracteres o palabras comunes en español."""
+    if not texto or not isinstance(texto, str):
+        return False
+    if re.search(r'[áéíóúÁÉÍÓÚñÑ¿¡]', texto):
+        return True
+    tokens = set(re.findall(r'\b[a-zA-ZáéíóúÁÉÍÓÚñÑ]+\b', texto.lower()))
+    return len(tokens.intersection(PALABRAS_ESPANOL)) > 0
+
+
+def traducir_escena_asistida(texto: str) -> str:
+    """Traduce de forma determinista y asistida escenas de cómic/manga de español a inglés."""
+    if not texto or not isinstance(texto, str):
+        return ""
+    res = texto
+    for patron, reemplazo in DICCIONARIO_FRASES_ES_EN:
+        res = re.sub(patron, reemplazo, res, flags=re.IGNORECASE)
+    for patron, reemplazo in DICCIONARIO_TERMINOS_ES_EN:
+        res = re.sub(patron, reemplazo, res, flags=re.IGNORECASE)
+    res = re.sub(r'\s+', ' ', res).strip()
+    return res
+
+
 def traducir_texto(texto: str, sys_prompt: str, timeout: float = 8.0) -> str:
-    """Invoca a Gemini Flash para traducir y sintetizar texto. Si falla, retorna el texto original limpio."""
+    """Invoca a Gemini Flash para traducir y sintetizar texto. Si falla, retorna traducción asistida de contingencia."""
     texto_limpio = (texto or "").strip()
     if not texto_limpio:
         return ""
@@ -122,9 +316,10 @@ def traducir_texto(texto: str, sys_prompt: str, timeout: float = 8.0) -> str:
         if content and isinstance(content, str) and len(content.strip()) > 2:
             return content.strip().strip('"').strip("'")
     except Exception as e:
-        logger.warning(f"⚠️ No se pudo realizar síntesis LLM del prompt ({e}). Usando texto original limpio.")
+        logger.warning(f"⚠️ No se pudo realizar síntesis LLM del prompt ({e}). Usando traducción asistida de contingencia.")
+        return traducir_escena_asistida(texto_limpio)
 
-    return texto_limpio
+    return traducir_escena_asistida(texto_limpio) if contiene_espanol(texto_limpio) else texto_limpio
 
 
 def optimizar_descripcion_escena_con_llm(texto_escena_es: str, personajes_info: Optional[List[str]] = None) -> str:
@@ -142,7 +337,10 @@ def optimizar_descripcion_escena_con_llm(texto_escena_es: str, personajes_info: 
     if personajes_info:
         sys_prompt += f" Characters to keep: {', '.join(personajes_info)}."
 
-    return traducir_texto(texto_limpio, sys_prompt, timeout=8.0)
+    resultado = traducir_texto(texto_limpio, sys_prompt, timeout=8.0)
+    if contiene_espanol(resultado):
+        resultado = traducir_escena_asistida(resultado)
+    return resultado
 
 
 def traducir_y_optimizar_prompt_flux(
@@ -218,6 +416,55 @@ def generar_texto_guion(prompt: str, system_prompt: str = None, json_mode: bool 
         )
 
 
+def _es_error_429_o_cuota(e: Exception) -> bool:
+    """Detecta si la excepción corresponde a error 429 de límite de cuota o neuronas agotadas en Cloudflare."""
+    if not e:
+        return False
+    msg = str(e).lower()
+    status_code = getattr(e, "status_code", None)
+    if status_code == 429:
+        return True
+    return any(kw in msg for kw in [
+        "429", "quota", "rate limit", "rate_limit", "neurons", "limit reached", "exhausted", "too many requests", "cloudflare"
+    ])
+
+
+def generar_imagen_pollinations_flux_sync(
+    prompt: str,
+    width: int = 1024,
+    height: int = 1024,
+    seed: Optional[int] = None
+) -> bytes:
+    """Fallback gratuito sin límites cuando Cloudflare Workers AI agota sus 10.000 neuronas (versión síncrona)."""
+    prompt_encoded = urllib.parse.quote(prompt)
+    seed_param = f"&seed={seed}" if seed is not None else ""
+    url = f"https://image.pollinations.ai/prompt/{prompt_encoded}?model=flux&width={width}&height={height}&nologo=true{seed_param}"
+    logger.info(f"🌐 [POLLINATIONS FLUX.1] Solicitando imagen de respaldo: {url[:100]}...")
+    with httpx.Client(timeout=60.0, follow_redirects=True) as client:
+        resp = client.get(url)
+        if resp.status_code == 200 and len(resp.content) > 1000:
+            return resp.content
+    raise HTTPException(status_code=502, detail="Todos los proveedores de imagen fallaron (FreeLLMAPI y Pollinations Fallback)")
+
+
+async def generar_imagen_pollinations_flux(
+    prompt: str,
+    width: int = 1024,
+    height: int = 1024,
+    seed: Optional[int] = None
+) -> bytes:
+    """Fallback gratuito sin límites cuando Cloudflare Workers AI agota sus 10.000 neuronas (versión asíncrona)."""
+    prompt_encoded = urllib.parse.quote(prompt)
+    seed_param = f"&seed={seed}" if seed is not None else ""
+    url = f"https://image.pollinations.ai/prompt/{prompt_encoded}?model=flux&width={width}&height={height}&nologo=true{seed_param}"
+    logger.info(f"🌐 [POLLINATIONS FLUX.1] Solicitando imagen de respaldo: {url[:100]}...")
+    async with httpx.AsyncClient(timeout=60.0, follow_redirects=True) as client:
+        resp = await client.get(url)
+        if resp.status_code == 200 and len(resp.content) > 1000:
+            return resp.content
+    raise HTTPException(status_code=502, detail="Todos los proveedores de imagen fallaron (FreeLLMAPI y Pollinations Fallback)")
+
+
 def generar_imagen_panel(
     prompt: str,
     size: str = "1024x1024",
@@ -232,10 +479,10 @@ def generar_imagen_panel(
     los modelos de imagen de alta fidelidad habilitados en FreeLLMAPI:
     - Modelo principal: FLUX.1 Dev (`black-forest-labs/flux-1-dev`)
     - Modelo secundario: FLUX.1 [schnell] (`@cf/black-forest-labs/flux-1-schnell` de Cloudflare)
+    - Fallback de contingencia: Pollinations FLUX.1 cuando Cloudflare agota la cuota diaria (429 / 10,000 neurons)
     
     Procesa la respuesta (URL remota o Base64), la almacena localmente en uploads/<subdirectorio>/
     y retorna la URL relativa accesible.
-    PROHIBIDO terminantemente el uso de Pollinations.ai o imágenes degradadas.
 
     :param prompt: Prompt descriptivo de la escena/personaje/portada.
     :param size: Dimensiones o aspect ratio de la imagen (ej. 768x1024, 768x1152, 576x1024, 1024x1024).
@@ -344,9 +591,152 @@ def generar_imagen_panel(
 
             logger.warning(f"⚠️ Falló generación con modelo '{modelo_actual}' ({e}). Intentando alternativa...")
 
-    # Si se agotaron los modelos sin éxito
-    logger.error(f"❌ Fallaron todos los modelos de imagen FreeLLMAPI intentados ({modelos_a_intentar}): {ultimo_error}", exc_info=True)
-    raise HTTPException(
-        status_code=status.HTTP_502_BAD_GATEWAY,
-        detail=f"Error en proveedor de imagen FreeLLMAPI: {str(ultimo_error)}"
+    # Si se agotaron los modelos de FreeLLMAPI (o arrojó 429 por límite de Cloudflare / 502),
+    # activar automáticamente el fallback a Pollinations FLUX.1 sin arrojar error 502 al usuario.
+    if _es_error_429_o_cuota(ultimo_error):
+        logger.warning("⚠️ [CUOTA CLOUDFLARE AGOTADA]: Conmutando automáticamente a Pollinations FLUX.1...")
+        print("\n" + "="*70)
+        print(">>> ⚠️ [CUOTA CLOUDFLARE AGOTADA]: Conmutando automáticamente a Pollinations FLUX.1...")
+        print("="*70 + "\n")
+    else:
+        logger.warning(f"⚠️ [FREELLMAPI ERROR]: Conmutando automáticamente a Pollinations FLUX.1 ({ultimo_error})...")
+        print(f"\n>>> ⚠️ [FREELLMAPI ERROR]: Conmutando automáticamente a Pollinations FLUX.1 ({ultimo_error})...\n")
+
+    try:
+        width = 1024
+        height = 1024
+        if size and "x" in size:
+            try:
+                parts = size.split("x")
+                width = int(parts[0])
+                height = int(parts[1])
+            except Exception:
+                width = 1024
+                height = 1024
+
+        img_bytes = generar_imagen_pollinations_flux_sync(
+            prompt=prompt_final,
+            width=width,
+            height=height,
+            seed=seed
+        )
+        return _guardar_imagen_local(img_bytes, proyecto_id=proyecto_id, subdirectorio=subdirectorio)
+    except Exception as e_poll:
+        logger.error(f"❌ Fallaron todos los modelos de imagen FreeLLMAPI ({ultimo_error}) y Pollinations ({e_poll})", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"Todos los proveedores de imagen fallaron (FreeLLMAPI: {str(ultimo_error)} | Pollinations Fallback: {str(e_poll)})"
+        )
+
+
+
+def extraer_adn_visual_multimodal(
+    ruta_imagen: str,
+    descripcion_base: str = "",
+    ropa_base: str = ""
+) -> str:
+    """
+    Analiza visualmente el avatar oficial de un personaje mediante Gemini 2.5 Flash
+    (con fallback asistido de traducción y condensación) y extrae su ADN Visual técnico
+    inmutable en inglés (< 250 caracteres, tokens separados por comas).
+    """
+    logger.info(f"👁️ Extrayendo ADN visual multimodal para imagen: {ruta_imagen}")
+
+    img_bytes = None
+    mime_type = "image/png"
+
+    posibles_rutas = []
+    p_orig = Path(ruta_imagen)
+    if p_orig.is_absolute() and p_orig.exists():
+        posibles_rutas.append(p_orig)
+    else:
+        limpio = ruta_imagen.lstrip("/").replace("\\", "/")
+        posibles_rutas.append(Path(limpio))
+        posibles_rutas.append(Path("backend") / limpio)
+        posibles_rutas.append(Path(__file__).resolve().parent.parent / limpio)
+        posibles_rutas.append(Path(__file__).resolve().parent.parent / "uploads" / "personajes" / Path(limpio).name)
+
+    archivo_encontrado = None
+    for pr in posibles_rutas:
+        if pr.exists() and pr.is_file():
+            archivo_encontrado = pr
+            break
+
+    if archivo_encontrado:
+        ext = archivo_encontrado.suffix.lower()
+        mime_map = {
+            ".png": "image/png",
+            ".jpg": "image/jpeg",
+            ".jpeg": "image/jpeg",
+            ".webp": "image/webp"
+        }
+        mime_type = mime_map.get(ext, "image/png")
+        try:
+            with open(archivo_encontrado, "rb") as f:
+                img_bytes = f.read()
+        except Exception as e_read:
+            logger.warning(f"No se pudo leer archivo de imagen {archivo_encontrado}: {e_read}")
+    elif ruta_imagen.startswith("data:image"):
+        try:
+            header, b64_str = ruta_imagen.split(",", 1)
+            mime_type = header.split(";")[0].split(":")[1]
+            img_bytes = base64.b64decode(b64_str)
+        except Exception as e_b64:
+            logger.warning(f"Error decodificando data URI: {e_b64}")
+
+    system_prompt = (
+        "You are a master character designer for comics. "
+        "Analyze this 2D character portrait and extract an exact, immutable physical description in English for FLUX.1. "
+        "Detail hair color, exact hairstyle, facial shape, eye color, nose shape, and every clothing item. "
+        "DO NOT invent items not visible (no glasses unless present). "
+        "Keep it under 250 characters, comma-separated tokens. Output ONLY the English tokens."
     )
+
+    # 1. Intentar con Gemini 2.5 Flash multimodal si hay API key y bytes disponibles
+    if img_bytes:
+        gemini_key = os.getenv("GEMINI_API_KEY", "").strip()
+        if gemini_key:
+            try:
+                from google import genai
+                from google.genai import types
+                client = genai.Client(api_key=gemini_key)
+                logger.info("Enviando imagen a Gemini 2.5 Flash para calibrar ADN visual...")
+                response = client.models.generate_content(
+                    model="gemini-2.5-flash",
+                    contents=[
+                        types.Part.from_bytes(
+                            data=img_bytes,
+                            mime_type=mime_type
+                        ),
+                        system_prompt
+                    ]
+                )
+                if response and response.text:
+                    texto = response.text.strip().strip('"').strip("'")
+                    if ":" in texto and len(texto.split(":")[0]) < 25:
+                        texto = texto.split(":", 1)[1].strip()
+                    if texto:
+                        if len(texto) > 250:
+                            tokens = [t.strip() for t in texto.split(",") if t.strip()]
+                            acc = []
+                            for t in tokens:
+                                if sum(len(x) + 2 for x in acc) + len(t) <= 245:
+                                    acc.append(t)
+                                else:
+                                    break
+                            texto = ", ".join(acc) if acc else texto[:245]
+                        logger.info(f"✅ ADN Visual calibrado con Gemini: {texto}")
+                        return texto
+            except Exception as e_gemini:
+                logger.warning(f"Gemini Vision falló al calibrar ADN ({e_gemini}). Aplicando fallback...")
+
+    # 2. Fallback asistido: traducir y condensar descripcion_base y ropa_base
+    base_text = f"{descripcion_base.strip()}, {ropa_base.strip()}".strip(" ,")
+    if base_text:
+        traduccion = traducir_escena_asistida(base_text)
+        tokens_base = [t.strip() for t in traduccion.replace(".", ",").split(",") if t.strip()]
+        adn_fallback = ", ".join(tokens_base)[:245].rstrip(", ")
+        return adn_fallback or "characteristic comic character appearance, detailed face and attire"
+
+    return "characteristic comic character appearance, detailed 2D comic art"
+

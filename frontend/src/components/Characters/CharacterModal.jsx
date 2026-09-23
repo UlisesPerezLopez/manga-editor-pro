@@ -16,7 +16,9 @@ import {
   FileText,
   User,
   RefreshCw,
-  Sliders
+  Sliders,
+  Eye,
+  Dna
 } from 'lucide-react'
 import useCharacterStore from '../../store/characterStore'
 import { getRoleBadge, getDefaultAvatar } from '../../assets/avatars'
@@ -151,6 +153,8 @@ export default function CharacterModal({
     crearPersonaje,
     actualizarPersonaje,
     generarAvatar,
+    calibrarAdnVision,
+    calibrandoAdnId,
     guardando,
     generandoAvatar,
     error,
@@ -180,6 +184,7 @@ export default function CharacterModal({
     motivacion: '',
     avatar_url: '',
     prompt_visual: '',
+    adn_visual: '',
   }
 
   const [form, setForm] = useState(FORM_INICIAL)
@@ -295,6 +300,7 @@ export default function CharacterModal({
           motivacion:        personajeEditar.motivacion || '',
           avatar_url:        personajeEditar.avatar_url || '',
           prompt_visual:     personajeEditar.prompt_visual || '',
+          adn_visual:        personajeEditar.adn_visual || '',
         }
         setForm(nuevoForm)
         setAvatarTemp(personajeEditar.avatar_url || null)
@@ -313,6 +319,23 @@ export default function CharacterModal({
       const nuevo = { ...prev, [name]: value }
       return nuevo
     })
+  }
+
+  // Calibrar ADN visual con Gemini Visión desde el modal
+  const handleCalibrarAdnModal = async () => {
+    if (!idProyecto || !personajeEditar?.id) return
+    setErrorLocal(null)
+    setMensajeExito(null)
+    const res = await calibrarAdnVision(idProyecto, personajeEditar.id)
+    if (res?.exito) {
+      const dna = res.data?.adn_visual
+      setForm(prev => ({ ...prev, adn_visual: dna }))
+      setMensajeExito('🧬 ¡ADN Visual calibrado con Gemini Visión!')
+      setTimeout(() => setMensajeExito(null), 3500)
+      if (onGuardadoExitoso) onGuardadoExitoso()
+    } else {
+      setErrorLocal(res?.error || 'Error al calibrar ADN con Visión')
+    }
   }
 
   // Guardar datos de la ficha técnica
@@ -336,7 +359,8 @@ export default function CharacterModal({
         personalidad: form.personalidad,
         motivacion: form.motivacion,
         avatar_url: form.avatar_url || avatarTemp,
-        prompt_visual: promptRetrato
+        prompt_visual: promptRetrato,
+        adn_visual: form.adn_visual
       })
     } else {
       res = await crearPersonaje(idProyecto, {
@@ -347,7 +371,8 @@ export default function CharacterModal({
         personalidad: form.personalidad,
         motivacion: form.motivacion,
         avatar_url: form.avatar_url || avatarTemp,
-        prompt_visual: promptRetrato
+        prompt_visual: promptRetrato,
+        adn_visual: form.adn_visual
       })
     }
 
@@ -688,6 +713,40 @@ export default function CharacterModal({
                 </div>
               </div>
 
+              {/* ADN Visual Inmutable (FLUX.1) */}
+              {form.adn_visual && (
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-purple-700 dark:text-purple-300 uppercase tracking-wider font-titulo flex items-center gap-1">
+                      <Dna className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+                      <span>ADN Visual Inmutable (FLUX.1)</span>
+                    </label>
+                    {modoEdicion && (personajeEditar?.avatar_url || avatarTemp) && (
+                      <button
+                        type="button"
+                        onClick={handleCalibrarAdnModal}
+                        disabled={calibrandoAdnId === personajeEditar.id}
+                        className="text-[11px] text-teal-600 dark:text-teal-400 hover:underline font-bold flex items-center gap-1 cursor-pointer"
+                      >
+                        <RefreshCw className={`w-3 h-3 ${calibrandoAdnId === personajeEditar.id ? 'animate-spin' : ''}`} />
+                        <span>[Recalibrar con Visión]</span>
+                      </button>
+                    )}
+                  </div>
+                  <textarea
+                    rows={2}
+                    name="adn_visual"
+                    value={form.adn_visual}
+                    onChange={handleChange}
+                    placeholder="Rasgos físicos inmutables en inglés extraídos por Gemini Visión..."
+                    className="w-full text-xs font-mono p-3 rounded-lg border-2 border-purple-500/40 bg-purple-50/50 dark:bg-purple-950/20 text-purple-900 dark:text-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-500 leading-relaxed"
+                  />
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                    Tokens técnicos en inglés inyectados en cada viñeta para garantizar consistencia anatómica absoluta.
+                  </p>
+                </div>
+              )}
+
             </form>
           )}
 
@@ -808,6 +867,28 @@ export default function CharacterModal({
                         <span>[🌟 Asignar como Avatar Oficial]</span>
                       </button>
 
+                      {modoEdicion && (
+                        <button
+                          type="button"
+                          onClick={handleCalibrarAdnModal}
+                          disabled={calibrandoAdnId === personajeEditar.id}
+                          className="w-full py-2 px-2.5 rounded-lg border-2 border-slate-900 dark:border-slate-700 bg-gradient-to-r from-teal-600 via-emerald-600 to-teal-700 hover:from-teal-500 hover:to-emerald-500 text-white font-titulo font-bold text-xs shadow-[2px_2px_0px_0px_rgba(15,23,42,0.85)] flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                          title="Extraer ADN técnico en inglés con Gemini Visión"
+                        >
+                          {calibrandoAdnId === personajeEditar.id ? (
+                            <>
+                              <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                              <span>Calibrando ADN con Gemini...</span>
+                            </>
+                          ) : (
+                            <>
+                              <Eye className="w-3.5 h-3.5 text-amber-300" />
+                              <span>[👁️ Calibrar ADN con Visión]</span>
+                            </>
+                          )}
+                        </button>
+                      )}
+
                       <button
                         type="button"
                         onClick={handleDescargarAvatar}
@@ -816,6 +897,18 @@ export default function CharacterModal({
                         <Download className="w-3.5 h-3.5" />
                         <span>Descargar Retrato</span>
                       </button>
+
+                      {form.adn_visual && (
+                        <div className="w-full p-2.5 rounded-xl border border-purple-500/40 bg-purple-50/50 dark:bg-purple-950/20 text-left mt-2">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-purple-700 dark:text-purple-300 font-titulo flex items-center gap-1">
+                            <Dna className="w-3 h-3 text-purple-500" />
+                            <span>ADN Visual Inmutable</span>
+                          </span>
+                          <p className="text-[11px] font-mono text-slate-700 dark:text-slate-300 mt-1 leading-snug break-words">
+                            {form.adn_visual}
+                          </p>
+                        </div>
+                      )}
                     </div>
                   ) : (
                     <p className="text-[11px] text-slate-500 text-center">

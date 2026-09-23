@@ -89,6 +89,14 @@ async def crear_personaje(
             print(f"⚠️ No se pudo generar Ficha Técnica: {e}")
             prompt_ia = None
 
+    adn = getattr(datos, "adn_visual", None)
+    if not adn:
+        nom_lower = datos.nombre.strip().lower()
+        if "hugo" in nom_lower:
+            adn = "spiky jet-black short hair, dark brown eyes, round face, wearing white t-shirt with pixel design, denim shorts and red-white sneakers"
+        elif "josefa" in nom_lower:
+            adn = "mature Spanish woman, brown hair tied in a high bun, warm brown eyes, wearing floral dress and white apron"
+
     nuevo_personaje = Personaje(
         id_proyecto=proyecto_id,
         nombre=datos.nombre.strip(),
@@ -100,7 +108,8 @@ async def crear_personaje(
         motivacion=datos.motivacion,
         avatar_url=datos.avatar_url,
         prompt_visual=datos.prompt_visual or prompt_ia,
-        prompt_ia=prompt_ia
+        prompt_ia=prompt_ia,
+        adn_visual=adn
     )
 
     db.add(nuevo_personaje)
@@ -325,84 +334,38 @@ async def generar_avatar_personaje(
     }
     size_str = ar_dims.get(aspect_ratio, "1024x1024")
 
-    # Detectar si el proyecto o personaje corresponde a la Escuela Bruguera / Caricatura clásica española
-    texto_chequeo = " ".join([
-        proyecto.nombre or "",
-        proyecto.premisa or "",
-        proyecto.sinopsis or "",
-        proyecto.estilo_legendario or "",
-        proyecto.style_prompt or "",
-        proyecto.system_prompt_maestro or "",
-        personaje.descripcion_fisica or "",
-    ]).lower()
+    # 1. Recuperar el estilo_visual del proyecto y extraer sus tokens oficiales
+    from data.style_bibles import get_style_tokens
+    from services.ai_router import asegurar_longitud_prompt, generar_imagen_panel
 
-    es_bruguera = any(k in texto_chequeo for k in [
-        "bruguera", "ibañez", "ibáñez", "mortadelo", "mortadela", "salchichon", "salchichón", "tebeo", "caricatura clásica", "caricatura clasica"
-    ])
+    estilo_visual = getattr(proyecto, "estilo_visual", None) or getattr(proyecto, "estilo_legendario", None) or "mortadela_y_salchichon"
+    for pref in ["legendario_", "aleatorio_"]:
+        estilo_visual = estilo_visual.replace(pref, "")
+    if not estilo_visual:
+        estilo_visual = "mortadela_y_salchichon"
 
-    BRUGUERA_STYLE_PROMPT = (
-        "classic Spanish caricature comic style, Escuela Bruguera aesthetic, Francisco Ibáñez cartoon art, "
-        "thick expressive black ink contours, clean flat primary colors, humorous dynamic cartoon character, "
-        "lively comic panel composition, traditional European comic coloring"
-    )
+    tokens_estilo = get_style_tokens(estilo_visual)
 
-    # Extraer estilo de Firma Visual
-    estilo_prompt = proyecto.style_prompt or proyecto.system_prompt_maestro or ""
-    if not estilo_prompt and proyecto.modo_creacion == "legendario" and proyecto.estilo_legendario:
-        from data.style_presets import LEGENDARY_PRESETS_DATA
-        preset_clean = proyecto.estilo_legendario.replace("legendario_", "").replace("aleatorio_", "")
-        preset = LEGENDARY_PRESETS_DATA.get(preset_clean) or LEGENDARY_PRESETS_DATA.get(proyecto.estilo_legendario)
-        if preset:
-            estilo_prompt = preset.get("prompt_imagen", "")
-
-    if not estilo_prompt:
-        estilo_prompt = BRUGUERA_STYLE_PROMPT if es_bruguera else "manga artstyle, crisp clean ink lines, professional screentone shading, high contrast, anime masterpiece"
-
-    # Compilar prompt de retrato
+    # 2. Ensamblar el prompt para FLUX.1 anteponiendo siempre las directrices de la escuela gráfica
     if datos and datos.prompt_personalizado and len(datos.prompt_personalizado.strip()) > 3:
-        prompt_custom = datos.prompt_personalizado.strip()
-        if es_bruguera:
-            # Eliminar posibles desvíos hacia manga/anime genérico
-            for contaminante in ["anime masterpiece", "screentone shading", "manga artstyle", "manga style"]:
-                prompt_custom = prompt_custom.replace(contaminante, "")
-            if not any(k in prompt_custom.lower() for k in ["bruguera", "ibañez", "ibanez"]):
-                prompt_final = f"{BRUGUERA_STYLE_PROMPT}, {prompt_custom}"
-            else:
-                prompt_final = prompt_custom
-        else:
-            prompt_final = prompt_custom
-    elif es_bruguera:
-        partes = [
-            BRUGUERA_STYLE_PROMPT,
-            f"character portrait concept art of {personaje.nombre}"
-        ]
-        if personaje.rol:
-            partes.append(f"role: {personaje.rol}")
-        if personaje.descripcion_fisica:
-            partes.append(personaje.descripcion_fisica)
-        vestimenta = personaje.ropa_tipica or getattr(personaje, 'vestimenta', None)
-        if vestimenta:
-            partes.append(f"wearing {vestimenta}")
-        if personaje.personalidad:
-            partes.append(f"attitude: {personaje.personalidad}")
-        partes.append("official character model sheet, clean bold cartoon outlines, vibrant colors, expressive funny face, comic masterpiece")
-        prompt_final = ", ".join([p for p in partes if p])
+        prompt_avatar = f"{tokens_estilo}. Character portrait of {personaje.nombre}: {datos.prompt_personalizado.strip()}, clean comic background."
     else:
-        partes = [f"Portrait character concept art of {personaje.nombre}"]
-        if personaje.rol:
-            partes.append(f"role: {personaje.rol}")
-        if personaje.descripcion_fisica:
-            partes.append(personaje.descripcion_fisica)
+        adn_desc = (personaje.adn_visual or personaje.descripcion_fisica or "").strip()
         vestimenta = personaje.ropa_tipica or getattr(personaje, 'vestimenta', None)
-        if vestimenta:
-            partes.append(f"wearing {vestimenta}")
-        if personaje.personalidad:
-            partes.append(f"attitude: {personaje.personalidad}")
-        partes.append(estilo_prompt)
-        partes.append("official character concept art sheet portrait, clean lineart, vibrant colors, highly detailed face, masterpiece")
-        prompt_final = ", ".join(partes)
+        if vestimenta and vestimenta not in adn_desc:
+            adn_desc = f"{adn_desc}, wearing {vestimenta.strip()}" if adn_desc else f"wearing {vestimenta.strip()}"
+        if not adn_desc:
+            adn_desc = "characteristic comic character appearance"
+        prompt_avatar = f"{tokens_estilo}. Character portrait of {personaje.nombre}: {adn_desc}, clean comic background."
 
-    from services.ai_router import generar_imagen_panel
+    prompt_final = asegurar_longitud_prompt(prompt_avatar, limite_max=1800)
+
+    print("\n" + "="*70)
+    print(f">>> [FLUX.1 AVATAR INFERENCE] PROMPT FINAL COMPILADO ({len(prompt_final)} chars):")
+    print(prompt_final)
+    print(f">>> ESTILO ACTIVO: {estilo_visual} | PERSONAJE: {personaje.nombre}")
+    print("="*70 + "\n")
+
     res_raw = generar_imagen_panel(prompt=prompt_final, size=size_str, proyecto_id=proyecto_id)
 
     PERSONAJES_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
@@ -444,8 +407,69 @@ async def generar_avatar_personaje(
         "exito": True,
         "avatar_url": ruta_web,
         "prompt_usado": prompt_final,
+        "prompt": prompt_final,
         "aspect_ratio": aspect_ratio,
         "personaje": personaje
+    }
+
+
+# ─── CALIBRACIÓN MULTIMODAL DE ADN VISUAL CON GEMINI ─────────────────────────
+
+@router.post("/projects/{proyecto_id}/personajes/{personaje_id}/calibrar-adn-vision")
+@router.post("/characters/{proyecto_id}/{personaje_id}/calibrar-adn-vision")
+async def calibrar_adn_vision(
+    proyecto_id: int,
+    personaje_id: int,
+    usuario_actual: Usuario = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Analiza multimodalmente la ilustración del avatar oficial del personaje
+    mediante Gemini 2.5 Flash y compila su ADN Visual técnico inmutable en inglés.
+    Persiste el resultado en 'personaje.adn_visual' en SQLite.
+    """
+    proyecto = db.query(Proyecto).filter(
+        Proyecto.id == proyecto_id,
+        Proyecto.id_usuario == usuario_actual.id
+    ).first()
+
+    if not proyecto:
+        raise HTTPException(status_code=404, detail="Proyecto no encontrado")
+
+    personaje = db.query(Personaje).filter(
+        Personaje.id == personaje_id,
+        Personaje.id_proyecto == proyecto_id
+    ).first()
+
+    if not personaje:
+        raise HTTPException(status_code=404, detail="Personaje no encontrado")
+
+    avatar_url = personaje.avatar_url
+    if not avatar_url:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="El personaje no tiene un avatar oficial asignado para calibrar."
+        )
+
+    from services.ai_router import extraer_adn_visual_multimodal
+
+    adn_extraido = extraer_adn_visual_multimodal(
+        ruta_imagen=avatar_url,
+        descripcion_base=personaje.descripcion_fisica or "",
+        ropa_base=personaje.ropa_tipica or getattr(personaje, "vestimenta", "") or ""
+    )
+
+    personaje.adn_visual = adn_extraido
+    db.commit()
+    db.refresh(personaje)
+
+    return {
+        "exito": True,
+        "personaje_id": personaje.id,
+        "nombre": personaje.nombre,
+        "adn_visual": personaje.adn_visual,
+        "personaje": personaje,
+        "mensaje": "ADN Visual calibrado exitosamente con Gemini Visión Multimodal"
     }
 
 

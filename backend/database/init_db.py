@@ -40,10 +40,24 @@ def _migrar_columnas():
                     conn.execute(text("ALTER TABLE usuarios ADD COLUMN ai_mode VARCHAR(30) DEFAULT 'cloud_free'"))
                     conn.commit()
                     print("✅ Columna 'ai_mode' añadida correctamente a 'usuarios'.")
+                if "avatar_url" not in columnas_usuarios:
+                    print("🔄 Migrando tabla 'usuarios': añadiendo columna 'avatar_url'...")
+                    conn.execute(text("ALTER TABLE usuarios ADD COLUMN avatar_url VARCHAR(500)"))
+                    conn.commit()
+                    print("✅ Columna 'avatar_url' añadida correctamente a 'usuarios'.")
 
             if "proyectos" in tablas:
                 columnas_proyectos = [col["name"] for col in inspector.get_columns("proyectos")]
                 cols_proj = [
+                    ("portada_url", "TEXT"),
+                    ("modo_creacion", "VARCHAR(20)"),
+                    ("estilo_legendario", "VARCHAR(100)"),
+                    ("system_prompt_maestro", "TEXT"),
+                    ("paleta_colores", "JSON"),
+                    ("tecnica_linea", "VARCHAR(50)"),
+                    ("estilo_sombreado", "VARCHAR(50)"),
+                    ("style_locked", "BOOLEAN DEFAULT 0"),
+                    ("formato_lectura", "VARCHAR(20) DEFAULT 'manga'"),
                     ("sinopsis", "TEXT"),
                     ("premisa", "TEXT"),
                     ("genero", "VARCHAR(50)"),
@@ -52,6 +66,7 @@ def _migrar_columnas():
                     ("firma_visual_extraida", "JSON"),
                     ("style_prompt", "TEXT"),
                     ("imagenes_referencia", "JSON"),
+                    ("estilo_visual", "VARCHAR(100)"),
                 ]
                 for col_name, col_type in cols_proj:
                     if col_name not in columnas_proyectos:
@@ -83,6 +98,7 @@ def _migrar_columnas():
                     ("avatar_url", "VARCHAR(500)"),
                     ("prompt_visual", "TEXT"),
                     ("vestimenta", "TEXT"),
+                    ("adn_visual", "TEXT"),
                 ]
                 for col_name, col_type in cols_pers:
                     if col_name not in columnas_personajes:

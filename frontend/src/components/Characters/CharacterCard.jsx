@@ -1,7 +1,7 @@
 // CharacterCard.jsx
 // Tarjeta entintada de personaje para MEP — Manga Editor Pro con renderizado de avatar y acciones rápidas.
 
-import { Pencil, Trash2, Sparkles, Image, Shield, Users } from 'lucide-react'
+import { Pencil, Trash2, Sparkles, Image, Shield, Users, Eye, RefreshCw, Dna } from 'lucide-react'
 import { getRoleBadge, getDefaultAvatar } from '../../assets/avatars'
 import { obtenerUrlImagen } from '../../services/api'
 
@@ -15,7 +15,14 @@ const CONFIG_ROL = {
   secundario:     { bg: 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-300 border-slate-400 dark:border-slate-600', label: 'Secundario' },
 }
 
-export default function CharacterCard({ personaje, onEditar, onGenerarRetrato, onEliminar }) {
+export default function CharacterCard({
+  personaje,
+  onEditar,
+  onGenerarRetrato,
+  onEliminar,
+  onCalibrarAdn,
+  calibrando = false
+}) {
   const rol = (personaje.rol || 'secundario').toLowerCase()
   const configRol = CONFIG_ROL[rol] || CONFIG_ROL.secundario
 
@@ -99,7 +106,45 @@ export default function CharacterCard({ personaje, onEditar, onGenerarRetrato, o
               </p>
             </div>
           )}
+
+          {/* Bloque de ADN Visual Inmutable */}
+          {personaje.adn_visual && (
+            <div className="p-2.5 rounded-lg border-2 border-purple-500/40 bg-purple-50/60 dark:bg-purple-950/30">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-purple-700 dark:text-purple-300 font-titulo flex items-center gap-1">
+                <Dna className="w-3 h-3 text-purple-600 dark:text-purple-400" />
+                <span>ADN Visual Inmutable (FLUX.1)</span>
+              </span>
+              <p className="text-[11px] text-slate-700 dark:text-slate-300 font-mono mt-0.5 line-clamp-2 leading-tight">
+                {personaje.adn_visual}
+              </p>
+            </div>
+          )}
         </div>
+
+        {/* Botón de Calibración Multimodal con Visión si tiene Avatar */}
+        {personaje.avatar_url && (
+          <div className="pt-2">
+            <button
+              type="button"
+              onClick={() => onCalibrarAdn?.(personaje)}
+              disabled={calibrando}
+              className="w-full py-2 px-3 rounded-lg border-2 border-slate-900 dark:border-slate-700 bg-gradient-to-r from-teal-600 via-emerald-600 to-teal-700 hover:from-teal-500 hover:to-emerald-500 text-white text-xs font-titulo font-bold shadow-[2px_2px_0px_0px_rgba(15,23,42,0.85)] active:translate-x-[1px] active:translate-y-[1px] transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+              title="Analizar avatar 2D con Gemini Visión para fijar rasgos inmutables en inglés"
+            >
+              {calibrando ? (
+                <>
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                  <span>Calibrando ADN con Gemini...</span>
+                </>
+              ) : (
+                <>
+                  <Eye className="w-3.5 h-3.5 text-amber-300" />
+                  <span>[👁️ Calibrar ADN con Visión]</span>
+                </>
+              )}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Botonera de Acciones Entintada */}

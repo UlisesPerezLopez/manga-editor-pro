@@ -149,17 +149,22 @@ export default function ProyectoCard({
           </span>
         </div>
 
-        {/* Badge de estilo bloqueado */}
-        <div className="absolute bottom-2.5 left-3 z-10 flex items-center gap-1.5">
+        {/* Badge de estilo */}
+        <div className="absolute bottom-2.5 left-3 z-10 flex items-center gap-1.5 flex-wrap">
+          {(proyecto.estilo_visual || proyecto.estilo_legendario) && (
+            <span className="text-[10px] bg-indigo-950/85 text-indigo-200 border border-indigo-500/50 px-2 py-0.5 rounded-full backdrop-blur-sm font-titulo font-semibold capitalize truncate max-w-[140px]">
+              {(proyecto.estilo_visual || proyecto.estilo_legendario).replace('aleatorio_', '').replace(/_/g, ' ')}
+            </span>
+          )}
           {proyecto.style_locked ? (
             <span className="text-[10px] bg-emerald-950/80 text-emerald-300 border border-emerald-500/40 px-2 py-0.5 rounded-full backdrop-blur-sm font-titulo flex items-center gap-1">
               <Lock className="w-2.5 h-2.5" />
               {t('dashboard.fixedStyle') || 'Firma Bloqueada'}
             </span>
           ) : (
-            <span className="text-[10px] bg-amber-950/80 text-amber-300 border border-amber-500/40 px-2 py-0.5 rounded-full backdrop-blur-sm font-titulo flex items-center gap-1">
-              <Unlock className="w-2.5 h-2.5" />
-              {t('dashboard.noStyle') || 'Firma Abierta'}
+            <span className="text-[10px] bg-emerald-950/80 text-emerald-300 border border-emerald-500/40 px-2 py-0.5 rounded-full backdrop-blur-sm font-titulo flex items-center gap-1">
+              <Sparkles className="w-2.5 h-2.5" />
+              Calibrado
             </span>
           )}
         </div>

@@ -502,7 +502,7 @@ class TestE2EPipeline:
         assert res_final.status_code == 200
         assert len(res_final.json()) == 2
 
-    @patch("services.ai_router.optimizar_descripcion_escena_con_llm", side_effect=lambda x, **kwargs: x)
+    @patch("services.ai_router.optimizar_descripcion_escena_con_llm", side_effect=lambda texto_escena_es="", *args, **kwargs: texto_escena_es or (args[0] if args else ""))
     @patch("services.ai_router.generar_imagen_panel")
     def test_09_vinetas_generacion_y_persistencia(self, mock_gen_img, mock_opt_llm, client, auth_context):
         """Prueba la generación de viñetas con anclajes de personajes anti-alucinación y get_or_create relacional."""
@@ -548,7 +548,7 @@ class TestE2EPipeline:
         vin_data = res_vin.json()
         assert vin_data["exito"] is True
         assert vin_data["imagen_url"].startswith("/uploads/vinetas/")
-        assert "Kaelen: Joven espadachín" in vin_data["prompt_usado"]
+        assert any(pat in vin_data["prompt_usado"] for pat in ["Kaelen (Joven espadachín", "Kaelen: Joven espadachín"])
         assert vin_data["aspect_ratio"] == "16:9"
         assert vin_data["capitulo_num"] == 1
         assert vin_data["pagina_num"] == 1
@@ -625,6 +625,73 @@ class TestE2EPipeline:
         assert res_import.status_code == 200, res_import.text
         assert res_import.json()["exito"] is True
         assert res_import.json()["importados"] >= 1
+
+    @patch("services.ai_router.extraer_adn_visual_multimodal")
+    @patch("services.ai_router.generar_imagen_panel")
+    def test_11_calibrar_adn_vision_y_aislamiento_espacial(self, mock_gen_img, mock_extraer_adn, client, auth_context):
+        """Prueba la calibración multimodal de ADN con Visión y el aislamiento espacial multi-personaje."""
+        headers = auth_context["headers"]
+        mock_gen_img.return_value = "data:image/png;base64,mock"
+        mock_extraer_adn.return_value = "spiky black hair, intense dark eyes, wearing black tunic"
+
+        # 1. Crear proyecto
+        res_proj = client.post("/projects", json={
+            "nombre": "Proyecto Calibrar ADN",
+            "modo_creacion": "legendario",
+            "estilo_legendario": "shonen_legendario",
+            "formato_lectura": "manga"
+        }, headers=headers)
+        proj_id = res_proj.json()["id"]
+
+        # 2. Crear personaje con avatar asignado
+        res_char = client.post(f"/projects/{proj_id}/personajes", json={
+            "nombre": "Ren",
+            "rol": "protagonista",
+            "descripcion_fisica": "Joven de cabello oscuro",
+            "ropa_tipica": "Túnica negra",
+            "avatar_url": "/uploads/personajes/mock_avatar.png"
+        }, headers=headers)
+        char_id = res_char.json()["id"]
+
+        # 3. Calibrar ADN con Visión
+        res_calibrar = client.post(f"/projects/{proj_id}/personajes/{char_id}/calibrar-adn-vision", headers=headers)
+        assert res_calibrar.status_code == 200, res_calibrar.text
+        data_calibrar = res_calibrar.json()
+        assert data_calibrar["exito"] is True
+        assert data_calibrar["adn_visual"] == "spiky black hair, intense dark eyes, wearing black tunic"
+
+        # 4. Crear segundo personaje y generar viñeta multi-personaje para probar aislamiento espacial
+        res_char2 = client.post(f"/projects/{proj_id}/personajes", json={
+            "nombre": "Lyra",
+            "rol": "coprotagonista",
+            "descripcion_fisica": "Chica de cabello castaño",
+            "ropa_tipica": "Chaleco utilitario",
+            "adn_visual": "brown ponytail hair, hazel eyes, wearing utility vest"
+        }, headers=headers)
+        char2_id = res_char2.json()["id"]
+
+        payload_vineta = {
+            "capitulo_num": 1,
+            "pagina_num": 1,
+            "vineta_num": 1,
+            "prompt": "Ren and Lyra plan their strategy near the river",
+            "plano": "Plano medio",
+            "personajes_ids": [char_id, char2_id],
+            "aspect_ratio": "16:9"
+        }
+        res_vin = client.post(f"/projects/{proj_id}/vinetas/generar-imagen", json=payload_vineta, headers=headers)
+        assert res_vin.status_code == 200, res_vin.text
+        vin_resp = res_vin.json()
+        prompt_usado = vin_resp["prompt_usado"]
+        
+        # Verificar aislamiento espacial
+        assert "On the left: Ren" in prompt_usado
+        assert "On the right: Lyra" in prompt_usado
+        # Verificar inhibidor de sombreado realista para plano medio
+        assert "clean 2D comic art, flat colors, no cross-hatching, no realistic skin textures" in prompt_usado
+        # Verificar seed clustering
+        assert "variation seed" in prompt_usado
+
 
 
 

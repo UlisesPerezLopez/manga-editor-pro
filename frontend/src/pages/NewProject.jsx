@@ -35,7 +35,7 @@ function NewProjectContent() {
 
   const [paso, setPaso] = useState(1) // 1: modo, 2: detalles, 3: creando
   const [modoSeleccionado, setModoSeleccionado] = useState(null)
-  const [estiloSeleccionado, setEstiloSeleccionado] = useState(null)
+  const [estiloSeleccionado, setEstiloSeleccionado] = useState('mortadela_y_salchichon')
   const [form, setForm] = useState({
     nombre: '',
     formato_lectura: 'manga',
@@ -89,10 +89,8 @@ function NewProjectContent() {
       setError(t('newProject.errorRequiredName') || 'El nombre del proyecto es obligatorio')
       return
     }
-    if (modoSeleccionado === 'legendario' && !estiloSeleccionado) {
-      setError(t('newProject.errorSelectLegendary') || 'Debes seleccionar un estilo legendario')
-      return
-    }
+
+    const estiloDefinitivo = estiloSeleccionado || 'mortadela_y_salchichon'
 
     setCargando(true)
     setError(null)
@@ -103,7 +101,8 @@ function NewProjectContent() {
         nombre: form.nombre.trim(),
         modo_creacion: modoSeleccionado || 'propio',
         formato_lectura: form.formato_lectura || 'manga',
-        estilo_legendario: modoSeleccionado === 'legendario' ? estiloSeleccionado : null,
+        estilo_visual: estiloDefinitivo,
+        estilo_legendario: estiloDefinitivo,
       }
       const res = await projectsAPI.crear(datos)
       const nuevoProyecto = res?.data
@@ -169,7 +168,7 @@ function NewProjectContent() {
 
       <main className="flex-1 flex items-center justify-center p-4 sm:p-6 relative z-10">
         <div className={`w-full transition-all duration-300 ${
-          paso === 2 && modoSeleccionado === 'legendario' ? 'max-w-5xl' : 'max-w-3xl'
+          paso === 2 ? 'max-w-5xl' : 'max-w-3xl'
         }`}>
 
           {/* ── PASO 1: Selección de modo ── */}
@@ -281,18 +280,39 @@ function NewProjectContent() {
                   />
                 </div>
 
-                {/* Selector de 25 Estilos Legendarios */}
-                {modoSeleccionado === 'legendario' && (
-                  <div>
-                    <label className="block text-rdc-muted text-sm mb-3 font-titulo font-semibold">
-                      {t('newProject.legendaryStyle') || 'Selecciona el estilo artístico maestro'} (25 disponibles)
+                {/* Selector Obligatorio de las 25 Biblias de Estilo */}
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <label className="block text-rdc-muted text-sm font-titulo font-semibold">
+                      {modoSeleccionado === 'legendario' && (t('newProject.legendaryStyle') || 'Selecciona el estilo artístico maestro (25 disponibles)')}
+                      {modoSeleccionado === 'propio' && 'Selecciona el estilo canónico base de referencia (25 disponibles)'}
+                      {modoSeleccionado === 'aleatorio' && 'Estilo asignado o selecciona tu preferencia (25 disponibles)'}
                     </label>
-                    <StyleSelectorGrid
-                      estiloSeleccionado={estiloSeleccionado}
-                      onSeleccionar={setEstiloSeleccionado}
-                    />
+                    {modoSeleccionado === 'aleatorio' && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const estilosKeys = [
+                            'shonen_legendario', 'fantasia_oscura', 'cyberpunk_209X', 'anime_pastoral', 'mecha_clasico',
+                            'gotico_vampirico', 'jidaigeki_samurai', 'shojo_mistico', 'seinen_psicologico', 'cosmos_mitologico',
+                            'belleza_melancolica', 'isekai_fantasia', 'kodomo_aventura', 'mortadela_y_salchichon', 'superperez',
+                            'el_capitan_rayo', 'galos_y_druidas', 'franco_belga', 'indie_underground', 'hero_vintage_modern',
+                            'vigilante_nocturno', 'reloj_del_juicio', 'heroe_miltru', 'barabaros', 'us_vintage'
+                          ]
+                          const randomEstilo = estilosKeys[Math.floor(Math.random() * estilosKeys.length)]
+                          setEstiloSeleccionado(randomEstilo)
+                        }}
+                        className="text-xs px-2.5 py-1 rounded-lg border border-amber-500/50 bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 transition-colors font-titulo font-semibold flex items-center gap-1 cursor-pointer"
+                      >
+                        🎲 Sortear al Azar
+                      </button>
+                    )}
                   </div>
-                )}
+                  <StyleSelectorGrid
+                    estiloSeleccionado={estiloSeleccionado}
+                    onSeleccionar={setEstiloSeleccionado}
+                  />
+                </div>
 
                 {/* Nota modo propio */}
                 {modoSeleccionado === 'propio' && (
@@ -302,7 +322,7 @@ function NewProjectContent() {
                   }>
                     <Sparkles className="w-4 h-4 flex-shrink-0 mt-0.5 text-rdc-accent" />
                     <p className="text-xs font-titulo font-medium leading-relaxed">
-                      {t('newProject.customNote') || 'Podrás subir tus páginas de referencia en el siguiente paso para calibrar tu firma visual con IA.'}
+                      {t('newProject.customNote') || 'El estilo seleccionado servirá de ancla visual estética para tus personajes y viñetas hasta que subas tus muestras personalizadas.'}
                     </p>
                   </div>
                 )}
@@ -315,7 +335,7 @@ function NewProjectContent() {
                   }>
                     <MangaIcon name="modo_aleatorio" size={18} className="flex-shrink-0 mt-0.5" />
                     <p className="text-xs font-titulo font-medium leading-relaxed">
-                      {t('newProject.randomNote') || 'La IA generará un conjunto de directivas visuales y pesos de arte equilibrados para tu proyecto.'}
+                      {t('newProject.randomNote') || 'La IA combinará técnicas y directivas artísticas a partir del estilo canónico seleccionado.'}
                     </p>
                   </div>
                 )}

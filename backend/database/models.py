@@ -42,6 +42,7 @@ class Proyecto(Base):
     # Modo de creación: 'propio', 'legendario' o 'aleatorio'
     modo_creacion = Column(String(20), nullable=True)
     estilo_legendario = Column(String(100), nullable=True)
+    estilo_visual = Column(String(100), nullable=True)
 
     # Firma Visual - Sistema Prompt Maestro y Diagnóstico Estructurado
     system_prompt_maestro = Column(Text, nullable=True)
@@ -96,6 +97,7 @@ class Personaje(Base):
     # Prompt optimizado para IA generado automáticamente por Gemini
     prompt_ia = Column(Text, nullable=True)
     prompt_visual = Column(Text, nullable=True)
+    adn_visual = Column(Text, nullable=True)
 
     # Avatar / Retrato oficial del personaje
     avatar_url = Column(String(500), nullable=True)

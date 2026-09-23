@@ -4,6 +4,7 @@
 // y generar/persistir las ilustraciones de viñetas con FLUX.1 Dev y Firma Visual activa.
 
 import { useState, useEffect, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import {
   Sparkles,
@@ -33,6 +34,7 @@ import { getDefaultAvatar } from '../assets/avatars'
 import Spinner from './UI/Spinner'
 import MangaIcon from './common/MangaIcon'
 import { LEGENDARY_STYLES } from '../data/stylePresets'
+import ChapterFilmstrip from './ChapterFilmstrip'
 
 // Función Segura de Extracción Numérica (Anti-NaN)
 const parsearNumeroSeguro = (valor, porDefecto = 1) => {
@@ -91,7 +93,8 @@ const extraerDatosVineta = (capIdOrNum, pNum, vNum, listaCapitulos, storeGuiones
     plano: vineta.plano || vineta.angulo_camara || vineta.encuadre || "Plano General (Wide Shot)",
     dialogo: vineta.dialogo || vineta.texto_dialogo || vineta.narracion || "",
     imagen_url: vineta.imagen_url || vineta.url || null,
-    personajes: vineta.personajes || []
+    personajes: vineta.personajes || [],
+    prompt_usado: vineta.prompt_usado || ""
   }
 }
 
@@ -131,9 +134,10 @@ const LienzoVacio = () => (
 )
 
 export default function PanelArtStudio({ proyecto, onActualizar }) {
+  const navigate = useNavigate()
   const { t } = useTranslation()
   const { personajes, cargarPersonajes } = useCharacterStore()
-  const { vinetasEstudio, setVinetaEstudio, capitulosGuiones } = useProjectStore()
+  const { vinetasEstudio, setVinetaEstudio, removerImagenVineta, capitulosGuiones } = useProjectStore()
 
   const projectId = proyecto?.id
   const modo = proyecto?.modo_creacion || 'propio'
@@ -170,6 +174,25 @@ export default function PanelArtStudio({ proyecto, onActualizar }) {
   const [notificacionExito, setNotificacionExito] = useState(null)
   const [errorMensaje, setErrorMensaje] = useState(null)
   const [lightboxAbierto, setLightboxAbierto] = useState(false)
+  const [motorOnline, setMotorOnline] = useState(null)
+  const [verificandoMotor, setVerificandoMotor] = useState(false)
+
+  // Comprobar estado de conectividad con FreeLLMAPI en puerto 31415
+  const verificarEstadoMotor = async () => {
+    setVerificandoMotor(true)
+    try {
+      const res = await vinetasAPI.checkFreeLLMAPI()
+      setMotorOnline(Boolean(res?.data?.online))
+    } catch (e) {
+      setMotorOnline(false)
+    } finally {
+      setVerificandoMotor(false)
+    }
+  }
+
+  useEffect(() => {
+    verificarEstadoMotor()
+  }, [])
 
   // Cargar personajes y capítulos del proyecto al iniciar
   useEffect(() => {
@@ -281,7 +304,8 @@ export default function PanelArtStudio({ proyecto, onActualizar }) {
         plano: datosGuion.plano || "Plano General (Wide Shot)",
         dialogo: datosGuion.dialogo || "",
         imagen_url: datosGuion.imagen_url || null,
-        personajes_ids: idsPersonajes
+        personajes_ids: idsPersonajes,
+        prompt_usado: datosGuion.prompt_usado || ""
       })
     }
   }, [claveActual, capitulos?.length]) // Dependencias seguras sin bucle reactivo
@@ -383,8 +407,18 @@ export default function PanelArtStudio({ proyecto, onActualizar }) {
       }
     } catch (err) {
       console.error(">>> [PanelArtStudio] Error al generar viñeta:", err)
-      const detalle = err.response?.data?.detail || err.message || "Error al conectar con el motor de imagen."
-      setErrorMensaje(typeof detalle === 'string' ? detalle : JSON.stringify(detalle))
+      const data = err.response?.data
+      const detalle = data?.detail || err.message || "Error al conectar con el motor de imagen."
+      
+      // Si el backend devolvió el prompt compilado a pesar del error (ej. 502), persistirlo en el visor para auditoría
+      const promptEnviado = typeof detalle === 'object' ? detalle.prompt_usado : (data?.prompt_usado || "")
+      if (promptEnviado) {
+        setVinetaEstudio(claveActual, { prompt_usado: promptEnviado })
+      }
+
+      const msg = typeof detalle === 'object' ? (detalle.mensaje || detalle.detail || detalle.message || JSON.stringify(detalle)) : detalle
+      setErrorMensaje(typeof msg === 'string' ? msg : JSON.stringify(msg))
+      verificarEstadoMotor()
     } finally {
       setGenerando(false)
     }
@@ -440,6 +474,24 @@ export default function PanelArtStudio({ proyecto, onActualizar }) {
     document.body.removeChild(a)
   }
 
+  // Borrar ilustración de la viñeta actual en BD, disco y estado global
+  const handleBorrarIlustracionActual = async () => {
+    if (!projectId || !capNum || !pagNum || !vinNum) return
+    const confirmar = window.confirm(`¿Seguro que deseas eliminar la ilustración de la Viñeta ${vinNum} (Página ${pagNum}, Capítulo ${capNum})?`)
+    if (!confirmar) return
+
+    try {
+      await vinetasAPI.borrarImagenVineta(projectId, capNum, pagNum, vinNum)
+      removerImagenVineta(claveActual)
+      setNotificacionExito(`🗑️ Ilustración de la Viñeta ${vinNum} eliminada correctamente.`)
+      setTimeout(() => setNotificacionExito(null), 3500)
+      if (onActualizar) onActualizar()
+    } catch (err) {
+      console.error('[PanelArtStudio] Error al borrar ilustración:', err)
+      setErrorMensaje(err.response?.data?.detail || err.message || 'Error al eliminar la ilustración de la viñeta.')
+    }
+  }
+
   // Ratio config actual
   const ratioConfig = ASPECT_RATIOS.find(r => r.id === aspectRatioSeleccionado) || ASPECT_RATIOS[4]
 
@@ -475,8 +527,39 @@ export default function PanelArtStudio({ proyecto, onActualizar }) {
           </div>
         </div>
 
-        {/* Badges de Estado Rápido */}
-        <div className="flex items-center gap-2 text-xs font-mono font-bold text-slate-700 dark:text-slate-300">
+        {/* Badges de Estado Rápido y Motor FLUX */}
+        <div className="flex flex-wrap items-center gap-2 text-xs font-mono font-bold text-slate-700 dark:text-slate-300">
+          <button
+            type="button"
+            onClick={verificarEstadoMotor}
+            disabled={verificandoMotor}
+            className={`px-2.5 py-1 rounded-lg border-2 flex items-center gap-1.5 transition-colors cursor-pointer text-[11px] shadow-[1px_1px_0px_0px_rgba(0,0,0,0.85)] ${
+              motorOnline === true
+                ? 'border-emerald-600 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300'
+                : motorOnline === false
+                ? 'border-red-600 bg-red-50 dark:bg-red-950/60 text-red-700 dark:text-red-300'
+                : 'border-slate-400 bg-slate-100 dark:bg-slate-800 text-slate-500'
+            }`}
+            title="Haz clic para comprobar el estado de FreeLLMAPI en el puerto 31415"
+          >
+            <span className={`w-2 h-2 rounded-full ${
+              motorOnline === true
+                ? 'bg-emerald-500 animate-pulse'
+                : motorOnline === false
+                ? 'bg-red-500'
+                : 'bg-slate-400'
+            }`} />
+            <span>
+              {verificandoMotor
+                ? 'Comprobando...'
+                : motorOnline === true
+                ? 'Motor Local: Conectado'
+                : motorOnline === false
+                ? 'Motor Local: Desconectado'
+                : 'Comprobando Motor...'}
+            </span>
+          </button>
+
           <span className="px-2.5 py-1 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800">
             Cap. {capNum}
           </span>
@@ -509,11 +592,11 @@ export default function PanelArtStudio({ proyecto, onActualizar }) {
         </div>
       )}
 
-      {/* ── ESTRUCTURA EN PANTALLA DIVIDIDA (SPLIT SCREEN: 35% / 65%) ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      {/* ── ESTRUCTURA EN PANTALLA DIVIDIDA (3 COLUMNAS: PARÁMETROS 33% | LIENZO 42% | FILMSTRIP 25%) ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
 
-        {/* ── COLUMNA IZQUIERDA: NAVEGADOR Y CONTEXTO DE ESCENA (35% -> 4 cols en grid de 12) ── */}
-        <div className="lg:col-span-5 xl:col-span-4 space-y-4">
+        {/* ── COLUMNA 1: PARÁMETROS Y PERSONAJES (33% -> 4 cols en grid de 12) ── */}
+        <div className="col-span-12 lg:col-span-4 space-y-4">
 
           {/* 1. Selectores Encadenados (Capítulo -> Página -> Viñeta) */}
           <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border-2 border-slate-900 dark:border-slate-700 shadow-[3px_3px_0px_0px_rgba(0,0,0,0.85)] space-y-3">
@@ -768,8 +851,8 @@ export default function PanelArtStudio({ proyecto, onActualizar }) {
 
         </div>
 
-        {/* ── COLUMNA DERECHA: LIENZO DE GENERACIÓN EN ALTA RESOLUCIÓN (65% -> 8 cols en grid de 12) ── */}
-        <div className="lg:col-span-7 xl:col-span-8 space-y-4">
+        {/* ── COLUMNA 2: VISOR CENTRAL DE LA VIÑETA ACTIVA (42% -> 5 cols en grid de 12) ── */}
+        <div className="col-span-12 lg:col-span-5 space-y-4">
 
           {/* Lienzo Contenedor de la Viñeta */}
           <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border-2 border-slate-900 dark:border-slate-700 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.85)] space-y-4">
@@ -827,6 +910,14 @@ export default function PanelArtStudio({ proyecto, onActualizar }) {
                       className="max-h-[560px] w-auto object-contain rounded-lg shadow-md animate-fadeIn"
                     />
                     <div className="absolute bottom-3 right-3 flex gap-2">
+                      <button
+                        type="button"
+                        onClick={handleBorrarIlustracionActual}
+                        className="px-3 py-1.5 rounded bg-red-950/90 hover:bg-red-800 text-red-200 text-xs border border-red-700/80 flex items-center gap-1 shadow-lg transition cursor-pointer"
+                        title="Borrar ilustración de esta viñeta"
+                      >
+                        🗑️ Limpiar
+                      </button>
                       <a 
                         href={obtenerUrlImagen(imagenGenerada)} 
                         download={`cap${capNum}_p${pagNum}_v${vinNum}.png`} 
@@ -843,13 +934,23 @@ export default function PanelArtStudio({ proyecto, onActualizar }) {
               </div>
             </div>
 
-            {/* Prompt Compilado Usado */}
+            {/* Visor de Auditoría: PROMPT MAESTRO INYECTADO EN FLUX.1 DEV */}
             {promptUsado && (
-              <div className="p-3 rounded-lg border border-slate-300 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-mono text-slate-600 dark:text-slate-400 space-y-1">
-                <span className="font-bold font-titulo uppercase text-[10px] text-slate-500 block">
-                  Prompt Maestro Inyectado en FLUX.1 Dev:
-                </span>
-                <p className="line-clamp-2 leading-relaxed">
+              <div className="p-3.5 rounded-xl border-2 border-slate-900 dark:border-slate-700 bg-slate-950 text-slate-200 shadow-[2px_2px_0px_0px_rgba(0,0,0,0.85)] space-y-2">
+                <div className="flex items-center justify-between gap-2 border-b border-slate-800 pb-1.5">
+                  <span className="font-bold font-titulo uppercase text-[10px] sm:text-xs text-purple-400 flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-purple-400 flex-shrink-0" />
+                    <span>PROMPT MAESTRO INYECTADO EN FLUX.1 DEV:</span>
+                  </span>
+                  <span className={`font-mono text-[10px] px-2 py-0.5 rounded border font-bold ${
+                    promptUsado.length <= 1800
+                      ? 'border-emerald-500/50 bg-emerald-950/60 text-emerald-400'
+                      : 'border-red-500/50 bg-red-950/60 text-red-400'
+                  }`}>
+                    {promptUsado.length} / 1800 chars
+                  </span>
+                </div>
+                <p className="text-xs font-mono leading-relaxed text-slate-300 break-words max-h-32 overflow-y-auto pr-1">
                   {promptUsado}
                 </p>
               </div>
@@ -865,6 +966,23 @@ export default function PanelArtStudio({ proyecto, onActualizar }) {
                   className="font-bold underline ml-2 cursor-pointer hover:text-white"
                 >
                   Cerrar
+                </button>
+              </div>
+            )}
+
+            {/* Aviso de Motor FLUX Desconectado */}
+            {motorOnline === false && (
+              <div className="mb-3 p-3 rounded-xl bg-amber-500/10 border-2 border-amber-500/40 text-amber-300 text-xs flex items-center justify-between shadow-[2px_2px_0px_0px_rgba(245,158,11,0.5)]">
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse flex-shrink-0" />
+                  <span><strong>Motor FLUX.1 no detectado:</strong> El servicio FreeLLMAPI en el puerto 31415 no responde. Asegúrate de iniciarlo antes de solicitar la síntesis.</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={verificarEstadoMotor}
+                  className="ml-3 px-2.5 py-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-lg text-[10px] cursor-pointer whitespace-nowrap"
+                >
+                  Reintentar
                 </button>
               </div>
             )}
@@ -907,20 +1025,50 @@ export default function PanelArtStudio({ proyecto, onActualizar }) {
               </div>
 
               {imagenGenerada && (
-                <button
-                  type="button"
-                  onClick={handleDescargarImagen}
-                  className="py-3 px-4 rounded-xl border-2 border-slate-900 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-100 text-slate-800 dark:text-slate-200 font-titulo font-bold text-xs shadow-[2px_2px_0px_0px_rgba(0,0,0,0.85)] flex items-center gap-1.5 cursor-pointer"
-                >
-                  <Download className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-                  <span>[📥 Descargar PNG]</span>
-                </button>
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleBorrarIlustracionActual}
+                    className="px-3 py-2 rounded-lg bg-red-950/80 hover:bg-red-900 border border-red-800 text-red-200 text-xs font-bold flex items-center gap-1.5 transition shadow"
+                    title="Borrar ilustración de esta viñeta"
+                  >
+                    🗑️ Limpiar Viñeta
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleDescargarImagen}
+                    className="py-3 px-4 rounded-xl border-2 border-slate-900 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-100 text-slate-800 dark:text-slate-200 font-titulo font-bold text-xs shadow-[2px_2px_0px_0px_rgba(0,0,0,0.85)] flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <Download className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                    <span>[📥 Descargar PNG]</span>
+                  </button>
+                </div>
               )}
 
             </div>
 
           </div>
 
+        </div>
+
+        {/* ── COLUMNA 3: DOCK DE PRODUCCIÓN / TIRA DE VIÑETAS (25% -> 3 cols en lg:grid-cols-12) ── */}
+        <div className="col-span-12 lg:col-span-3 space-y-4 lg:sticky lg:top-4">
+          <ChapterFilmstrip
+            proyecto={proyecto}
+            capituloNum={capNum}
+            paginaActivaNum={pagNum}
+            vinetaActivaNum={vinNum}
+            capitulos={capitulos}
+            onSeleccionarVineta={(pNum, vNum) => {
+              setPaginaSeleccionadaNum(pNum)
+              setVinetaSeleccionadaNum(vNum)
+            }}
+            onMaquetarPagina={(pNum) => {
+              if (proyecto?.id) {
+                navigate(`/editor/${proyecto.id}?tab=vinetas&cap=${capNum}&pag=${pNum}`)
+              }
+            }}
+          />
         </div>
 
       </div>

@@ -31,7 +31,9 @@ export default function Personajes({ proyecto, onActualizar }) {
     cargando,
     cargarPersonajes,
     eliminarPersonaje,
-    importarPersonajesDelGuion
+    importarPersonajesDelGuion,
+    calibrarAdnVision,
+    calibrandoAdnId
   } = useCharacterStore()
   const { sinopsisGenerada, guionGenerado } = useProjectStore()
 
@@ -93,6 +95,23 @@ export default function Personajes({ proyecto, onActualizar }) {
       if (onActualizar) onActualizar()
     } else {
       setNotificacion({ tipo: 'error', texto: res?.error || 'Error al eliminar personaje.' })
+    }
+  }
+
+  // Calibrar ADN visual con Gemini Visión Multimodal
+  const handleCalibrarAdn = async (personaje) => {
+    if (!projectId || !personaje?.id) return
+    setNotificacion({ tipo: 'info', texto: `👁️ Analizando avatar de ${personaje.nombre} con Gemini Visión...` })
+    const res = await calibrarAdnVision(projectId, personaje.id)
+    if (res?.exito) {
+      setNotificacion({
+        tipo: 'exito',
+        texto: `🧬 ¡ADN Visual de ${personaje.nombre} calibrado con éxito! Rasgos inmutables fijados.`
+      })
+      setTimeout(() => setNotificacion(null), 4000)
+      if (onActualizar) onActualizar()
+    } else {
+      setNotificacion({ tipo: 'error', texto: res?.error || 'Error al calibrar ADN con Visión.' })
     }
   }
 
@@ -301,6 +320,8 @@ export default function Personajes({ proyecto, onActualizar }) {
               onEditar={handleEditarPersonaje}
               onGenerarRetrato={handleGenerarRetrato}
               onEliminar={handleEliminar}
+              onCalibrarAdn={handleCalibrarAdn}
+              calibrando={calibrandoAdnId === personaje.id}
             />
           ))}
         </div>

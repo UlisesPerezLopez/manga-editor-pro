@@ -63,6 +63,7 @@ class ProyectoCrear(BaseModel):
     nombre: str = Field(min_length=1, max_length=200)
     modo_creacion: str = Field(pattern="^(propio|legendario|aleatorio)$")
     estilo_legendario: Optional[str] = None
+    estilo_visual: Optional[str] = "mortadela_y_salchichon"
     formato_lectura: str = Field(default="manga",
                                   pattern="^(manga|jp_manga|occidental|webtoon)$")
 
@@ -88,6 +89,7 @@ class ProyectoActualizar(BaseModel):
     num_capitulos: Optional[int] = Field(default=None, ge=1, le=50)
     formato_lectura: Optional[str] = Field(default=None, pattern="^(manga|jp_manga|occidental|webtoon)$")
     portada_url: Optional[str] = None
+    estilo_visual: Optional[str] = None
 
 
 class ProyectoRespuesta(BaseModel):
@@ -97,6 +99,7 @@ class ProyectoRespuesta(BaseModel):
     portada_url: Optional[str] = None
     modo_creacion: Optional[str] = None
     estilo_legendario: Optional[str] = None
+    estilo_visual: Optional[str] = None
     style_locked: bool
     formato_lectura: str
     sinopsis: Optional[str] = None
@@ -135,6 +138,7 @@ class PersonajeCrearCompleto(BaseModel):
     motivacion: Optional[str] = None
     avatar_url: Optional[str] = None
     prompt_visual: Optional[str] = None
+    adn_visual: Optional[str] = None
     # Si True, genera automáticamente la ficha técnica IA
     generar_ficha_ia: bool = Field(default=False)
 
@@ -154,6 +158,7 @@ class PersonajeActualizar(BaseModel):
     motivacion: Optional[str] = None
     avatar_url: Optional[str] = None
     prompt_visual: Optional[str] = None
+    adn_visual: Optional[str] = None
 
 
 class GenerarAvatarPersonajeRequest(BaseModel):
@@ -176,6 +181,7 @@ class PersonajeRespuestaCompleta(BaseModel):
     motivacion: Optional[str] = None
     avatar_url: Optional[str] = None
     prompt_visual: Optional[str] = None
+    adn_visual: Optional[str] = None
     prompt_ia: Optional[str] = None
     expresiones_json: Optional[Any] = None
     imagenes_referencia_json: Optional[Any] = None
@@ -286,6 +292,7 @@ class FirmaVisualRespuesta(BaseModel):
     nombre_proyecto: str
     modo_creacion: Optional[str] = None
     estilo_legendario: Optional[str] = None
+    estilo_visual: Optional[str] = None
     style_locked: bool = False
     style_prompt: Optional[str] = None
     system_prompt_maestro: Optional[str] = None

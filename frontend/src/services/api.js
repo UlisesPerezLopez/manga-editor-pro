@@ -88,6 +88,8 @@ export const projectsAPI = {
   eliminarReferenciasFirma: (id) => api.delete(`/projects/${id}/firma-visual/referencias`),
   generarPortada: (id, datos) => api.post(`/projects/${id}/generar-portada`, datos),
   obtenerDetalleEstilo: (styleId) => api.get(`/projects/styles/${styleId}`),
+  borrarImagenVineta: (id, cap, pag, vin) => api.delete(`/projects/${id}/vinetas/${cap}/${pag}/${vin}/imagen`),
+  purgarImagenesCapitulo: (id, cap) => api.post(`/projects/${id}/vinetas/${cap}/purgar-imagenes`),
 }
 
 // ─── GENERACIÓN IA ────────────────────────────────────────────────────────
@@ -166,6 +168,9 @@ export const charactersAPI = {
 
   regenerarFicha: (idProyecto, idPersonaje) =>
     api.post(`/characters/${idProyecto}/${idPersonaje}/regenerar-ficha`),
+
+  calibrarAdnVision: (idProyecto, idPersonaje) =>
+    api.post(`/projects/${idProyecto}/personajes/${idPersonaje}/calibrar-adn-vision`),
 }
 
 
@@ -179,7 +184,22 @@ export const vinetasAPI = {
 
   listarVinetas: (idProyecto) =>
     api.get(`/projects/${idProyecto}/vinetas`),
+
+  borrarImagenVineta: (id, cap, pag, vin) =>
+    api.delete(`/projects/${id}/vinetas/${cap}/${pag}/${vin}/imagen`),
+
+  purgarImagenesCapitulo: (id, cap) =>
+    api.post(`/projects/${id}/vinetas/${cap}/purgar-imagenes`),
+
+  checkFreeLLMAPI: () =>
+    api.get('/api/ai/health/freellmapi'),
 }
+
+export const borrarImagenVineta = (id, cap, pag, vin) =>
+  api.delete(`/projects/${id}/vinetas/${cap}/${pag}/${vin}/imagen`)
+
+export const purgarImagenesCapitulo = (id, cap) =>
+  api.post(`/projects/${id}/vinetas/${cap}/purgar-imagenes`)
 
 
 // ─── GENERACIÓN DE IMÁGENES ──────────────────────────────────────────────
@@ -189,6 +209,9 @@ export const imageAPI = {
 
   estadoProveedores: () =>
     api.get('/generate/estado-proveedores'),
+
+  checkFreeLLMAPI: () =>
+    api.get('/api/ai/health/freellmapi'),
 }
 
 // ─── EXPORTACIÓN ─────────────────────────────────────────────────────────

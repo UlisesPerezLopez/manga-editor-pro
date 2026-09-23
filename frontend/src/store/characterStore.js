@@ -10,6 +10,7 @@ const useCharacterStore = create((set, get) => ({
   cargando: false,
   guardando: false,
   generandoAvatar: false,
+  calibrandoAdnId: null,
   error: null,
 
   // ─── ACCIONES ──────────────────────────────────────────────────────────
@@ -141,6 +142,32 @@ const useCharacterStore = create((set, get) => ({
     } catch (e) {
       const msg = e.response?.data?.detail || 'Error al regenerar ficha'
       set({ error: msg, guardando: false })
+      return { exito: false, error: msg }
+    }
+  },
+
+  calibrarAdnVision: async (idProyecto, idPersonaje) => {
+    set({ calibrandoAdnId: idPersonaje, error: null })
+    try {
+      const r = await charactersAPI.calibrarAdnVision(idProyecto, idPersonaje)
+      const data = r?.data || {}
+      if (data?.adn_visual) {
+        set(state => ({
+          personajes: state.personajes.map(p =>
+            p.id === idPersonaje ? { ...p, adn_visual: data.adn_visual } : p
+          ),
+          personajeEditando: state.personajeEditando?.id === idPersonaje
+            ? { ...state.personajeEditando, adn_visual: data.adn_visual }
+            : state.personajeEditando,
+          calibrandoAdnId: null
+        }))
+      } else {
+        set({ calibrandoAdnId: null })
+      }
+      return { exito: true, data }
+    } catch (e) {
+      const msg = e.response?.data?.detail || e.message || 'Error al calibrar ADN con Gemini Visión'
+      set({ error: msg, calibrandoAdnId: null })
       return { exito: false, error: msg }
     }
   },

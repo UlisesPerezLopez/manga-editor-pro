@@ -498,5 +498,80 @@
     "zh": "简体中文",
     "fr": "Français",
     "it": "Italiano"
+  },
+  "editor": {
+    "save": "Save",
+    "saving": "Saving...",
+    "selectPage": "Loading page canvas...",
+    "selectPageDesc": "The canvas will initialize immediately with your project structure.",
+    "pageNumber": "Page {{num}}",
+    "unsavedChanges": "Unsaved changes",
+    "savedJustNow": "Saved just now",
+    "savedSecsAgo": "Saved {{seconds}}s ago",
+    "savedMinsAgo": "Saved {{minutes}}m ago",
+    "applyTemplate": "Panel templates",
+    "applyTemplateConfirm": "Do you want to apply this template? Existing panels will be reorganized.",
+    "tabs": {
+      "templates": "Templates",
+      "panels": "Panels",
+      "balloons": "Balloons",
+      "structure": "Structure",
+      "layers": "Layers",
+      "filters": "Filters",
+      "snapping": "Guides",
+      "fx": "FX"
+    },
+    "tools": {
+      "select": "Select",
+      "panel": "Panel",
+      "brush": "Ink Brush",
+      "dialogue": "Dialogue Balloon",
+      "thought": "Thought Balloon",
+      "narration": "Narration Box",
+      "text": "Free Text",
+      "undo": "Undo",
+      "redo": "Redo",
+      "delete": "Delete Selection",
+      "clear": "Clear Canvas"
+    },
+    "layers": {
+      "title": "Canvas Layers",
+      "noObjects": "No objects on canvas. Add a template, panels or balloons.",
+      "panel": "Panel Frame",
+      "dialogue": "Dialogue Balloon",
+      "thought": "Thought Balloon",
+      "narration": "Narration Box",
+      "text": "Text",
+      "image": "Artwork",
+      "drawing": "Brush Stroke",
+      "visible": "Visible",
+      "hidden": "Hidden",
+      "locked": "Locked",
+      "unlocked": "Unlocked",
+      "bringForward": "Bring forward",
+      "sendBackwards": "Send backwards",
+      "delete": "Delete layer"
+    },
+    "filters": {
+      "title": "Image Filters & Effects",
+      "subtitle": "Tonal adjustments and contrast for comics",
+      "selectImagePrompt": "Click on a panel with artwork to enable filters.",
+      "reset": "Reset original",
+      "inkBw": "Ink & B/W Contrast",
+      "inkBwDesc": "High monochrome contrast traditional comic inking",
+      "halftone": "Manga Screentone",
+      "halftoneDesc": "Halftone dots for shonen print shading",
+      "sepia": "Vintage Sepia",
+      "sepiaDesc": "Warm nostalgic tone for flashbacks or memory",
+      "invert": "Invert / Negative",
+      "invertDesc": "Dramatic shock or impact visual effect"
+    },
+    "snapping": {
+      "title": "Magnetic Guides & Grid",
+      "enableGuides": "Enable Smart Guides",
+      "enableGrid": "Snap to Grid",
+      "gridSize": "Grid Size:",
+      "active": "Magnetic Snapping Enabled"
+    }
   }
 }

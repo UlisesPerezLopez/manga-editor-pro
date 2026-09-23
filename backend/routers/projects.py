@@ -12,7 +12,8 @@ from sqlalchemy.orm import Session
 logger = logging.getLogger("mep.projects")
 
 from database.database import get_db
-from database.models import Proyecto, Usuario, ReferenciaEstilo
+from database.models import Proyecto, Usuario, ReferenciaEstilo, Personaje
+from database import models
 from models.schemas import (
     ProyectoCrear,
     ProyectoActualizarPortada,
@@ -33,6 +34,15 @@ from services.style_analyzer import (
     analizar_conjunto_imagenes,
     generar_system_prompt_maestro
 )
+import services.ai_router as ai_router
+from services.ai_router import (
+    optimizar_descripcion_escena_con_llm,
+    generar_imagen_panel,
+    asegurar_longitud_prompt,
+    traducir_escena_asistida,
+    contiene_espanol
+)
+from data.style_bibles import get_style_tokens
 
 router = APIRouter(prefix="/projects", tags=["Proyectos"])
 
@@ -55,6 +65,27 @@ ESTILOS_LEGENDARIOS = {
     }
     for clave, datos in LEGENDARY_PRESETS.items()
 }
+
+
+def asegurar_estilo_proyecto(proyecto: Proyecto, db: Session) -> Proyecto:
+    """Garantiza que un proyecto nunca tenga estilo_visual nulo, asignando mortadela_y_salchichon por defecto."""
+    if not getattr(proyecto, "estilo_visual", None):
+        estilo = getattr(proyecto, "estilo_legendario", None) or "mortadela_y_salchichon"
+        for pref in ["aleatorio_", "legendario_"]:
+            estilo = estilo.replace(pref, "")
+        if not estilo:
+            estilo = "mortadela_y_salchichon"
+        proyecto.estilo_visual = estilo
+        if not proyecto.style_prompt:
+            proyecto.style_prompt = get_style_tokens(estilo)
+        if not proyecto.system_prompt_maestro:
+            proyecto.system_prompt_maestro = proyecto.style_prompt
+        try:
+            db.commit()
+            db.refresh(proyecto)
+        except Exception:
+            db.rollback()
+    return proyecto
 
 
 @router.get("/estilos-legendarios")
@@ -267,64 +298,62 @@ async def crear_proyecto(
     db: Session = Depends(get_db)
 ):
     """
-    Crea un nuevo proyecto de cómic según el modo elegido:
-    - 'propio': Sin estilo fijo, el usuario subirá sus referencias en el Style Wizard.
-    - 'legendario': Carga el System Prompt Maestro del estilo elegido y lo bloquea.
-    - 'aleatorio': Combina estilos al azar, genera el prompt y lo bloquea.
+    Crea un nuevo proyecto de cómic asegurando que siempre tenga una de las 25 Biblias de Estilo asignadas:
+    - Inicializa estilo_visual = datos.estilo_visual or "mortadela_y_salchichon".
+    - Pobla style_prompt automáticamente vía get_style_tokens(estilo_visual).
     """
-    system_prompt = None
-    estilo_legendario = None
+    # Determinar estilo visual canónico (limpiando prefijos)
+    estilo_candidato = getattr(datos, "estilo_visual", None) or getattr(datos, "estilo_legendario", None) or "mortadela_y_salchichon"
+    for pref in ["legendario_", "aleatorio_"]:
+        estilo_candidato = estilo_candidato.replace(pref, "")
+    if not estilo_candidato:
+        estilo_candidato = "mortadela_y_salchichon"
 
-    # Modo Propio: sin estilo inicial
-    if datos.modo_creacion == "propio":
-        system_prompt = None
-        estilo_legendario = None
+    estilo_visual = estilo_candidato
+    style_tokens = get_style_tokens(estilo_visual)
+    estilo_legendario = estilo_visual
+    system_prompt = style_tokens
 
-    # Modo Legendario: validar y cargar estilo predefinido
-    elif datos.modo_creacion == "legendario":
-        if not datos.estilo_legendario:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="El modo legendario requiere seleccionar un estilo"
-            )
-        if datos.estilo_legendario not in ESTILOS_LEGENDARIOS:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Estilo '{datos.estilo_legendario}' no encontrado en el catálogo"
-            )
-        estilo_info = ESTILOS_LEGENDARIOS[datos.estilo_legendario]
-        system_prompt = estilo_info["system_prompt"]
-        estilo_legendario = datos.estilo_legendario
+    # Modo Legendario
+    if datos.modo_creacion == "legendario" and datos.estilo_legendario:
+        clean_leg = datos.estilo_legendario.replace("legendario_", "")
+        if clean_leg in ESTILOS_LEGENDARIOS:
+            estilo_visual = clean_leg
+            estilo_legendario = clean_leg
+            style_tokens = get_style_tokens(estilo_visual)
+            system_prompt = style_tokens
 
-    # Modo Aleatorio: combinar elementos de estilos al azar
+    # Modo Aleatorio: enriquecer con directivas artísticas
     elif datos.modo_creacion == "aleatorio":
-        estilos_keys = list(ESTILOS_LEGENDARIOS.keys())
-        estilo_base = random.choice(estilos_keys)
-        estilo_legendario = f"aleatorio_{estilo_base}"
-        estilo_info = ESTILOS_LEGENDARIOS[estilo_base]
-
+        if not getattr(datos, "estilo_visual", None) or datos.estilo_visual == "mortadela_y_salchichon":
+            estilos_keys = list(ESTILOS_LEGENDARIOS.keys())
+            estilo_visual = random.choice(estilos_keys)
+            style_tokens = get_style_tokens(estilo_visual)
+        estilo_legendario = f"aleatorio_{estilo_visual}"
+        
         tecnicas = ["hatching shadows", "screentone shading",
                     "cel-shading", "watercolor wash", "crosshatching"]
         atmosferas = ["dramatic lighting", "soft ambient light",
                       "high contrast", "moody atmosphere", "vibrant energy"]
 
         system_prompt = (
-            f"{estilo_info['system_prompt']}, "
+            f"{style_tokens}, "
             f"{random.choice(tecnicas)}, {random.choice(atmosferas)}, "
-            "unique unexpected artistic combination, professional manga artwork"
+            "unique unexpected artistic combination, professional comic artwork"
         )
 
     # Normalizar formato de lectura
     formato_normalizado = "manga" if datos.formato_lectura in ["manga", "jp_manga"] else datos.formato_lectura
 
-    # Crear el proyecto en la base de datos
+    # Crear el proyecto en la base de datos con estilo canónico asegurado
     nuevo_proyecto = Proyecto(
         id_usuario=usuario_actual.id,
         nombre=datos.nombre.strip(),
         modo_creacion=datos.modo_creacion,
+        estilo_visual=estilo_visual,
         estilo_legendario=estilo_legendario,
         system_prompt_maestro=system_prompt,
-        style_prompt=system_prompt,
+        style_prompt=style_tokens,
         formato_lectura=formato_normalizado,
         style_locked=(datos.modo_creacion == "legendario")
     )
@@ -344,10 +373,14 @@ async def listar_proyectos(
     """
     Devuelve todos los proyectos del usuario autenticado.
     Ordenados por fecha de actualización (más reciente primero).
+    Garantiza que ningún proyecto tenga estilo_visual nulo.
     """
     proyectos = db.query(Proyecto).filter(
         Proyecto.id_usuario == usuario_actual.id
     ).order_by(Proyecto.updated_at.desc()).all()
+
+    for p in proyectos:
+        asegurar_estilo_proyecto(p, db)
 
     return proyectos
 
@@ -361,6 +394,7 @@ async def obtener_proyecto(
     """
     Devuelve los detalles de un proyecto específico.
     Solo el propietario puede acceder a su proyecto.
+    Garantiza que el estilo_visual esté siempre poblado.
     """
     proyecto = db.query(Proyecto).filter(
         Proyecto.id == proyecto_id,
@@ -373,6 +407,7 @@ async def obtener_proyecto(
             detail="Proyecto no encontrado"
         )
 
+    asegurar_estilo_proyecto(proyecto, db)
     return proyecto
 
 
@@ -470,9 +505,16 @@ async def actualizar_proyecto(
         proyecto.formato_lectura = "manga" if datos.formato_lectura in ["manga", "jp_manga"] else datos.formato_lectura
     if datos.portada_url is not None:
         proyecto.portada_url = datos.portada_url
+    if getattr(datos, "estilo_visual", None) is not None:
+        clean_est = datos.estilo_visual.replace("legendario_", "").replace("aleatorio_", "")
+        proyecto.estilo_visual = clean_est
+        tokens = get_style_tokens(clean_est)
+        proyecto.style_prompt = tokens
+        proyecto.system_prompt_maestro = tokens
 
     db.commit()
     db.refresh(proyecto)
+    asegurar_estilo_proyecto(proyecto, db)
     return proyecto
 
 
@@ -744,20 +786,22 @@ async def obtener_firma_visual(
     if not proyecto:
         raise HTTPException(status_code=404, detail="Proyecto no encontrado")
 
+    asegurar_estilo_proyecto(proyecto, db)
+
     preset_info = None
-    if proyecto.modo_creacion in ["legendario", "aleatorio"] and proyecto.estilo_legendario:
-        clave_estilo = proyecto.estilo_legendario.replace("aleatorio_", "")
-        if clave_estilo in LEGENDARY_PRESETS:
-            raw_preset = LEGENDARY_PRESETS[clave_estilo]
-            preset_info = {
-                "id": clave_estilo,
-                "nombre": raw_preset["nombre_ui"],
-                "subtitulo": raw_preset["subtitulo"],
-                "escuela": raw_preset.get("escuela", "manga"),
-                "icono": raw_preset.get("icono", ""),
-                "prompt_imagen": raw_preset.get("prompt_imagen", ""),
-                "prompt_guion": raw_preset.get("prompt_guion", "")
-            }
+    estilo_id = getattr(proyecto, "estilo_visual", None) or getattr(proyecto, "estilo_legendario", None) or "mortadela_y_salchichon"
+    clave_estilo = estilo_id.replace("aleatorio_", "").replace("legendario_", "")
+    if clave_estilo in LEGENDARY_PRESETS:
+        raw_preset = LEGENDARY_PRESETS[clave_estilo]
+        preset_info = {
+            "id": clave_estilo,
+            "nombre": raw_preset["nombre_ui"],
+            "subtitulo": raw_preset["subtitulo"],
+            "escuela": raw_preset.get("escuela", "manga"),
+            "icono": raw_preset.get("icono", ""),
+            "prompt_imagen": raw_preset.get("prompt_imagen", ""),
+            "prompt_guion": raw_preset.get("prompt_guion", "")
+        }
 
     num_refs = len(proyecto.imagenes_referencia or [])
 
@@ -766,6 +810,7 @@ async def obtener_firma_visual(
         nombre_proyecto=proyecto.nombre,
         modo_creacion=proyecto.modo_creacion,
         estilo_legendario=proyecto.estilo_legendario,
+        estilo_visual=proyecto.estilo_visual,
         style_locked=proyecto.style_locked,
         style_prompt=proyecto.style_prompt or proyecto.system_prompt_maestro,
         system_prompt_maestro=proyecto.system_prompt_maestro,
@@ -827,6 +872,7 @@ async def sortear_estilo_aleatorio(
         "estilo_base": estilo_sorteado
     }
 
+    proyecto.estilo_visual = estilo_sorteado
     proyecto.estilo_legendario = f"aleatorio_{estilo_sorteado}"
     proyecto.system_prompt_maestro = nuevo_system_prompt
     proyecto.style_prompt = nuevo_system_prompt
@@ -1124,19 +1170,6 @@ def _sincronizar_guion_json_vineta(
     capitulo.guion_json = guion_data
 
 
-def asegurar_longitud_prompt(prompt_base: str, limite_max: int = 1800) -> str:
-    """Garantiza que el prompt nunca supere el límite de 2048 caracteres de Cloudflare Workers AI."""
-    if not prompt_base or len(prompt_base) <= limite_max:
-        return prompt_base or ""
-    
-    # Si excede, recortar respetando el final de la última frase completa
-    recortado = prompt_base[:limite_max]
-    ultimo_punto = recortado.rfind('.')
-    if ultimo_punto > limite_max // 2:
-        return recortado[:ultimo_punto + 1]
-    return recortado.rstrip() + "..."
-
-
 @router.post("/{proyecto_id}/vinetas/generar-imagen")
 async def generar_imagen_vineta_panel(
     proyecto_id: int,
@@ -1149,10 +1182,6 @@ async def generar_imagen_vineta_panel(
     compilando quirúrgicamente: Firma Visual + Plano de Cámara + Anclajes Anti-Alucinación de Personajes + Descripción.
     Garantiza get_or_create relacional y sincronización simultánea en la tabla 'vinetas' y 'Capitulo.guion_json'.
     """
-    from database.models import Personaje
-    from services.ai_router import generar_imagen_panel, optimizar_descripcion_escena_con_llm
-    from data.style_bibles import get_style_tokens
-
     proyecto = db.query(Proyecto).filter(
         Proyecto.id == proyecto_id,
         Proyecto.id_usuario == usuario_actual.id
@@ -1182,80 +1211,157 @@ async def generar_imagen_vineta_panel(
     }
     size_str = AR_DIMS.get(datos.aspect_ratio, "1024x1024")
 
-    # 3. Biblia de Estilo / Firma Visual activa
-    estilo_id = getattr(proyecto, "estilo_visual", None) or getattr(proyecto, "estilo_legendario", None) or ""
-    style_tokens = get_style_tokens(estilo_id)
-    if proyecto.style_prompt:
-        style_tokens = f"{style_tokens}, {proyecto.style_prompt}"
-    elif proyecto.system_prompt_maestro:
-        style_tokens = f"{style_tokens}, {proyecto.system_prompt_maestro}"
+    # A. Mapeo de plano de cámara a inglés
+    planos_map = {
+        "Plano General (Wide Shot)": "wide establishing shot",
+        "Plano general": "wide establishing shot",
+        "Plano Entero (Full Shot)": "full body shot",
+        "Plano entero": "full body shot",
+        "Plano Medio (Medium Shot)": "medium shot",
+        "Plano medio": "medium shot",
+        "Primer Plano (Close-up)": "close-up shot",
+        "Primer plano": "close-up shot",
+        "Plano Detalle (Detail Shot)": "macro detail shot",
+        "Plano detalle": "macro detail shot",
+        "Vista Cenital (Bird's Eye)": "overhead top-down shot",
+        "Vista cenital": "overhead top-down shot",
+        "Contrapicado (Low Angle)": "dramatic low angle shot",
+        "Contrapicado": "dramatic low angle shot",
+        "Plano Holandés (Dutch Angle)": "dynamic tilted dutch angle shot",
+        "Plano holandés": "dynamic tilted dutch angle shot"
+    }
+    plano_camara = datos.plano or "Plano medio"
+    plano_en = planos_map.get(datos.plano) or planos_map.get(plano_camara) or "medium shot"
+    descripcion_escena = datos.prompt.strip()
 
-    # 4. Anclajes Anti-Alucinación Dinámicos de Personajes (Multi-Personaje Condensado)
+    # B. Extracción y Anclajes de Personajes Activos (ADN Visual Inmutable)
     anclajes_personajes = []
     nombres_personajes = []
     if datos.personajes_ids:
-        personajes_db = db.query(Personaje).filter(
-            Personaje.id.in_(datos.personajes_ids),
-            Personaje.id_proyecto == proyecto_id
+        personajes_db = db.query(models.Personaje).filter(
+            models.Personaje.id.in_(datos.personajes_ids),
+            models.Personaje.id_proyecto == proyecto_id
         ).all()
         for p in personajes_db:
             nombres_personajes.append(p.nombre)
-            # Extraer solo los primeros 80 caracteres del físico y la ropa básica
-            fisico_corto = (p.descripcion_fisica or "character").split(',')[0].strip()[:80]
-            ropa_corta = (p.ropa_tipica or getattr(p, "vestimenta", None) or "casual clothes").split(',')[0].strip()[:60]
-            anclajes_personajes.append(f"{p.nombre}: {fisico_corto}, wearing {ropa_corta}")
+            # Usar adn_visual si existe; si no, limpiar descripción física
+            raw_dna = (p.adn_visual or p.descripcion_fisica or "character").strip()
+            # Eliminar duplicados del nombre si ya viene como prefijo en el ADN
+            if raw_dna.lower().startswith(p.nombre.lower()):
+                raw_dna = raw_dna[len(p.nombre):].lstrip(": -")
+            ropa = (p.ropa_tipica or getattr(p, "vestimenta", None) or "casual clothes").strip()
+            if "wearing " in raw_dna.lower():
+                anclajes_personajes.append(f"{p.nombre} ({raw_dna})")
+            else:
+                anclajes_personajes.append(f"{p.nombre} ({raw_dna}, wearing {ropa})")
 
-    plano_camara = datos.plano or "Plano medio"
-    descripcion_escena = datos.prompt.strip()
-
-    # Traducción técnica y encuadre en inglés
-    PLANO_TO_EN = {
-        "Plano general": "wide establishing shot",
-        "Plano entero": "full body shot",
-        "Plano medio": "medium shot",
-        "Primer plano": "close-up shot",
-        "Plano detalle": "extreme close-up detail shot",
-        "Vista cenital": "bird's eye view overhead shot",
-        "Contrapicado": "low angle heroic shot",
-        "Plano holandés": "dutch angle dynamic tilted shot",
-    }
-    camera_shot_en = PLANO_TO_EN.get(plano_camara, f"{plano_camara} shot")
-    scene_action_en = optimizar_descripcion_escena_con_llm(
-        descripcion_escena,
+    # C. Traducción y Condensación Semántica al Inglés (< 400 chars)
+    scene_action_en = ai_router.optimizar_descripcion_escena_con_llm(
+        texto_escena_es=datos.prompt,
         personajes_info=nombres_personajes
     )
 
-    # Jerarquía Estricta del Prompt Multi-Personaje respetando ventana T5 y guardrail <= 1800 caracteres
-    partes = []
-    if scene_action_en:
-        partes.append(scene_action_en.rstrip('.'))
-    if anclajes_personajes:
-        partes.append(f"Characters: {'; '.join(anclajes_personajes)}")
-    if camera_shot_en:
-        c_shot = camera_shot_en if camera_shot_en.endswith("shot") else f"{camera_shot_en} shot"
-        partes.append(c_shot)
-    if style_tokens:
-        partes.append(style_tokens)
-    if datos.seed is not None:
-        partes.append(f"variation seed {datos.seed}")
+    # Fallback de seguridad: si scene_action_en sigue en español, forzar traducción asistida
+    if ai_router.contiene_espanol(scene_action_en):
+        scene_action_en = ai_router.traducir_escena_asistida(scene_action_en)
 
-    prompt_ensamblado = ". ".join([p.strip() for p in partes if p.strip()]) + "."
+    # D. Inyección de Tokens de la Biblia de Estilos (style_bibles.json)
+    estilo_id = getattr(proyecto, "estilo_visual", None) or getattr(proyecto, "estilo_legendario", None) or "mortadela_y_salchichon"
+    style_tokens = get_style_tokens(estilo_id)
+    if getattr(proyecto, "style_prompt", None):
+        style_tokens = f"{style_tokens}, {proyecto.style_prompt}"
+    elif getattr(proyecto, "system_prompt_maestro", None):
+        style_tokens = f"{style_tokens}, {proyecto.system_prompt_maestro}"
+
+    # E. Semilla Coordinada (Seed Clustering)
+    seed_final = datos.seed if datos.seed is not None else ((proyecto_id * 1000) + (datos.pagina_num * 100) + datos.vineta_num)
+
+    # F. Ensamblado Maestro Jerárquico (Acción + Personajes Espaciales + Cámara + Inhibidor + Estilo + Variación)
+    partes_prompt = [scene_action_en.rstrip('.')]
+
+    # Aislamiento espacial multi-personaje con desduplicación inteligente
+    if anclajes_personajes:
+        scene_action_lower = scene_action_en.lower()
+        tiene_posicion_espacial = any(sp in scene_action_lower for sp in [
+            "on the left", "in the center", "on the right", "to the left", "to the right", "in the middle"
+        ])
+
+        if tiene_posicion_espacial or len(anclajes_personajes) == 1:
+            # Si el texto de la acción ya delimita las posiciones de los personajes, evitar duplicar prefijos espaciales
+            partes_prompt.append(f"Characters in panel: {'; '.join(anclajes_personajes)}")
+        elif len(anclajes_personajes) == 2:
+            partes_prompt.append(f"Characters in panel: On the left: {anclajes_personajes[0]}. On the right: {anclajes_personajes[1]}")
+        else:
+            posiciones = ["On the left", "In the center", "On the right"]
+            bloque_pos = []
+            for idx, anch in enumerate(anclajes_personajes):
+                pos = posiciones[idx] if idx < len(posiciones) else f"Character {idx+1}"
+                bloque_pos.append(f"{pos}: {anch}")
+            partes_prompt.append(f"Characters in panel: {'. '.join(bloque_pos)}")
+
+    partes_prompt.append(plano_en)
+
+    # Supresión estricta de sombreado realista y texturas 3D en planos medios y primeros planos
+    plano_camara_lower = plano_camara.lower()
+    if any(k in plano_camara_lower for k in ["medio", "primer", "medium", "close-up", "closeup"]):
+        partes_prompt.append("clean 2D comic art, flat colors, no cross-hatching, no realistic skin textures, traditional comic album illustration")
+
+    if style_tokens:
+        partes_prompt.append(style_tokens)
+    partes_prompt.append(f"variation seed {seed_final}")
+
+    prompt_ensamblado = ". ".join([p.strip() for p in partes_prompt if p.strip()]) + "."
+    
+    # G. Guardrail Estricto de Longitud (<= 1800 caracteres)
     prompt_final = asegurar_longitud_prompt(prompt_ensamblado, limite_max=1800)
 
-    print(f"\n>>> [PROMPT REAL ENVIADO A FLUX.1 (Longitud: {len(prompt_final)} chars)]:\n{prompt_final}\n")
-    logger.info(f">>> [PROMPT REAL ENVIADO A FLUX.1 (Longitud: {len(prompt_final)} chars)]:\n{prompt_final}")
+    # H. Auditoría en Terminal y Persistencia
+    print("\n" + "="*70)
+    print(f">>> [FLUX.1 INFERENCE] PROMPT FINAL COMPILADO (Longitud: {len(prompt_final)} chars):")
+    print(prompt_final)
+    print(f">>> ESTILO ACTIVO: {estilo_id} | SEED: {seed_final} | PERSONAJES: {nombres_personajes}")
+    print("="*70 + "\n")
+    logger.info(f">>> [FLUX.1 INFERENCE] PROMPT FINAL COMPILADO (Longitud: {len(prompt_final)} chars):\n{prompt_final}")
 
-    # 5. Generación con FLUX.1 Dev
-    res_raw = generar_imagen_panel(
-        prompt=prompt_final,
-        size=size_str,
-        proyecto_id=proyecto_id,
-        seed=datos.seed,
-        subdirectorio="vinetas",
-        proyecto=proyecto
-    )
+    # 5. Persistir prompt compilado y metadatos de auditoría antes de invocar la inferencia
+    vineta.prompt_usado = prompt_final
+    vineta.plano = plano_camara
+    vineta.descripcion_escena = descripcion_escena
+    if datos.dialogo is not None:
+        vineta.dialogo = datos.dialogo
+    db.commit()
 
-    # 6. Almacenar localmente en uploads/vinetas/
+    # 6. Generación con FLUX.1 Dev
+    try:
+        res_raw = ai_router.generar_imagen_panel(
+            prompt=prompt_final,
+            size=size_str,
+            proyecto_id=proyecto_id,
+            seed=seed_final,
+            subdirectorio="vinetas",
+            proyecto=proyecto
+        )
+    except HTTPException as http_exc:
+        msg = http_exc.detail if isinstance(http_exc.detail, str) else str(http_exc.detail)
+        raise HTTPException(
+            status_code=http_exc.status_code,
+            detail={
+                "mensaje": msg,
+                "detail": msg,
+                "prompt_usado": prompt_final
+            }
+        )
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail={
+                "mensaje": str(exc),
+                "detail": str(exc),
+                "prompt_usado": prompt_final
+            }
+        )
+
+    # 7. Almacenar localmente en uploads/vinetas/
     VINETAS_UPLOAD_DIR = Path("uploads/vinetas")
     VINETAS_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
     nombre_archivo = f"{proyecto_id}_c{datos.capitulo_num}_p{datos.pagina_num}_v{datos.vineta_num}_{uuid.uuid4().hex[:8]}.png"
@@ -1329,6 +1435,7 @@ async def generar_imagen_vineta_panel(
         "pagina_num": datos.pagina_num,
         "vineta_num": datos.vineta_num,
         "plano": plano_camara,
+        "seed": seed_final,
         "vineta_id": vineta.id
     }
 
@@ -1423,3 +1530,152 @@ async def listar_vinetas_proyecto(
         })
 
     return resultado
+
+
+@router.delete("/{proyecto_id}/vinetas/{cap_num}/{pag_num}/{vin_num}/imagen")
+def borrar_imagen_vineta(
+    proyecto_id: int,
+    cap_num: int,
+    pag_num: int,
+    vin_num: int,
+    db: Session = Depends(get_db)
+):
+    """
+    Desacopla la imagen generada de una viñeta específica en la base de datos (tabla vinetas y guion_json)
+    y elimina físicamente el archivo PNG del disco si existe en uploads/.
+    """
+    capitulo = db.query(models.Capitulo).filter(
+        models.Capitulo.id_proyecto == proyecto_id,
+        models.Capitulo.numero == cap_num
+    ).first()
+    if not capitulo:
+        raise HTTPException(status_code=404, detail="Capítulo no encontrado")
+
+    archivos_a_eliminar = []
+
+    # 1. Actualizar árbol guion_json (soporta paginas y escenas)
+    if capitulo.guion_json:
+        guion_data = capitulo.guion_json
+        if isinstance(guion_data, str):
+            try:
+                import json
+                guion_data = json.loads(guion_data)
+            except Exception:
+                guion_data = {}
+
+        if isinstance(guion_data, dict):
+            for coleccion in ["paginas", "escenas"]:
+                for pag in guion_data.get(coleccion, []):
+                    num_p = pag.get("numero") if pag.get("numero") is not None else pag.get("numero_pagina")
+                    if num_p == pag_num:
+                        for vin in pag.get("vinetas", []):
+                            if vin.get("numero") == vin_num:
+                                if vin.get("imagen_url"):
+                                    archivos_a_eliminar.append(vin["imagen_url"])
+                                vin["imagen_url"] = None
+                                vin["prompt_usado"] = ""
+
+            capitulo.guion_json = guion_data
+            from sqlalchemy.orm.attributes import flag_modified
+            flag_modified(capitulo, "guion_json")
+
+    # 2. Actualizar tabla relacional vinetas si existe el registro
+    pagina_db = db.query(models.Pagina).filter(
+        models.Pagina.id_capitulo == capitulo.id,
+        models.Pagina.numero == pag_num
+    ).first()
+
+    if pagina_db:
+        vineta_db = db.query(models.Vineta).filter(
+            models.Vineta.id_pagina == pagina_db.id,
+            models.Vineta.numero_vineta == vin_num
+        ).first()
+        if vineta_db:
+            if vineta_db.imagen_url:
+                archivos_a_eliminar.append(vineta_db.imagen_url)
+            vineta_db.imagen_url = None
+            vineta_db.prompt_usado = None
+
+    # 3. Eliminar archivos PNG físicos en disco si están en uploads/
+    for img_path in archivos_a_eliminar:
+        try:
+            if isinstance(img_path, str) and img_path.startswith("/uploads/"):
+                rel_path = img_path.lstrip("/")
+                for base in [Path("."), Path("backend")]:
+                    target = base / rel_path
+                    if target.exists() and target.is_file():
+                        target.unlink()
+        except Exception as e_del:
+            logger.warning(f"No se pudo eliminar archivo físico {img_path}: {e_del}")
+
+    db.commit()
+    return {"status": "ok", "message": f"Ilustración de Viñeta {vin_num} eliminada"}
+
+
+@router.post("/{proyecto_id}/vinetas/{cap_num}/purgar-imagenes")
+def purgar_imagenes_capitulo(
+    proyecto_id: int,
+    cap_num: int,
+    db: Session = Depends(get_db)
+):
+    """
+    Resetea todas las imágenes generadas del capítulo actual de una sola vez
+    (en la tabla vinetas, en guion_json y en el sistema de archivos local).
+    """
+    capitulo = db.query(models.Capitulo).filter(
+        models.Capitulo.id_proyecto == proyecto_id,
+        models.Capitulo.numero == cap_num
+    ).first()
+    if not capitulo:
+        raise HTTPException(status_code=404, detail="Capítulo no encontrado")
+
+    archivos_a_eliminar = []
+
+    # 1. Limpiar árbol guion_json
+    if capitulo.guion_json:
+        guion_data = capitulo.guion_json
+        if isinstance(guion_data, str):
+            try:
+                import json
+                guion_data = json.loads(guion_data)
+            except Exception:
+                guion_data = {}
+
+        if isinstance(guion_data, dict):
+            for coleccion in ["paginas", "escenas"]:
+                for pag in guion_data.get(coleccion, []):
+                    for vin in pag.get("vinetas", []):
+                        if vin.get("imagen_url"):
+                            archivos_a_eliminar.append(vin["imagen_url"])
+                        vin["imagen_url"] = None
+                        vin["prompt_usado"] = ""
+
+            capitulo.guion_json = guion_data
+            from sqlalchemy.orm.attributes import flag_modified
+            flag_modified(capitulo, "guion_json")
+
+    # 2. Limpiar registros relacionales de vinetas
+    paginas = db.query(models.Pagina).filter(models.Pagina.id_capitulo == capitulo.id).all()
+    pag_ids = [p.id for p in paginas]
+    if pag_ids:
+        vinetas_db = db.query(models.Vineta).filter(models.Vineta.id_pagina.in_(pag_ids)).all()
+        for v in vinetas_db:
+            if v.imagen_url:
+                archivos_a_eliminar.append(v.imagen_url)
+            v.imagen_url = None
+            v.prompt_usado = None
+
+    # 3. Eliminar archivos PNG físicos de uploads/
+    for img_path in archivos_a_eliminar:
+        try:
+            if isinstance(img_path, str) and img_path.startswith("/uploads/"):
+                rel_path = img_path.lstrip("/")
+                for base in [Path("."), Path("backend")]:
+                    target = base / rel_path
+                    if target.exists() and target.is_file():
+                        target.unlink()
+        except Exception as e_del:
+            logger.warning(f"No se pudo eliminar archivo físico {img_path}: {e_del}")
+
+    db.commit()
+    return {"status": "ok", "message": f"Todas las ilustraciones del Capítulo {cap_num} han sido purgadas"}

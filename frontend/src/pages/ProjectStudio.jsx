@@ -312,15 +312,15 @@ function ProjectStudioContent() {
             <p className="text-rdc-muted text-xs mb-2 font-titulo uppercase tracking-wider font-semibold">
               {t('projectStudio.visualSignature') || 'Firma Visual'}
             </p>
-            {proyectoActivo?.style_locked ? (
+            {(proyectoActivo?.style_locked || proyectoActivo?.estilo_visual || proyectoActivo?.estilo_legendario) ? (
               <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-3 shadow-xs">
                 <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 text-xs font-titulo font-bold">
                   <CheckCircle2 className="w-3.5 h-3.5" />
                   <span>Firma Calibrada</span>
                 </div>
-                {proyectoActivo?.estilo_legendario && (
-                  <p className="text-rdc-muted text-xs mt-1 capitalize font-titulo truncate">
-                    {proyectoActivo.estilo_legendario.replace('aleatorio_', '').replace(/_/g, ' ')}
+                {(proyectoActivo?.estilo_visual || proyectoActivo?.estilo_legendario) && (
+                  <p className="text-emerald-700 dark:text-emerald-300 text-xs mt-1 capitalize font-titulo font-semibold truncate">
+                    {(proyectoActivo.estilo_visual || proyectoActivo.estilo_legendario).replace('aleatorio_', '').replace(/_/g, ' ')}
                   </p>
                 )}
               </div>
@@ -404,7 +404,7 @@ function ProjectStudioContent() {
 
           {/* Sección: Generador de Viñetas (Panel Art Studio) */}
           {seccionActiva === 'vinetas' && (
-            <div className="max-w-6xl mx-auto">
+            <div className="max-w-7xl xl:max-w-[1550px] mx-auto w-full px-2">
               <PanelArtStudio
                 proyecto={proyectoActivo}
                 onActualizar={() => {

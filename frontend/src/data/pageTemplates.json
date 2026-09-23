@@ -1,0 +1,30 @@
+{
+  "grid_1_splash": {
+    "id": "grid_1_splash",
+    "nombre": "Página Splash (1 Viñeta)",
+    "vinetas": [
+      { "id": "p1", "x": 0.05, "y": 0.05, "w": 0.9, "h": 0.9, "tipo": "rect" }
+    ]
+  },
+  "grid_4_regular": {
+    "id": "grid_4_regular",
+    "nombre": "Cuadrícula Bruguera (4 Viñetas 2x2)",
+    "vinetas": [
+      { "id": "p1", "x": 0.05, "y": 0.05, "w": 0.43, "h": 0.43, "tipo": "rect" },
+      { "id": "p2", "x": 0.52, "y": 0.05, "w": 0.43, "h": 0.43, "tipo": "rect" },
+      { "id": "p3", "x": 0.05, "y": 0.52, "w": 0.43, "h": 0.43, "tipo": "rect" },
+      { "id": "p4", "x": 0.52, "y": 0.52, "w": 0.43, "h": 0.43, "tipo": "rect" }
+    ]
+  },
+  "grid_5_dynamic": {
+    "id": "grid_5_dynamic",
+    "nombre": "Acción Dinámica (5 Viñetas)",
+    "vinetas": [
+      { "id": "p1", "x": 0.05, "y": 0.05, "w": 0.9, "h": 0.28, "tipo": "rect" },
+      { "id": "p2", "x": 0.05, "y": 0.36, "w": 0.43, "h": 0.28, "tipo": "rect" },
+      { "id": "p3", "x": 0.52, "y": 0.36, "w": 0.43, "h": 0.28, "tipo": "rect" },
+      { "id": "p4", "x": 0.05, "y": 0.67, "w": 0.43, "h": 0.28, "tipo": "rect" },
+      { "id": "p5", "x": 0.52, "y": 0.67, "w": 0.43, "h": 0.28, "tipo": "rect" }
+    ]
+  }
+}

@@ -62,6 +62,7 @@ export default function FirmaVisual({ proyecto, onActualizar }) {
     style_prompt: ''
   })
   const [presetInfo, setPresetInfo] = useState(null)
+  const [styleBibleDetalle, setStyleBibleDetalle] = useState(null)
 
   // Drag & drop
   const [arrastrando, setArrastrando] = useState(false)
@@ -88,6 +89,9 @@ export default function FirmaVisual({ proyecto, onActualizar }) {
   // Preset legendario actual según ID
   const presetActual = presetInfo || LEGENDARY_STYLES.find(s => s.id === proyecto?.estilo_legendario?.replace('aleatorio_', ''))
 
+  const estiloActivoId = proyecto?.estilo_visual || proyecto?.estilo_legendario || 'mortadela_y_salchichon'
+  const estiloActivoNombre = styleBibleDetalle?.nombre_oficial || presetActual?.name || (estiloActivoId ? estiloActivoId.replace('aleatorio_', '').replace(/_/g, ' ') : 'Humor Bruguera')
+
   // Construir prompt de portada sugerido basado en sinopsis y firma visual
   const construirPromptSugerido = () => {
     const sinopsisTexto = proyecto?.sinopsis || proyecto?.premisa || `Historia épica de ${proyecto?.nombre || 'manga'}`
@@ -109,6 +113,21 @@ export default function FirmaVisual({ proyecto, onActualizar }) {
         
         const rawDiag = data.firma_visual_extraida || {}
         const estiloCompilado = rawDiag.style_prompt || data.style_prompt || data.system_prompt_maestro || ''
+
+        const estiloId = data.estilo_visual || proyecto?.estilo_visual || data.estilo_legendario || proyecto?.estilo_legendario || 'mortadela_y_salchichon'
+        const cleanId = estiloId.replace('aleatorio_', '').replace('legendario_', '')
+
+        if (cleanId) {
+          try {
+            const resDetalle = await projectsAPI.obtenerDetalleEstilo(cleanId)
+            if (resDetalle?.data?.detalles) {
+              setStyleBibleDetalle(resDetalle.data.detalles)
+            }
+          } catch (errDetalle) {
+            console.warn('No se pudieron cargar los detalles de la Biblia de Estilos:', errDetalle)
+          }
+        }
+
         setDiagnostico({
           tipo_trazo: rawDiag.tipo_trazo || data.tecnica_linea || '',
           tratamiento_sombras: rawDiag.tratamiento_sombras || data.estilo_sombreado || '',
@@ -118,8 +137,7 @@ export default function FirmaVisual({ proyecto, onActualizar }) {
 
         if (data.preset_info) {
           setPresetInfo(data.preset_info)
-        } else if (data.estilo_legendario) {
-          const cleanId = data.estilo_legendario.replace('aleatorio_', '')
+        } else if (cleanId) {
           const found = LEGENDARY_STYLES.find(s => s.id === cleanId)
           if (found) setPresetInfo(found)
         }
@@ -463,17 +481,10 @@ export default function FirmaVisual({ proyecto, onActualizar }) {
             <span>[🖼️ Ver Referencias Visuales del Estilo]</span>
           </button>
 
-          {isLocked ? (
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl border-2 border-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 font-titulo font-bold text-xs shadow-[2px_2px_0px_0px_rgba(16,185,129,0.85)]">
-              <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-              <span>✔ Firma Visual Calibrada y Bloqueada</span>
-            </div>
-          ) : (
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl border-2 border-amber-500 bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 font-titulo font-bold text-xs shadow-[2px_2px_0px_0px_rgba(245,158,11,0.85)]">
-              <AlertTriangle className="w-4 h-4 text-amber-500" />
-              <span>Pendiente de Calibración / Edición</span>
-            </div>
-          )}
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl border-2 border-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 font-titulo font-bold text-xs shadow-[2px_2px_0px_0px_rgba(16,185,129,0.85)]">
+            <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+            <span>✔ Firma Calibrada: {estiloActivoNombre}</span>
+          </div>
         </div>
       </div>
 
@@ -492,6 +503,105 @@ export default function FirmaVisual({ proyecto, onActualizar }) {
         <div className="p-4 rounded-xl border-2 border-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 text-sm font-semibold flex items-center gap-2 shadow-[2px_2px_0px_0px_rgba(16,185,129,0.85)]">
           <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
           <span>{mensajeExito}</span>
+        </div>
+      )}
+
+      {/* ── TARJETA TÉCNICA DE LA BIBLIA DE ESTILO CANÓNICA ACTIVA ── */}
+      {styleBibleDetalle && (
+        <div className="p-5 rounded-2xl border-2 border-slate-900 dark:border-slate-700 bg-linear-to-br from-indigo-50/60 via-white to-purple-50/60 dark:from-slate-900 dark:via-slate-900 dark:to-indigo-950/30 shadow-[3px_3px_0px_0px_rgba(0,0,0,0.85)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,0.08)] space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
+            <div className="flex items-center gap-2">
+              <BookOpen className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+              <div>
+                <h4 className="font-titulo text-base font-black text-slate-900 dark:text-white">
+                  Biblia de Estilo: {styleBibleDetalle.nombre_oficial}
+                </h4>
+                {styleBibleDetalle.referencia_cultural && (
+                  <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                    Referencia histórica: {styleBibleDetalle.referencia_cultural}
+                  </p>
+                )}
+              </div>
+            </div>
+            <span className="text-xs px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 font-bold border border-emerald-300 dark:border-emerald-700 flex items-center gap-1.5">
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              Directrices de Cómic Activas
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-xs">
+            {styleBibleDetalle.linework && (
+              <div className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-800/60">
+                <div className="flex items-center gap-1.5 font-bold text-slate-700 dark:text-slate-200 mb-1">
+                  <Feather className="w-3.5 h-3.5 text-indigo-500" />
+                  <span>Entintado y Línea</span>
+                </div>
+                <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
+                  {styleBibleDetalle.linework}
+                </p>
+              </div>
+            )}
+
+            {styleBibleDetalle.shading_technique && (
+              <div className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-800/60">
+                <div className="flex items-center gap-1.5 font-bold text-slate-700 dark:text-slate-200 mb-1">
+                  <Layers className="w-3.5 h-3.5 text-indigo-500" />
+                  <span>Sombreado y Tramas</span>
+                </div>
+                <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
+                  {styleBibleDetalle.shading_technique}
+                </p>
+              </div>
+            )}
+
+            {styleBibleDetalle.color_palette && (
+              <div className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-800/60">
+                <div className="flex items-center gap-1.5 font-bold text-slate-700 dark:text-slate-200 mb-1">
+                  <Palette className="w-3.5 h-3.5 text-indigo-500" />
+                  <span>Paleta Cromática</span>
+                </div>
+                <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
+                  {styleBibleDetalle.color_palette}
+                </p>
+              </div>
+            )}
+
+            {styleBibleDetalle.anatomy_acting && (
+              <div className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-800/60">
+                <div className="flex items-center gap-1.5 font-bold text-slate-700 dark:text-slate-200 mb-1">
+                  <Sliders className="w-3.5 h-3.5 text-indigo-500" />
+                  <span>Anatomía y Acting</span>
+                </div>
+                <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
+                  {styleBibleDetalle.anatomy_acting}
+                </p>
+              </div>
+            )}
+
+            {styleBibleDetalle.atmosphere_backgrounds && (
+              <div className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-800/60">
+                <div className="flex items-center gap-1.5 font-bold text-slate-700 dark:text-slate-200 mb-1">
+                  <Eye className="w-3.5 h-3.5 text-indigo-500" />
+                  <span>Atmósfera y Entornos</span>
+                </div>
+                <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
+                  {styleBibleDetalle.atmosphere_backgrounds}
+                </p>
+              </div>
+            )}
+
+            {styleBibleDetalle.prompt_tokens && (
+              <div className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-800/60 sm:col-span-2 lg:col-span-1">
+                <div className="flex items-center gap-1.5 font-bold text-slate-700 dark:text-slate-200 mb-1">
+                  <FileCode className="w-3.5 h-3.5 text-indigo-500" />
+                  <span>Tokens Inyectados a FLUX.1</span>
+                </div>
+                <p className="text-slate-600 dark:text-slate-400 font-mono text-[11px] leading-relaxed line-clamp-3" title={styleBibleDetalle.prompt_tokens}>
+                  {styleBibleDetalle.prompt_tokens}
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       )}
 

@@ -3,25 +3,33 @@
 // Layout: toolbar izquierdo | canvas central | panel derecho
 
 import { useEffect, useRef, useState } from 'react'
-import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useParams, useNavigate, useSearchParams, Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import {
   Save,
   BookOpen,
   ArrowLeft,
   Layers,
-  LayoutTemplate,
+  LayoutGrid,
   Files,
   Sliders,
-  Magnet
+  Magnet,
+  Film,
+  MessageSquare,
+  Sparkles
 } from 'lucide-react'
 import useEditorStore from '../store/editorStore'
 import useProjectStore from '../store/projectStore'
 import MangaCanvas from '../components/Editor/MangaCanvas'
 import CanvasToolbar from '../components/Editor/CanvasToolbar'
+import EditorToolbar from '../components/Editor/EditorToolbar'
 import ChapterNavigator from '../components/Editor/ChapterNavigator'
+import TemplatesSidebar from '../components/Editor/TemplatesSidebar'
+import BalloonsSidebar from '../components/Editor/BalloonsSidebar'
+import FXSidebar from '../components/Editor/FXSidebar'
 import PageTemplates from '../components/Editor/PageTemplates'
 import GenerateArtPanel from '../components/Editor/GenerateArtPanel'
+import VinetasCapituloPanel from '../components/Editor/VinetasCapituloPanel'
 import LanguageSelector from '../components/common/LanguageSelector'
 import ThemeToggle from '../components/common/ThemeToggle'
 import AiEngineToggle from '../components/common/AiEngineToggle'
@@ -38,6 +46,7 @@ import ErrorBoundary from '../components/UI/ErrorBoundary'
 function EditorContent() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const { t } = useTranslation()
   const canvasRef = useRef(null)
 
@@ -49,8 +58,14 @@ function EditorContent() {
     setHerramientaActiva, limpiarEditor
   } = useEditorStore()
 
-  const [tabDerecha, setTabDerecha] = useState('estructura')
+  const tabQuery = searchParams.get('tab')
+  const [tabDerecha, setTabDerecha] = useState(
+    tabQuery && ['plantillas', 'vinetas', 'bocadillos', 'efectos', 'estructura', 'capas', 'filtros', 'snapping'].includes(tabQuery)
+      ? tabQuery
+      : 'plantillas'
+  )
   const [historial, setHistorial] = useState({ puedeDeshacer: false, puedeRehacer: false })
+  const [zoom, setZoom] = useState(1)
   const [lectorAbierto, setLectorAbierto] = useState(false)
   const [snappingConfig, setSnappingConfig] = useState(CONFIG_SNAPPING_DEFAULT)
   
@@ -59,11 +74,14 @@ function EditorContent() {
   const [mostrarGenerador, setMostrarGenerador] = useState(false)
 
   const TABS_DERECHA = [
-    { id: 'estructura', icon: Layers,         label: t('editor.tabs.structure') || 'Estructura' },
-    { id: 'plantillas', icon: LayoutTemplate,   label: t('editor.tabs.templates') || 'Plantillas' },
-    { id: 'capas',      icon: Files,            label: t('editor.tabs.layers') || 'Capas' },
-    { id: 'filtros',    icon: Sliders,          label: t('editor.tabs.filters') || 'Filtros' },
-    { id: 'snapping',   icon: Magnet,           label: t('editor.tabs.snapping') || 'Guías' },
+    { id: 'plantillas', icon: LayoutGrid,    label: t('editor.tabs.templates') || 'Plantillas' },
+    { id: 'vinetas',    icon: Film,          label: t('editor.tabs.panels') || 'Viñetas' },
+    { id: 'bocadillos', icon: MessageSquare, label: t('editor.tabs.balloons') || 'Bocadillos' },
+    { id: 'efectos',    icon: Sparkles,      label: t('editor.tabs.fx') || 'Efectos' },
+    { id: 'estructura', icon: BookOpen,      label: t('editor.tabs.structure') || 'Estructura' },
+    { id: 'capas',      icon: Layers,        label: t('editor.tabs.layers') || 'Capas' },
+    { id: 'filtros',    icon: Sliders,       label: t('editor.tabs.filters') || 'Filtros' },
+    { id: 'snapping',   icon: Magnet,        label: t('editor.tabs.snapping') || 'Guías' },
   ]
 
   useEffect(() => {
@@ -202,67 +220,86 @@ function EditorContent() {
         />
 
         {/* Canvas central */}
-        <div className="flex-1 overflow-hidden relative bg-rdc-primary">
-          {!paginaActiva ? (
-            <div className="flex items-center justify-center h-full">
-              <div className="text-center p-6">
-                <div className="w-14 h-14 rounded-2xl bg-rdc-card flex items-center justify-center mx-auto mb-3 text-rdc-muted">
-                  <BookOpen className="w-8 h-8 text-rdc-accent" />
-                </div>
-                <p className="font-titulo text-lg text-rdc-text font-bold mb-1">
-                  {t('editor.selectPage') || 'Cargando lienzo de página...'}
-                </p>
-                <p className="text-rdc-muted text-xs max-w-sm mx-auto">
-                  {t('editor.selectPageDesc') || 'El lienzo se inicializará de inmediato con la estructura de tu proyecto.'}
-                </p>
-              </div>
-            </div>
-          ) : (
-            <>
-              <MangaCanvas
-                ref={canvasRef}
-                paginaActiva={paginaActiva}
-                herramientaActiva={herramientaActiva}
-                onGuardar={handleGuardar}
-                onHistorialCambio={setHistorial}
-                snappingConfig={snappingConfig}
-                onVinetaSeleccionada={(vineta) => {
-                  setVinetaActiva(vineta)
-                  if (vineta) setMostrarGenerador(true)
-                }}
-              />
+        <div className="flex-1 overflow-hidden relative bg-rdc-primary flex flex-col">
+          {/* Barra superior de herramientas: Zoom, Capas, Historial, Exportación PNG */}
+          <EditorToolbar
+            canvasRef={canvasRef}
+            zoom={zoom}
+            onZoomChange={setZoom}
+            onDeshacer={() => canvasRef.current?.deshacer()}
+            onRehacer={() => canvasRef.current?.rehacer()}
+            onEliminarSeleccion={() => canvasRef.current?.eliminarSeleccion()}
+            puedeDeshacer={historial.puedeDeshacer}
+            puedeRehacer={historial.puedeRehacer}
+            paginaActiva={paginaActiva}
+            proyectoActivo={proyectoActivo}
+          />
 
-              {/* Panel de generación flotante */}
-              {mostrarGenerador && vinetaActiva && (
-                <div className="absolute right-4 top-4 w-80 bg-rdc-secondary/95
-                                border border-rdc-border rounded-2xl shadow-2xl backdrop-blur-md
-                                overflow-y-auto max-h-[80vh] z-50 animate-in fade-in zoom-in-95 duration-150">
-                  <div className="p-4">
-                    <GenerateArtPanel
-                      proyecto={proyectoActivo}
-                      vinetaSeleccionada={vinetaActiva}
-                      onImagenGenerada={async (imagen, tipo) => {
-                        if (canvasRef.current?.insertarImagenEnVineta) {
-                          await canvasRef.current.insertarImagenEnVineta(
-                            imagen, tipo
-                          )
-                          setMostrarGenerador(false)
-                        }
-                      }}
-                      onCerrar={() => setMostrarGenerador(false)}
-                    />
+          <div className="flex-1 overflow-hidden relative">
+            {!paginaActiva ? (
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center p-6">
+                  <div className="w-14 h-14 rounded-2xl bg-rdc-card flex items-center justify-center mx-auto mb-3 text-rdc-muted">
+                    <BookOpen className="w-8 h-8 text-rdc-accent" />
                   </div>
+                  <p className="font-titulo text-lg text-rdc-text font-bold mb-1">
+                    {t('editor.selectPage') || 'Cargando lienzo de página...'}
+                  </p>
+                  <p className="text-rdc-muted text-xs max-w-sm mx-auto">
+                    {t('editor.selectPageDesc') || 'El lienzo se inicializará de inmediato con la estructura de tu proyecto.'}
+                  </p>
                 </div>
-              )}
-            </>
-          )}
+              </div>
+            ) : (
+              <>
+                <MangaCanvas
+                  ref={canvasRef}
+                  paginaActiva={paginaActiva}
+                  plantillaActiva={paginaActiva?.layout_template || 'grid_4_regular'}
+                  herramientaActiva={herramientaActiva}
+                  zoom={zoom}
+                  onZoomChange={setZoom}
+                  onGuardar={handleGuardar}
+                  onHistorialCambio={setHistorial}
+                  snappingConfig={snappingConfig}
+                  onVinetaSeleccionada={(vineta) => {
+                    setVinetaActiva(vineta)
+                    if (vineta) setMostrarGenerador(true)
+                  }}
+                />
+
+                {/* Panel de generación flotante */}
+                {mostrarGenerador && vinetaActiva && (
+                  <div className="absolute right-4 top-4 w-80 bg-rdc-secondary/95
+                                  border border-rdc-border rounded-2xl shadow-2xl backdrop-blur-md
+                                  overflow-y-auto max-h-[80vh] z-50 animate-in fade-in zoom-in-95 duration-150">
+                    <div className="p-4">
+                      <GenerateArtPanel
+                        proyecto={proyectoActivo}
+                        vinetaSeleccionada={vinetaActiva}
+                        onImagenGenerada={async (imagen, tipo) => {
+                          if (canvasRef.current?.insertarImagenEnVineta) {
+                            await canvasRef.current.insertarImagenEnVineta(
+                              imagen, tipo
+                            )
+                            setMostrarGenerador(false)
+                          }
+                        }}
+                        onCerrar={() => setMostrarGenerador(false)}
+                      />
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
         </div>
 
-        {/* Panel derecho: navegador, plantillas, capas, filtros y guías */}
+        {/* Panel derecho: navegador, plantillas, viñetas, bocadillos, efectos, capas, filtros y guías */}
         <div className="w-64 sm:w-72 bg-rdc-secondary/95 border-l border-rdc-border flex flex-col flex-shrink-0 backdrop-blur-md">
 
-          {/* Tabs del panel derecho */}
-          <div className="flex border-b border-rdc-border overflow-x-auto whitespace-nowrap no-scrollbar p-1 gap-1">
+          {/* Botonera compacta en cuadrícula (4 columnas × 2 filas) */}
+          <div className="grid grid-cols-4 gap-1.5 p-2 bg-slate-900 border-b border-slate-800 flex-shrink-0 select-none">
             {TABS_DERECHA.map(tab => {
               const Icon = tab.icon
               const activo = tabDerecha === tab.id
@@ -271,14 +308,14 @@ function EditorContent() {
                   key={tab.id}
                   onClick={() => setTabDerecha(tab.id)}
                   title={tab.label}
-                  className={`flex-1 py-1.5 px-2 text-[11px] font-titulo rounded-lg transition-colors whitespace-nowrap flex items-center justify-center gap-1 cursor-pointer ${
+                  className={`text-xs py-1.5 px-1 rounded flex flex-col items-center justify-center transition-colors cursor-pointer ${
                     activo
-                      ? 'bg-rdc-accent text-white font-bold shadow-xs'
-                      : 'text-rdc-muted hover:text-rdc-text hover:bg-rdc-card'
+                      ? 'bg-amber-500 text-slate-950 font-bold shadow-sm'
+                      : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
                   }`}
                 >
-                  <Icon className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">{tab.label}</span>
+                  <Icon className="w-4 h-4 mb-0.5" />
+                  <span className="text-[10px] leading-tight truncate">{tab.label}</span>
                 </button>
               )
             })}
@@ -286,19 +323,49 @@ function EditorContent() {
 
           {/* Contenido del tab */}
           <div className="flex-1 overflow-hidden">
+            {tabDerecha === 'plantillas' && (
+              <TemplatesSidebar
+                canvasRef={canvasRef}
+                plantillaActivaId={paginaActiva?.layout_template}
+                onAplicarPlantilla={(plantilla) => {
+                  if (canvasRef.current?.aplicarPlantillaDesdeJson) {
+                    canvasRef.current.aplicarPlantillaDesdeJson(plantilla)
+                  }
+                }}
+              />
+            )}
+            {tabDerecha === 'vinetas' && (
+              <VinetasCapituloPanel
+                onInsertarImagen={async (url) => {
+                  if (canvasRef.current?.insertarImagenEnVineta) {
+                    await canvasRef.current.insertarImagenEnVineta(url)
+                  }
+                }}
+                onCrearBocadillo={(dialogo) => {
+                  if (canvasRef.current?.insertarBocadilloDialogo) {
+                    canvasRef.current.insertarBocadilloDialogo(dialogo)
+                  }
+                }}
+              />
+            )}
+            {tabDerecha === 'bocadillos' && (
+              <BalloonsSidebar
+                canvasRef={canvasRef}
+                onInsertarBocadillo={(preset, texto) => {
+                  if (canvasRef.current?.insertarBocadilloPreset) {
+                    canvasRef.current.insertarBocadilloPreset(preset, null, null, texto)
+                  }
+                }}
+              />
+            )}
+            {tabDerecha === 'efectos' && (
+              <FXSidebar
+                canvasRef={canvasRef}
+                onActualizar={handleGuardarManual}
+              />
+            )}
             {tabDerecha === 'estructura' && proyectoActivo && (
               <ChapterNavigator proyecto={proyectoActivo} />
-            )}
-            {tabDerecha === 'plantillas' && (
-              <div className="overflow-y-auto h-full">
-                <p className="text-rdc-muted text-xs px-3 pt-3 pb-1 uppercase font-titulo">
-                  {t('editor.applyTemplate') || 'Plantillas de viñetas'}
-                </p>
-                <PageTemplates
-                  onSeleccionar={handleAplicarPlantilla}
-                  plantillaActual={paginaActiva?.layout_template}
-                />
-              </div>
             )}
             {tabDerecha === 'capas' && (
               <LayersPanel

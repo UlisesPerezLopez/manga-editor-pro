@@ -1,0 +1,92 @@
+{
+  "speech1": {
+    "id": "speech1",
+    "tipo": "speech",
+    "nombre": "Diálogo Clásico (Cola Izq)",
+    "svg": "/assets/editor/balloons/speech1.svg",
+    "fontFamily": "Comic Relief, Bangers, cursive",
+    "fontSize": 18,
+    "textColor": "#000000"
+  },
+  "speech2": {
+    "id": "speech2",
+    "tipo": "speech",
+    "nombre": "Diálogo Clásico (Cola Der)",
+    "svg": "/assets/editor/balloons/speech2.svg",
+    "fontFamily": "Comic Relief, Bangers, cursive",
+    "fontSize": 18,
+    "textColor": "#000000"
+  },
+  "scream1": {
+    "id": "scream1",
+    "tipo": "scream",
+    "nombre": "Grito / Explosión A",
+    "svg": "/assets/editor/balloons/scream1.svg",
+    "fontFamily": "Bangers, Impact, sans-serif",
+    "fontSize": 24,
+    "textColor": "#000000"
+  },
+  "scream2": {
+    "id": "scream2",
+    "tipo": "scream",
+    "nombre": "Grito / Explosión B",
+    "svg": "/assets/editor/balloons/scream2.svg",
+    "fontFamily": "Bangers, Impact, sans-serif",
+    "fontSize": 24,
+    "textColor": "#000000"
+  },
+  "thought1": {
+    "id": "thought1",
+    "tipo": "thought",
+    "nombre": "Pensamiento / Nube A",
+    "svg": "/assets/editor/balloons/thought1.svg",
+    "fontFamily": "Comic Relief, cursive",
+    "fontSize": 16,
+    "textColor": "#222222"
+  },
+  "thought2": {
+    "id": "thought2",
+    "tipo": "thought",
+    "nombre": "Pensamiento / Nube B",
+    "svg": "/assets/editor/balloons/thought2.svg",
+    "fontFamily": "Comic Relief, cursive",
+    "fontSize": 16,
+    "textColor": "#222222"
+  },
+  "whisper1": {
+    "id": "whisper1",
+    "tipo": "whisper",
+    "nombre": "Susurro Punteado A",
+    "svg": "/assets/editor/balloons/whisper1.svg",
+    "fontFamily": "Comic Relief, cursive",
+    "fontSize": 15,
+    "textColor": "#444444"
+  },
+  "whisper2": {
+    "id": "whisper2",
+    "tipo": "whisper",
+    "nombre": "Susurro Punteado B",
+    "svg": "/assets/editor/balloons/whisper2.svg",
+    "fontFamily": "Comic Relief, cursive",
+    "fontSize": 15,
+    "textColor": "#444444"
+  },
+  "caption1": {
+    "id": "caption1",
+    "tipo": "caption",
+    "nombre": "Cartela Narrador (Doble Marco)",
+    "svg": "/assets/editor/balloons/caption1.svg",
+    "fontFamily": "Oswald, sans-serif",
+    "fontSize": 15,
+    "textColor": "#111111"
+  },
+  "caption2": {
+    "id": "caption2",
+    "tipo": "caption",
+    "nombre": "Cartela Narrador (Marco Simple)",
+    "svg": "/assets/editor/balloons/caption2.svg",
+    "fontFamily": "Oswald, sans-serif",
+    "fontSize": 15,
+    "textColor": "#111111"
+  }
+}
