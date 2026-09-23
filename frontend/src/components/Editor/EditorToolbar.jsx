@@ -37,6 +37,7 @@ export default function EditorToolbar({
   puedeDeshacer = false,
   puedeRehacer = false,
   paginaActiva,
+  capituloActivo,
   proyectoActivo,
 }) {
   const { t } = useTranslation()
@@ -75,7 +76,7 @@ export default function EditorToolbar({
     }
   }
 
-  // Exportar Página PNG a resolución nativa 2x
+  // Exportar Página PNG a resolución nativa 2x (1190 x 1684 px)
   const handleExportarPNG = () => {
     if (!canvasRef?.current) return
     try {
@@ -89,11 +90,9 @@ export default function EditorToolbar({
         return
       }
 
-      const numPagina = paginaActiva?.numero || 1
-      const prefijo = proyectoActivo?.nombre
-        ? proyectoActivo.nombre.trim().toLowerCase().replace(/[^a-z0-9_-]/g, '_')
-        : 'manga'
-      const nombreArchivo = `${prefijo}_pagina_${numPagina}_hd.png`
+      const capNum = paginaActiva?.capitulo_numero || capituloActivo?.numero || 1
+      const pagNum = paginaActiva?.numero || 1
+      const nombreArchivo = `Capitulo_${capNum}_Pagina_${pagNum}_Maquetada.png`
 
       const enlace = document.createElement('a')
       enlace.download = nombreArchivo

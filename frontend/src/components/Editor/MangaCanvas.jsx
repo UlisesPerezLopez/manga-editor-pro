@@ -3,12 +3,44 @@
 
 import { useEffect, useRef, useState, useCallback, forwardRef, useImperativeHandle } from 'react'
 import { fabric } from 'fabric'
+import {
+  Bold,
+  Italic,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  Type,
+  Minus,
+  Plus,
+  Palette,
+  X
+} from 'lucide-react'
 import { CANVAS_DIMENSIONES, PLANTILLAS } from './PageTemplates'
 import pageTemplatesData from '../../data/pageTemplates.json'
+import balloonPresetsData from '../../data/balloonPresets.json'
 import useCanvasHistory from './useCanvasHistory'
 import { procesarSnapping, limpiarGuias, CONFIG_SNAPPING_DEFAULT } from './canvasSnapping'
 
 const { width: CANVAS_W, height: CANVAS_H } = CANVAS_DIMENSIONES
+
+export const FUENTES_DISPONIBLES = [
+  { id: 'Comic Relief', label: 'Comic Relief' },
+  { id: 'Bangers', label: 'Bangers' },
+  { id: 'Comic Neue', label: 'Comic Neue' },
+  { id: 'Oswald', label: 'Oswald' },
+  { id: 'Chango', label: 'Chango' },
+  { id: 'Arial', label: 'Arial' },
+]
+
+export const COLORES_PRESET = [
+  '#000000',
+  '#FFFFFF',
+  '#E53E3E',
+  '#2563EB',
+  '#16A34A',
+  '#D97706',
+  '#7C3AED'
+]
 
 // Función auxiliar para auto-renderizar marcos de plantilla de forma atómica en Fabric.js
 export const instanciarMarcosPlantilla = (canvas, plantillaKey = 'grid_4_regular') => {
@@ -79,6 +111,7 @@ const MangaCanvas = forwardRef(function MangaCanvas({
   const guardadoTimerRef = useRef(null)
   const [zoomInterno, setZoomInterno] = useState(1)
   const zoomActual = zoomProp !== undefined ? zoomProp : zoomInterno
+  const [propiedadesTexto, setPropiedadesTexto] = useState(null)
 
   // Hook dedicado de historial
   const {
@@ -89,6 +122,55 @@ const MangaCanvas = forwardRef(function MangaCanvas({
     puedeDeshacer,
     puedeRehacer
   } = useCanvasHistory(30)
+
+  // ─── GESTIÓN DE PROPIEDADES TIPOGRÁFICAS FLOTANTES ───────────────────────
+
+  const actualizarPropiedadTexto = (propiedad, valor) => {
+    if (!propiedadesTexto || !fabricRef.current) return
+    const canvas = fabricRef.current
+    const { targetObj, textObj } = propiedadesTexto
+    if (!textObj) return
+
+    textObj.set(propiedad, valor)
+    if (targetObj && targetObj.type === 'group') {
+      targetObj.addWithUpdate()
+    }
+    canvas.renderAll()
+    guardarEstado(canvas)
+
+    setPropiedadesTexto(prev => {
+      if (!prev) return null
+      return {
+        ...prev,
+        [propiedad === 'fontWeight' ? 'isBold' : propiedad === 'fontStyle' ? 'isItalic' : propiedad]:
+          propiedad === 'fontWeight' ? (valor === 'bold') :
+          propiedad === 'fontStyle' ? (valor === 'italic') : valor,
+        fontSize: propiedad === 'fontSize' ? valor : prev.fontSize,
+        fontFamily: propiedad === 'fontFamily' ? valor : prev.fontFamily,
+        textAlign: propiedad === 'textAlign' ? valor : prev.textAlign,
+        color: propiedad === 'fill' ? valor : prev.color,
+      }
+    })
+  }
+
+  const cambiarTamanoTexto = (delta) => {
+    if (!propiedadesTexto) return
+    const actual = propiedadesTexto.fontSize || 18
+    const nuevo = Math.max(8, Math.min(120, actual + delta))
+    actualizarPropiedadTexto('fontSize', nuevo)
+  }
+
+  const toggleNegrita = () => {
+    if (!propiedadesTexto) return
+    const nuevoValor = propiedadesTexto.isBold ? 'normal' : 'bold'
+    actualizarPropiedadTexto('fontWeight', nuevoValor)
+  }
+
+  const toggleCursiva = () => {
+    if (!propiedadesTexto) return
+    const nuevoValor = propiedadesTexto.isItalic ? 'normal' : 'italic'
+    actualizarPropiedadTexto('fontStyle', nuevoValor)
+  }
 
   useEffect(() => {
     snappingConfigRef.current = snappingConfig
@@ -145,24 +227,88 @@ const MangaCanvas = forwardRef(function MangaCanvas({
       limpiarGuias(canvas)
     })
 
-    // Edición rápida de texto con doble clic en bocadillos
+    // Edición interactiva inline de texto con doble clic en bocadillos (cero window.prompt)
     const alHacerDobleClic = (e) => {
       const target = e.target
-      if (target && target.type === 'group' && (target.data?.type === 'balloon' || target.data?.tipo === 'bocadillo' || target.data?.tipo?.startsWith('bocadillo'))) {
+      if (!target) return
+      const canvasActual = fabricRef.current
+      if (!canvasActual) return
+
+      const esBocadillo = target.type === 'group' && (
+        target.data?.type === 'balloon' || 
+        target.data?.tipo === 'bocadillo' || 
+        target.data?.tipo?.startsWith('bocadillo')
+      )
+
+      if (esBocadillo) {
         const textObj = target.getObjects().find(o => o.type === 'i-text' || o.type === 'text')
-        if (textObj) {
-          const nuevoTexto = window.prompt('Editar texto del bocadillo:', textObj.text || '')
-          if (nuevoTexto !== null && nuevoTexto !== undefined) {
-            textObj.set('text', nuevoTexto)
-            canvas.renderAll()
-            guardarEstado(canvas)
+        if (!textObj) return
+
+        const savedData = { ...(target.data || {}) }
+        const savedIndex = canvasActual.getObjects().indexOf(target)
+        const objects = target.getObjects()
+        const otherObjs = objects.filter(o => o !== textObj)
+
+        // Descomponer temporalmente el grupo para permitir edición directa en el lienzo
+        target.toActiveSelection()
+        canvasActual.discardActiveObject()
+
+        // Desactivar interacción con el vector SVG de fondo mientras se edita el texto
+        otherObjs.forEach(o => {
+          o.selectable = false
+          o.evented = false
+        })
+
+        // Activar y entrar en modo de edición de texto
+        textObj.selectable = true
+        textObj.evented = true
+        canvasActual.setActiveObject(textObj)
+
+        if (textObj.enterEditing) {
+          textObj.enterEditing()
+          if (textObj.selectAll) {
+            textObj.selectAll()
           }
         }
+        canvasActual.renderAll()
+
+        const alSalirEdicion = () => {
+          textObj.off('editing:exited', alSalirEdicion)
+
+          otherObjs.forEach(o => {
+            o.selectable = true
+            o.evented = true
+          })
+
+          const allObjs = [...otherObjs, textObj]
+          const sel = new fabric.ActiveSelection(allObjs, { canvas: canvasActual })
+          canvasActual.setActiveObject(sel)
+          const newGroup = sel.toGroup()
+
+          newGroup.set({
+            cornerColor: '#E5A93C',
+            cornerStyle: 'circle',
+            borderColor: '#E5A93C',
+            cornerSize: 8,
+            transparentCorners: false,
+            data: savedData
+          })
+
+          if (savedIndex >= 0) {
+            newGroup.moveTo(savedIndex)
+          }
+
+          canvasActual.setActiveObject(newGroup)
+          canvasActual.renderAll()
+          guardarEstado(canvasActual)
+        }
+
+        textObj.on('editing:exited', alSalirEdicion)
       }
     }
     canvas.on('mouse:dblclick', alHacerDobleClic)
 
-    // Listener para notificar al padre qué viñeta está seleccionada
+    // Listener para notificar al padre qué viñeta está seleccionada y gestionar la barra flotante de texto
     const comprobarSeleccion = (e) => {
       const obj = e.selected?.[0]
       const tipoObjeto = obj?.data?.type || obj?.data?.tipo || obj?.tipo
@@ -172,6 +318,31 @@ const MangaCanvas = forwardRef(function MangaCanvas({
       } else if (onVinetaSeleccionada) {
         onVinetaSeleccionada(null)
       }
+
+      // Detectar objeto de texto o bocadillo para barra contextual flotante
+      if (obj) {
+        let textObj = null
+        if (obj.type === 'i-text' || obj.type === 'text') {
+          textObj = obj
+        } else if (obj.type === 'group' && (obj.data?.type === 'balloon' || obj.data?.tipo === 'bocadillo' || obj.data?.tipo?.startsWith('bocadillo'))) {
+          textObj = obj.getObjects().find(o => o.type === 'i-text' || o.type === 'text')
+        }
+
+        if (textObj) {
+          setPropiedadesTexto({
+            targetObj: obj,
+            textObj: textObj,
+            fontFamily: textObj.fontFamily || 'Comic Relief',
+            fontSize: Math.round(textObj.fontSize || 18),
+            isBold: textObj.fontWeight === 'bold' || textObj.fontWeight === 700 || textObj.fontWeight === '700',
+            isItalic: textObj.fontStyle === 'italic',
+            textAlign: textObj.textAlign || 'center',
+            color: typeof textObj.fill === 'string' ? textObj.fill : '#000000'
+          })
+          return
+        }
+      }
+      setPropiedadesTexto(null)
     }
 
     canvas.on('selection:created', comprobarSeleccion)
@@ -179,11 +350,13 @@ const MangaCanvas = forwardRef(function MangaCanvas({
     canvas.on('selection:cleared', () => {
       limpiarGuias(canvas)
       if (onVinetaSeleccionada) onVinetaSeleccionada(null)
+      setPropiedadesTexto(null)
     })
 
     // Atajos de teclado
     const handleKeyDown = (e) => {
       if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return
+      if (fabricRef.current?.getActiveObject()?.isEditing) return
 
       if (e.key === 'Delete' || e.key === 'Backspace') {
         _eliminarSeleccion()
@@ -256,7 +429,115 @@ const MangaCanvas = forwardRef(function MangaCanvas({
       canvas.isDrawingMode = false
       canvas.defaultCursor = 'default'
       canvas.selection = true
+      canvas.forEachObject(obj => {
+        if (!obj.data?.esGuiaAlineacion) {
+          obj.selectable = true
+          obj.evented = true
+        }
+      })
       return
+    }
+
+    if (herramientaActiva === 'mano') {
+      canvas.isDrawingMode = false
+      canvas.selection = false
+      canvas.defaultCursor = 'grab'
+      canvas.discardActiveObject()
+      canvas.renderAll()
+
+      canvas.forEachObject(obj => {
+        obj.selectable = false
+        obj.evented = false
+      })
+
+      let isDragging = false
+      let lastPosX = 0
+      let lastPosY = 0
+
+      const onMouseDownPan = (opt) => {
+        isDragging = true
+        canvas.defaultCursor = 'grabbing'
+        lastPosX = opt.e.clientX
+        lastPosY = opt.e.clientY
+      }
+
+      const onMouseMovePan = (opt) => {
+        if (!isDragging) return
+        const vpt = canvas.viewportTransform
+        vpt[4] += opt.e.clientX - lastPosX
+        vpt[5] += opt.e.clientY - lastPosY
+        canvas.requestRenderAll()
+        lastPosX = opt.e.clientX
+        lastPosY = opt.e.clientY
+      }
+
+      const onMouseUpPan = () => {
+        isDragging = false
+        canvas.defaultCursor = 'grab'
+        canvas.setViewportTransform(canvas.viewportTransform)
+      }
+
+      canvas.on('mouse:down', onMouseDownPan)
+      canvas.on('mouse:move', onMouseMovePan)
+      canvas.on('mouse:up', onMouseUpPan)
+
+      return () => {
+        canvas.defaultCursor = 'default'
+        canvas.off('mouse:down', onMouseDownPan)
+        canvas.off('mouse:move', onMouseMovePan)
+        canvas.off('mouse:up', onMouseUpPan)
+        canvas.forEachObject(obj => {
+          if (!obj.data?.esGuiaAlineacion) {
+            obj.selectable = true
+            obj.evented = true
+          }
+        })
+      }
+    }
+
+    if (herramientaActiva === 'texto') {
+      canvas.isDrawingMode = false
+      canvas.selection = false
+      canvas.defaultCursor = 'text'
+
+      const onClickTexto = (opt) => {
+        if (opt.target && (opt.target.type === 'i-text' || opt.target.type === 'text')) {
+          return
+        }
+        const pointer = canvas.getPointer(opt.e)
+        const nuevoTexto = new fabric.IText('¡BOOM!', {
+          left: pointer.x,
+          top: pointer.y,
+          fontFamily: 'Bangers',
+          fontSize: 32,
+          fill: '#E53E3E',
+          stroke: '#000000',
+          strokeWidth: 1.5,
+          originX: 'center',
+          originY: 'center',
+          editable: true,
+          selectable: true,
+          cornerColor: '#E5A93C',
+          cornerStyle: 'circle',
+          borderColor: '#E5A93C',
+          cornerSize: 8,
+          transparentCorners: false,
+          data: { tipo: 'texto', esOnomatopeya: true }
+        })
+        canvas.add(nuevoTexto)
+        canvas.setActiveObject(nuevoTexto)
+        if (nuevoTexto.enterEditing) {
+          nuevoTexto.enterEditing()
+          if (nuevoTexto.selectAll) nuevoTexto.selectAll()
+        }
+        canvas.renderAll()
+        guardarEstado(canvas)
+      }
+
+      canvas.on('mouse:down', onClickTexto)
+      return () => {
+        canvas.off('mouse:down', onClickTexto)
+      }
     }
 
     if (herramientaActiva === 'pincel') {
@@ -272,7 +553,7 @@ const MangaCanvas = forwardRef(function MangaCanvas({
       }
     }
 
-    // Herramientas de inserción (viñeta, bocadillos, texto)
+    // Herramientas de inserción (viñeta, bocadillos, etc.)
     canvas.isDrawingMode = false
     canvas.defaultCursor = 'crosshair'
     canvas.selection = false
@@ -531,6 +812,51 @@ const MangaCanvas = forwardRef(function MangaCanvas({
       canvas.renderAll()
       guardarEstado(canvas)
     },
+    limpiarMarcoSeleccionado: () => {
+      const canvas = fabricRef.current
+      if (!canvas) return
+      const activo = canvas.getActiveObject()
+      if (!activo) {
+        alert('Por favor selecciona una viñeta para vaciar su contenido.')
+        return
+      }
+
+      const esPanel = activo.data?.type === 'panel' || activo.data?.tipo === 'vineta' || activo.type === 'rect'
+      const esImagen = activo.data?.type === 'panel_image' || activo.data?.tipo === 'imagen_generada' || activo.type === 'image'
+
+      if (esPanel) {
+        const targetPanelId = activo.data?.panelId || activo.data?.id
+        const imagenes = canvas.getObjects().filter(o => {
+          if (o.data?.type === 'panel_image' || o.data?.tipo === 'imagen_generada') {
+            if (targetPanelId && o.data?.panelId === targetPanelId) return true
+            const pb = activo.getBoundingRect(true)
+            const ib = o.getBoundingRect(true)
+            return Math.abs(ib.left - pb.left) < 25 && Math.abs(ib.top - pb.top) < 25
+          }
+          return false
+        })
+        imagenes.forEach(img => canvas.remove(img))
+        activo.set('fill', '#FFFFFF')
+        canvas.renderAll()
+        guardarEstado(canvas)
+      } else if (esImagen) {
+        const panelId = activo.data?.panelId
+        if (panelId) {
+          const panel = canvas.getObjects().find(o => 
+            (o.data?.type === 'panel' || o.data?.tipo === 'vineta' || o.type === 'rect') &&
+            o.data?.panelId === panelId
+          )
+          if (panel) panel.set('fill', '#FFFFFF')
+        }
+        canvas.remove(activo)
+        canvas.renderAll()
+        guardarEstado(canvas)
+      } else {
+        canvas.remove(activo)
+        canvas.renderAll()
+        guardarEstado(canvas)
+      }
+    },
     guardarAhora: _guardarAhora,
     aplicarPlantilla: aplicarPlantillaExterna,
 
@@ -709,14 +1035,17 @@ const MangaCanvas = forwardRef(function MangaCanvas({
       }
 
       if (!vinetaDestino && coords) {
-        const point = new fabric.Point(coords.x, coords.y)
         const objetos = canvas.getObjects()
         for (let i = objetos.length - 1; i >= 0; i--) {
           const obj = objetos[i]
-          const esPanel = obj.data?.type === 'panel' || obj.data?.tipo === 'vineta' || obj.type === 'rect'
-          if (esPanel && obj.containsPoint(point)) {
-            vinetaDestino = obj
-            break
+          const esPanel = !obj.data?.esGuiaAlineacion && (obj.data?.type === 'panel' || obj.data?.tipo === 'vineta' || (obj.type === 'rect' && !obj.data?.type))
+          if (esPanel) {
+            const pb = obj.getBoundingRect(true)
+            if (coords.x >= pb.left && coords.x <= pb.left + pb.width &&
+                coords.y >= pb.top && coords.y <= pb.top + pb.height) {
+              vinetaDestino = obj
+              break
+            }
           }
         }
       }
@@ -729,7 +1058,25 @@ const MangaCanvas = forwardRef(function MangaCanvas({
       }
 
       if (!vinetaDestino) {
-        vinetaDestino = canvas.getObjects().find(o => o.data?.type === 'panel' || o.data?.tipo === 'vineta')
+        const paneles = canvas.getObjects().filter(o => 
+          !o.data?.esGuiaAlineacion && (o.data?.type === 'panel' || o.data?.tipo === 'vineta' || (o.type === 'rect' && !o.data?.tipo))
+        )
+        const imagenes = canvas.getObjects().filter(o => 
+          o.data?.type === 'panel_image' || o.data?.tipo === 'imagen_generada' || o.type === 'image'
+        )
+        // Buscar primer marco disponible que aún no tenga imagen
+        const panelVacio = paneles.find(p => {
+          const pId = p.data?.panelId || p.data?.id
+          if (pId) {
+            return !imagenes.some(img => (img.data?.panelId || img.data?.id) === pId)
+          }
+          const pb = p.getBoundingRect(true)
+          return !imagenes.some(img => {
+            const ib = img.getBoundingRect(true)
+            return Math.abs(ib.left - pb.left) < 15 && Math.abs(ib.top - pb.top) < 15
+          })
+        })
+        vinetaDestino = panelVacio || paneles[0] || null
       }
 
       return new Promise((resolve, reject) => {
@@ -746,8 +1093,20 @@ const MangaCanvas = forwardRef(function MangaCanvas({
               const destH = vinetaDestino.height * (vinetaDestino.scaleY || 1)
               const destLeft = vinetaDestino.left
               const destTop = vinetaDestino.top
+              const targetPanelId = vinetaDestino.data?.panelId || vinetaDestino.data?.id
 
-              // Escalar la imagen en modo cover (Math.max(scaleX, scaleY))
+              // Eliminar imagen previa en esta viñeta para evitar apilamiento de capas
+              const imagenesPrevias = canvas.getObjects().filter(o => {
+                if (o.data?.type === 'panel_image' || o.data?.tipo === 'imagen_generada') {
+                  if (targetPanelId && (o.data?.panelId === targetPanelId || o.data?.id === targetPanelId)) return true
+                  const ib = o.getBoundingRect(true)
+                  return Math.abs(ib.left - destLeft) < 20 && Math.abs(ib.top - destTop) < 20
+                }
+                return false
+              })
+              imagenesPrevias.forEach(prev => canvas.remove(prev))
+
+              // Escalar la imagen en modo cover exacto
               const scaleX = destW / img.width
               const scaleY = destH / img.height
               const scale = Math.max(scaleX, scaleY)
@@ -760,6 +1119,8 @@ const MangaCanvas = forwardRef(function MangaCanvas({
               img.set({
                 left: imgLeft,
                 top: imgTop,
+                originX: 'left',
+                originY: 'top',
                 scaleX: scale,
                 scaleY: scale,
                 clipPath: new fabric.Rect({
@@ -771,11 +1132,16 @@ const MangaCanvas = forwardRef(function MangaCanvas({
                 }),
                 selectable: true,
                 hasControls: true,
+                cornerColor: '#E5A93C',
+                cornerStyle: 'circle',
+                borderColor: '#E5A93C',
+                cornerSize: 8,
+                transparentCorners: false,
                 tipo: 'imagen_generada',
                 data: {
                   type: 'panel_image',
                   tipo: 'imagen_generada',
-                  panelId: vinetaDestino.data?.panelId || vinetaDestino.data?.id,
+                  panelId: targetPanelId,
                   srcOriginal: imagenSrc
                 }
               })
@@ -800,10 +1166,17 @@ const MangaCanvas = forwardRef(function MangaCanvas({
               img.set({
                 left: posX,
                 top: posY,
+                originX: 'left',
+                originY: 'top',
                 scaleX: scale,
                 scaleY: scale,
                 selectable: true,
                 hasControls: true,
+                cornerColor: '#E5A93C',
+                cornerStyle: 'circle',
+                borderColor: '#E5A93C',
+                cornerSize: 8,
+                transparentCorners: false,
                 tipo: 'imagen_generada',
                 data: {
                   type: 'panel_image',
@@ -824,61 +1197,150 @@ const MangaCanvas = forwardRef(function MangaCanvas({
       })
     },
 
-    insertarBocadilloDialogo: (texto, x = CANVAS_W / 2, y = CANVAS_H / 2) => {
+    insertarBocadilloDialogo: (texto, posX = null, posY = null) => {
       const canvas = fabricRef.current
       if (!canvas) return
 
-      const ancho = Math.max(160, Math.min(260, (texto || '').length * 8 + 40))
-      const alto = 70
-      const izq = x - ancho / 2
-      const arr = y - alto / 2
+      let targetX = posX
+      let targetY = posY
 
-      const bocadillo = new fabric.Group([
-        new fabric.Ellipse({
-          rx: ancho / 2,
-          ry: alto / 2,
-          fill: 'white',
-          stroke: COLORES.bocadillo_dialogo,
-          strokeWidth: 2,
-          originX: 'center',
-          originY: 'center',
-        }),
-        new fabric.IText(texto || '—Diálogo—', {
-          fontSize: 12,
-          fill: '#1A1A1A',
-          fontFamily: 'Comic Relief',
-          originX: 'center',
-          originY: 'center',
-          textAlign: 'center',
-        })
-      ], {
-        left: izq,
-        top: arr,
-        selectable: true,
-        data: { tipo: 'bocadillo_dialogo' }
-      })
+      if (targetX === null || targetX === undefined || targetY === null || targetY === undefined) {
+        const activo = canvas.getActiveObject()
+        let vinetaDestino = null
+        if (activo && (activo.data?.type === 'panel' || activo.data?.tipo === 'vineta' || activo.type === 'rect')) {
+          vinetaDestino = activo
+        }
+        if (!vinetaDestino) {
+          vinetaDestino = canvas.getObjects().find(o => o.data?.type === 'panel' || o.data?.tipo === 'vineta')
+        }
 
-      canvas.add(bocadillo)
-      canvas.setActiveObject(bocadillo)
-      canvas.renderAll()
-      guardarEstado(canvas)
-      return bocadillo
+        if (vinetaDestino) {
+          const destW = vinetaDestino.width * (vinetaDestino.scaleX || 1)
+          const destH = vinetaDestino.height * (vinetaDestino.scaleY || 1)
+          targetX = vinetaDestino.left + destW / 2
+          targetY = vinetaDestino.top + destH * 0.38
+        } else {
+          targetX = CANVAS_W / 2
+          targetY = CANVAS_H / 2
+        }
+      }
+
+      const preset = balloonPresetsData?.speech1 || {
+        id: 'speech1',
+        tipo: 'speech',
+        svg: '/assets/editor/balloons/speech1.svg',
+        fontFamily: 'Comic Relief, Bangers, cursive',
+        fontSize: 18,
+        textColor: '#000000'
+      }
+
+      const fontPrincipal = preset.fontFamily ? preset.fontFamily.split(',')[0].replace(/['"]/g, '').trim() : 'Comic Relief'
+      const textoFinal = texto || '¡Escribe aquí!'
+
+      fabric.loadSVGFromURL(
+        preset.svg,
+        (objects, options) => {
+          if (!objects || objects.length === 0) {
+            // Fallback vectorial en caso de que el recurso SVG no responda
+            const ancho = Math.max(160, Math.min(260, textoFinal.length * 8 + 40))
+            const alto = 70
+            const bocadillo = new fabric.Group([
+              new fabric.Ellipse({
+                rx: ancho / 2,
+                ry: alto / 2,
+                fill: '#FFFFFF',
+                stroke: '#000000',
+                strokeWidth: 3,
+                originX: 'center',
+                originY: 'center',
+              }),
+              new fabric.IText(textoFinal, {
+                fontSize: 16,
+                fill: '#000000',
+                fontFamily: fontPrincipal,
+                originX: 'center',
+                originY: 'center',
+                textAlign: 'center',
+                editable: true,
+              })
+            ], {
+              left: targetX,
+              top: targetY,
+              originX: 'center',
+              originY: 'center',
+              selectable: true,
+              data: { type: 'balloon', tipo: 'bocadillo', presetId: preset.id }
+            })
+            canvas.add(bocadillo)
+            canvas.setActiveObject(bocadillo)
+            canvas.renderAll()
+            guardarEstado(canvas)
+            return
+          }
+
+          const svgElement = fabric.util.groupSVGElements(objects, options)
+          svgElement.set({
+            originX: 'center',
+            originY: 'center',
+          })
+
+          const textObj = new fabric.IText(textoFinal, {
+            fontFamily: fontPrincipal,
+            fontSize: preset.fontSize || 18,
+            fill: preset.textColor || '#000000',
+            originX: 'center',
+            originY: 'center',
+            textAlign: 'center',
+            editable: true,
+          })
+
+          const balloonGroup = new fabric.Group([svgElement, textObj], {
+            left: targetX,
+            top: targetY,
+            originX: 'center',
+            originY: 'center',
+            selectable: true,
+            hasControls: true,
+            cornerColor: '#E5A93C',
+            cornerStyle: 'circle',
+            borderColor: '#E5A93C',
+            cornerSize: 8,
+            transparentCorners: false,
+            data: {
+              type: 'balloon',
+              tipo: 'bocadillo',
+              presetId: preset.id,
+              balloonType: preset.tipo
+            }
+          })
+
+          canvas.add(balloonGroup)
+          canvas.setActiveObject(balloonGroup)
+          canvas.renderAll()
+          guardarEstado(canvas)
+        },
+        null,
+        { crossOrigin: 'anonymous' }
+      )
     },
   }))
 
   return (
     <div
-      className="flex items-center justify-center w-full h-full bg-rdc-primary overflow-auto p-4"
+      className="relative flex items-center justify-center w-full h-full bg-rdc-primary overflow-auto p-4"
       onDragOver={(e) => {
         e.preventDefault()
         e.dataTransfer.dropEffect = 'copy'
       }}
       onDrop={async (e) => {
         e.preventDefault()
-        if (!elementoCanvasRef.current) return
-        const rect = elementoCanvasRef.current.getBoundingClientRect()
-        const x = (e.clientX - rect.left) / zoomActual
-        const y = (e.clientY - rect.top) / zoomActual
+        const canvas = fabricRef.current
+        if (!elementoCanvasRef.current || !canvas) return
+
+        // Coordenadas precisas del lienzo usando canvas.getPointer
+        const pointer = canvas.getPointer(e)
+        const x = pointer.x
+        const y = pointer.y
 
         // 1. Detección de preset de bocadillo (JSON)
         const jsonStr = e.dataTransfer.getData('application/json')
@@ -903,6 +1365,179 @@ const MangaCanvas = forwardRef(function MangaCanvas({
         }
       }}
     >
+      {/* ── Barra contextual flotante de propiedades tipográficas ── */}
+      {propiedadesTexto && (
+        <div
+          className="absolute top-4 left-1/2 -translate-x-1/2 z-40
+                     bg-rdc-card/95 border border-rdc-border shadow-2xl rounded-2xl
+                     p-2 px-3 flex items-center gap-2 backdrop-blur-md animate-fade-in
+                     text-rdc-text font-titulo select-none max-w-fit"
+          onMouseDown={(e) => e.stopPropagation()}
+        >
+          {/* Selector de Familia Tipográfica */}
+          <div className="flex items-center gap-1">
+            <Type className="w-3.5 h-3.5 text-rdc-accent" />
+            <select
+              value={propiedadesTexto.fontFamily}
+              onChange={(e) => actualizarPropiedadTexto('fontFamily', e.target.value)}
+              className="bg-rdc-secondary border border-rdc-border text-rdc-text text-xs rounded-lg px-2 py-1 focus:ring-1 focus:ring-rdc-accent cursor-pointer outline-none"
+            >
+              {FUENTES_DISPONIBLES.map(f => (
+                <option key={f.id} value={f.id} style={{ fontFamily: f.id }}>
+                  {f.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="h-4 w-px bg-rdc-border mx-0.5" />
+
+          {/* Tamaño de fuente (- size +) */}
+          <div className="flex items-center gap-1 bg-rdc-secondary border border-rdc-border rounded-lg p-0.5">
+            <button
+              type="button"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => cambiarTamanoTexto(-2)}
+              className="w-5 h-5 flex items-center justify-center rounded hover:bg-rdc-primary text-rdc-muted hover:text-rdc-text transition-colors cursor-pointer"
+              title="Reducir tamaño"
+            >
+              <Minus className="w-3 h-3" />
+            </button>
+            <span className="text-xs font-mono font-bold px-1 min-w-[24px] text-center">
+              {propiedadesTexto.fontSize}
+            </span>
+            <button
+              type="button"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => cambiarTamanoTexto(2)}
+              className="w-5 h-5 flex items-center justify-center rounded hover:bg-rdc-primary text-rdc-muted hover:text-rdc-text transition-colors cursor-pointer"
+              title="Aumentar tamaño"
+            >
+              <Plus className="w-3 h-3" />
+            </button>
+          </div>
+
+          <div className="h-4 w-px bg-rdc-border mx-0.5" />
+
+          {/* Negrita & Cursiva */}
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={toggleNegrita}
+              className={`w-7 h-7 flex items-center justify-center rounded-lg border transition-all cursor-pointer ${
+                propiedadesTexto.isBold
+                  ? 'bg-rdc-accent text-white border-rdc-accent shadow-xs'
+                  : 'bg-rdc-secondary border-rdc-border text-rdc-muted hover:text-rdc-text hover:bg-rdc-primary'
+              }`}
+              title="Negrita"
+            >
+              <Bold className="w-3.5 h-3.5" />
+            </button>
+
+            <button
+              type="button"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={toggleCursiva}
+              className={`w-7 h-7 flex items-center justify-center rounded-lg border transition-all cursor-pointer ${
+                propiedadesTexto.isItalic
+                  ? 'bg-rdc-accent text-white border-rdc-accent shadow-xs'
+                  : 'bg-rdc-secondary border-rdc-border text-rdc-muted hover:text-rdc-text hover:bg-rdc-primary'
+              }`}
+              title="Cursiva"
+            >
+              <Italic className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          <div className="h-4 w-px bg-rdc-border mx-0.5" />
+
+          {/* Alineación */}
+          <div className="flex items-center gap-0.5 bg-rdc-secondary border border-rdc-border rounded-lg p-0.5">
+            <button
+              type="button"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => actualizarPropiedadTexto('textAlign', 'left')}
+              className={`p-1 rounded transition-colors cursor-pointer ${
+                propiedadesTexto.textAlign === 'left' ? 'bg-rdc-accent text-white' : 'text-rdc-muted hover:text-rdc-text'
+              }`}
+              title="Alinear a la izquierda"
+            >
+              <AlignLeft className="w-3.5 h-3.5" />
+            </button>
+            <button
+              type="button"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => actualizarPropiedadTexto('textAlign', 'center')}
+              className={`p-1 rounded transition-colors cursor-pointer ${
+                propiedadesTexto.textAlign === 'center' ? 'bg-rdc-accent text-white' : 'text-rdc-muted hover:text-rdc-text'
+              }`}
+              title="Centrar"
+            >
+              <AlignCenter className="w-3.5 h-3.5" />
+            </button>
+            <button
+              type="button"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => actualizarPropiedadTexto('textAlign', 'right')}
+              className={`p-1 rounded transition-colors cursor-pointer ${
+                propiedadesTexto.textAlign === 'right' ? 'bg-rdc-accent text-white' : 'text-rdc-muted hover:text-rdc-text'
+              }`}
+              title="Alinear a la derecha"
+            >
+              <AlignRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          <div className="h-4 w-px bg-rdc-border mx-0.5" />
+
+          {/* Paleta de Color */}
+          <div className="flex items-center gap-1.5">
+            {COLORES_PRESET.map(c => (
+              <button
+                key={c}
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => actualizarPropiedadTexto('fill', c)}
+                className={`w-4 h-4 rounded-full border transition-transform cursor-pointer ${
+                  propiedadesTexto.color.toLowerCase() === c.toLowerCase()
+                    ? 'scale-125 ring-2 ring-rdc-accent ring-offset-1 border-white shadow-xs'
+                    : 'border-slate-400 hover:scale-110'
+                }`}
+                style={{ backgroundColor: c }}
+                title={c}
+              />
+            ))}
+            {/* Color Picker nativo */}
+            <label
+              className="relative w-5 h-5 rounded-full border border-rdc-border overflow-hidden cursor-pointer flex items-center justify-center bg-rdc-secondary hover:ring-1 hover:ring-rdc-accent"
+              title="Color personalizado"
+            >
+              <Palette className="w-3 h-3 text-rdc-muted pointer-events-none" />
+              <input
+                type="color"
+                value={propiedadesTexto.color.startsWith('#') && propiedadesTexto.color.length === 7 ? propiedadesTexto.color : '#000000'}
+                onChange={(e) => actualizarPropiedadTexto('fill', e.target.value)}
+                className="opacity-0 absolute inset-0 w-full h-full cursor-pointer"
+              />
+            </label>
+          </div>
+
+          <div className="h-4 w-px bg-rdc-border mx-0.5" />
+
+          {/* Cerrar barra */}
+          <button
+            type="button"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => setPropiedadesTexto(null)}
+            className="p-1 rounded-lg text-rdc-muted hover:text-rdc-text hover:bg-rdc-primary transition-colors cursor-pointer"
+            title="Cerrar barra"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
+
       <div
         style={{ transform: `scale(${zoomActual})`, transformOrigin: 'top center' }}
         className="shadow-2xl transition-transform duration-100 ease-out"

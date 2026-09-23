@@ -3,28 +3,37 @@
     "id": "grid_1_splash",
     "nombre": "Página Splash (1 Viñeta)",
     "vinetas": [
-      { "id": "p1", "x": 0.05, "y": 0.05, "w": 0.9, "h": 0.9, "tipo": "rect" }
+      { "id": "p1", "x": 0.05, "y": 0.05, "w": 0.90, "h": 0.90, "tipo": "rect" }
+    ]
+  },
+  "grid_3_horizontal": {
+    "id": "grid_3_horizontal",
+    "nombre": "3 Tiras Horizontales (Dominical)",
+    "vinetas": [
+      { "id": "p1", "x": 0.05, "y": 0.050, "w": 0.90, "h": 0.290, "tipo": "rect" },
+      { "id": "p2", "x": 0.05, "y": 0.355, "w": 0.90, "h": 0.290, "tipo": "rect" },
+      { "id": "p3", "x": 0.05, "y": 0.660, "w": 0.90, "h": 0.290, "tipo": "rect" }
     ]
   },
   "grid_4_regular": {
     "id": "grid_4_regular",
-    "nombre": "Cuadrícula Bruguera (4 Viñetas 2x2)",
+    "nombre": "Cuadrícula 2x2 (Bruguera Clásico)",
     "vinetas": [
-      { "id": "p1", "x": 0.05, "y": 0.05, "w": 0.43, "h": 0.43, "tipo": "rect" },
-      { "id": "p2", "x": 0.52, "y": 0.05, "w": 0.43, "h": 0.43, "tipo": "rect" },
-      { "id": "p3", "x": 0.05, "y": 0.52, "w": 0.43, "h": 0.43, "tipo": "rect" },
-      { "id": "p4", "x": 0.52, "y": 0.52, "w": 0.43, "h": 0.43, "tipo": "rect" }
+      { "id": "p1", "x": 0.05, "y": 0.050, "w": 0.44, "h": 0.442, "tipo": "rect" },
+      { "id": "p2", "x": 0.51, "y": 0.050, "w": 0.44, "h": 0.442, "tipo": "rect" },
+      { "id": "p3", "x": 0.05, "y": 0.508, "w": 0.44, "h": 0.442, "tipo": "rect" },
+      { "id": "p4", "x": 0.51, "y": 0.508, "w": 0.44, "h": 0.442, "tipo": "rect" }
     ]
   },
-  "grid_5_dynamic": {
-    "id": "grid_5_dynamic",
+  "grid_5_action": {
+    "id": "grid_5_action",
     "nombre": "Acción Dinámica (5 Viñetas)",
     "vinetas": [
-      { "id": "p1", "x": 0.05, "y": 0.05, "w": 0.9, "h": 0.28, "tipo": "rect" },
-      { "id": "p2", "x": 0.05, "y": 0.36, "w": 0.43, "h": 0.28, "tipo": "rect" },
-      { "id": "p3", "x": 0.52, "y": 0.36, "w": 0.43, "h": 0.28, "tipo": "rect" },
-      { "id": "p4", "x": 0.05, "y": 0.67, "w": 0.43, "h": 0.28, "tipo": "rect" },
-      { "id": "p5", "x": 0.52, "y": 0.67, "w": 0.43, "h": 0.28, "tipo": "rect" }
+      { "id": "p1", "x": 0.05, "y": 0.050, "w": 0.90, "h": 0.350, "tipo": "rect" },
+      { "id": "p2", "x": 0.05, "y": 0.416, "w": 0.44, "h": 0.259, "tipo": "rect" },
+      { "id": "p3", "x": 0.51, "y": 0.416, "w": 0.44, "h": 0.259, "tipo": "rect" },
+      { "id": "p4", "x": 0.05, "y": 0.691, "w": 0.44, "h": 0.259, "tipo": "rect" },
+      { "id": "p5", "x": 0.51, "y": 0.691, "w": 0.44, "h": 0.259, "tipo": "rect" }
     ]
   }
 }

@@ -27,8 +27,6 @@ import ChapterNavigator from '../components/Editor/ChapterNavigator'
 import TemplatesSidebar from '../components/Editor/TemplatesSidebar'
 import BalloonsSidebar from '../components/Editor/BalloonsSidebar'
 import FXSidebar from '../components/Editor/FXSidebar'
-import PageTemplates from '../components/Editor/PageTemplates'
-import GenerateArtPanel from '../components/Editor/GenerateArtPanel'
 import VinetasCapituloPanel from '../components/Editor/VinetasCapituloPanel'
 import LanguageSelector from '../components/common/LanguageSelector'
 import ThemeToggle from '../components/common/ThemeToggle'
@@ -52,7 +50,7 @@ function EditorContent() {
 
   const { proyectoActivo, cargarProyecto } = useProjectStore()
   const {
-    paginaActiva, herramientaActiva,
+    paginaActiva, capituloActivo, herramientaActiva,
     guardando, ultimoGuardado,
     cargarCapitulos, guardarCanvas,
     setHerramientaActiva, limpiarEditor
@@ -68,10 +66,6 @@ function EditorContent() {
   const [zoom, setZoom] = useState(1)
   const [lectorAbierto, setLectorAbierto] = useState(false)
   const [snappingConfig, setSnappingConfig] = useState(CONFIG_SNAPPING_DEFAULT)
-  
-  // Estados para generación de imágenes en viñetas
-  const [vinetaActiva, setVinetaActiva] = useState(null)
-  const [mostrarGenerador, setMostrarGenerador] = useState(false)
 
   const TABS_DERECHA = [
     { id: 'plantillas', icon: LayoutGrid,    label: t('editor.tabs.templates') || 'Plantillas' },
@@ -214,7 +208,7 @@ function EditorContent() {
           onDeshacer={() => canvasRef.current?.deshacer()}
           onRehacer={() => canvasRef.current?.rehacer()}
           onEliminarSeleccion={() => canvasRef.current?.eliminarSeleccion()}
-          onLimpiarCanvas={() => canvasRef.current?.limpiar?.()}
+          onLimpiarCanvas={() => canvasRef.current?.limpiarMarcoSeleccionado?.()}
           puedeDeshacer={historial.puedeDeshacer}
           puedeRehacer={historial.puedeRehacer}
         />
@@ -232,6 +226,7 @@ function EditorContent() {
             puedeDeshacer={historial.puedeDeshacer}
             puedeRehacer={historial.puedeRehacer}
             paginaActiva={paginaActiva}
+            capituloActivo={capituloActivo}
             proyectoActivo={proyectoActivo}
           />
 
@@ -251,46 +246,17 @@ function EditorContent() {
                 </div>
               </div>
             ) : (
-              <>
-                <MangaCanvas
-                  ref={canvasRef}
-                  paginaActiva={paginaActiva}
-                  plantillaActiva={paginaActiva?.layout_template || 'grid_4_regular'}
-                  herramientaActiva={herramientaActiva}
-                  zoom={zoom}
-                  onZoomChange={setZoom}
-                  onGuardar={handleGuardar}
-                  onHistorialCambio={setHistorial}
-                  snappingConfig={snappingConfig}
-                  onVinetaSeleccionada={(vineta) => {
-                    setVinetaActiva(vineta)
-                    if (vineta) setMostrarGenerador(true)
-                  }}
-                />
-
-                {/* Panel de generación flotante */}
-                {mostrarGenerador && vinetaActiva && (
-                  <div className="absolute right-4 top-4 w-80 bg-rdc-secondary/95
-                                  border border-rdc-border rounded-2xl shadow-2xl backdrop-blur-md
-                                  overflow-y-auto max-h-[80vh] z-50 animate-in fade-in zoom-in-95 duration-150">
-                    <div className="p-4">
-                      <GenerateArtPanel
-                        proyecto={proyectoActivo}
-                        vinetaSeleccionada={vinetaActiva}
-                        onImagenGenerada={async (imagen, tipo) => {
-                          if (canvasRef.current?.insertarImagenEnVineta) {
-                            await canvasRef.current.insertarImagenEnVineta(
-                              imagen, tipo
-                            )
-                            setMostrarGenerador(false)
-                          }
-                        }}
-                        onCerrar={() => setMostrarGenerador(false)}
-                      />
-                    </div>
-                  </div>
-                )}
-              </>
+              <MangaCanvas
+                ref={canvasRef}
+                paginaActiva={paginaActiva}
+                plantillaActiva={paginaActiva?.layout_template || 'grid_4_regular'}
+                herramientaActiva={herramientaActiva}
+                zoom={zoom}
+                onZoomChange={setZoom}
+                onGuardar={handleGuardar}
+                onHistorialCambio={setHistorial}
+                snappingConfig={snappingConfig}
+              />
             )}
           </div>
         </div>

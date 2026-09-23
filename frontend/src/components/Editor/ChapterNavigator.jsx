@@ -74,17 +74,17 @@ export default function ChapterNavigator({ proyecto }) {
     <div className="flex flex-col h-full bg-rdc-secondary/95">
       {/* Header con botón "+ Capítulo" completo */}
       <div className="flex items-center justify-between p-3 border-b border-rdc-border">
-        <p className="text-rdc-muted text-xs uppercase tracking-wider font-titulo font-bold flex items-center gap-1.5">
+        <p className="text-rdc-muted text-xs tracking-wider font-titulo font-bold flex items-center gap-1.5">
           <Layers className="w-3.5 h-3.5 text-rdc-accent" />
-          {t('editor.structure') || 'Estructura'}
+          {t('editor.structure.title') || 'Estructura del Proyecto'}
         </p>
         <button
           onClick={() => setCreandoCap(true)}
           className="text-rdc-accent hover:text-rdc-accent-hover text-xs transition-colors duration-200 font-titulo font-semibold flex items-center gap-1 bg-rdc-card hover:bg-rdc-card/80 px-2.5 py-1 rounded-lg border border-rdc-border cursor-pointer shadow-xs"
-          title="Nuevo capítulo"
+          title={t('editor.structure.newChapter') || 'Nuevo capítulo'}
         >
           <Plus className="w-3 h-3" />
-          <span>{t('editor.newChapter') || '+ Capítulo'}</span>
+          <span>{t('editor.structure.newChapter') || '+ Nuevo Capítulo'}</span>
         </button>
       </div>
 

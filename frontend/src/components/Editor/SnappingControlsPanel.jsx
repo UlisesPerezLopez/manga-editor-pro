@@ -21,7 +21,7 @@ export default function SnappingControlsPanel({ config, onChangeConfig }) {
   return (
     <div className="flex flex-col h-full bg-rdc-secondary text-xs">
       <div className="p-3 border-b border-rdc-border">
-        <p className="font-titulo font-bold text-rdc-text uppercase tracking-wider text-[11px]">
+        <p className="font-titulo font-bold text-rdc-text tracking-wide text-xs">
           🧲 {t('editor.snapping.title')}
         </p>
       </div>
