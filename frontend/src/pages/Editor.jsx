@@ -318,6 +318,7 @@ function EditorContent() {
             )}
             {tabDerecha === 'vinetas' && (
               <VinetasCapituloPanel
+                canvasRef={canvasRef}
                 onInsertarImagen={async (url, vineta) => {
                   if (canvasRef.current?.insertarImagenEnVineta) {
                     await canvasRef.current.insertarImagenEnVineta(url, vineta)

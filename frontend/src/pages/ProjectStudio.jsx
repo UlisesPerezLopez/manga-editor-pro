@@ -55,13 +55,13 @@ function ProjectStudioContent() {
 
   // Secciones del workspace con i18n reactivo e iconos Manga oficiales
   const SECCIONES = useMemo(() => [
-    { id: 'guiones',      iconName: 'guionista_ia',         label: t('projectStudio.scriptWriter') || 'Guionista IA', proximamente: false },
-    { id: 'firma-visual', iconName: 'firma_visual',         label: t('projectStudio.visualSignature') || 'Firma Visual', proximamente: false },
-    { id: 'personajes',   iconName: 'personajes',           label: t('projectStudio.characters') || 'Personajes', proximamente: false },
-    { id: 'vinetas',      iconName: 'imagenes_ia_generadas', label: t('projectStudio.panelGenerator') || 'Generador de Viñetas', proximamente: false },
-    { id: 'editor',       iconName: 'editor_paginas',       label: t('projectStudio.pageEditor') || 'Editor de Páginas', proximamente: false }, 
-    { id: 'analitica',    iconName: 'analitica_engagement', label: t('analytics.title') || 'Analítica y Engagement', proximamente: false },
-    { id: 'exportar',     iconName: 'exportar',             label: t('projectStudio.export') || 'Exportar', proximamente: false },
+    { id: 'guiones',      iconName: 'guionista_ia',         label: t('sidebar.scriptWriter') || t('projectStudio.scriptWriter') || 'Guionista IA', proximamente: false },
+    { id: 'firma-visual', iconName: 'firma_visual',         label: t('sidebar.visualSignature') || t('projectStudio.visualSignature') || 'Firma Visual', proximamente: false },
+    { id: 'personajes',   iconName: 'personajes',           label: t('sidebar.characters') || t('projectStudio.characters') || 'Personajes', proximamente: false },
+    { id: 'vinetas',      iconName: 'imagenes_ia_generadas', label: t('sidebar.panelArtStudio') || t('projectStudio.panelGenerator') || 'Generador de Viñetas', proximamente: false },
+    { id: 'editor',       iconName: 'editor_paginas',       label: t('sidebar.pageEditor') || t('projectStudio.pageEditor') || 'Editor de Páginas', proximamente: false }, 
+    { id: 'analitica',    iconName: 'analitica_engagement', label: t('sidebar.analytics') || t('analytics.title') || 'Analítica y Engagement', proximamente: false },
+    { id: 'exportar',     iconName: 'exportar',             label: t('sidebar.export') || t('projectStudio.export') || 'Exportar', proximamente: false },
   ], [t])
 
   const cargarCapitulos = async (pId = (id ? parseInt(id, 10) : null)) => {
@@ -268,7 +268,7 @@ function ProjectStudioContent() {
         <aside className="w-56 bg-rdc-secondary border-r border-rdc-border
                           flex flex-col flex-shrink-0 py-4">
           <p className="text-rdc-muted text-xs uppercase px-4 mb-3 tracking-wider font-titulo">
-            {t('projectStudio.tools') || 'Herramientas'}
+            {t('sidebar.tools') || t('projectStudio.tools') || 'Herramientas'}
           </p>
           <div className="space-y-1 px-2">
             {SECCIONES.map((sec) => {
@@ -299,7 +299,7 @@ function ProjectStudioContent() {
                   <div className="min-w-0 flex-1">
                     <span className="font-titulo text-xs block truncate">{sec.label}</span>
                     {sec.proximamente && (
-                      <p className="text-[10px] opacity-60">Próximamente</p>
+                      <p className="text-[10px] opacity-60">{t('sidebar.comingSoon') || 'Próximamente'}</p>
                     )}
                   </div>
                 </button>
@@ -310,13 +310,13 @@ function ProjectStudioContent() {
           {/* Info del proyecto en el sidebar */}
           <div className="mt-auto px-4 pt-4 border-t border-rdc-border">
             <p className="text-rdc-muted text-xs mb-2 font-titulo uppercase tracking-wider font-semibold">
-              {t('projectStudio.visualSignature') || 'Firma Visual'}
+              {t('sidebar.visualSignature') || t('projectStudio.visualSignature') || 'Firma Visual'}
             </p>
             {(proyectoActivo?.style_locked || proyectoActivo?.estilo_visual || proyectoActivo?.estilo_legendario) ? (
               <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-3 shadow-xs">
                 <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 text-xs font-titulo font-bold">
                   <CheckCircle2 className="w-3.5 h-3.5" />
-                  <span>Firma Calibrada</span>
+                  <span>{t('sidebar.signatureCalibrated') || 'Firma Calibrada'}</span>
                 </div>
                 {(proyectoActivo?.estilo_visual || proyectoActivo?.estilo_legendario) && (
                   <p className="text-emerald-700 dark:text-emerald-300 text-xs mt-1 capitalize font-titulo font-semibold truncate">
@@ -328,10 +328,10 @@ function ProjectStudioContent() {
               <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 shadow-xs">
                 <div className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400 text-xs font-titulo font-bold">
                   <AlertTriangle className="w-3.5 h-3.5" />
-                  <span>Sin Firma Visual</span>
+                  <span>{t('sidebar.noVisualSignature') || 'Sin Firma Visual'}</span>
                 </div>
                 <p className="text-rdc-muted text-[11px] mt-1">
-                  Pendiente de calibración
+                  {t('sidebar.pendingCalibration') || 'Pendiente de calibración'}
                 </p>
               </div>
             )}
@@ -369,7 +369,7 @@ function ProjectStudioContent() {
               <div className="mb-6">
                 <h2 className="text-2xl font-black flex items-center gap-3 font-titulo text-slate-900 dark:text-white">
                   <MangaIcon name="firma_visual" size={28} />
-                  <span>Firma Visual</span>
+                  <span>{t('sidebar.visualSignature') || t('projectStudio.visualSignature') || 'Firma Visual'}</span>
                 </h2>
                 <p className="text-rdc-muted text-sm mt-1">
                   {modoActual === 'propio'

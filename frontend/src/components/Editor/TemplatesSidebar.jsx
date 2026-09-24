@@ -30,6 +30,16 @@ export default function TemplatesSidebar({ canvasRef, onAplicarPlantilla, planti
     }
   }
 
+  const getNombrePlantilla = (p) => {
+    switch (p.id) {
+      case 'grid_1_splash': return t('editor.templatesSidebar.splash') || p.nombre
+      case 'grid_3_horizontal': return t('editor.templatesSidebar.twoHorizontal') || p.nombre
+      case 'grid_4_regular': return t('editor.templatesSidebar.bruguera') || p.nombre
+      case 'grid_5_action': return t('editor.templatesSidebar.actionFive') || p.nombre
+      default: return p.nombre
+    }
+  }
+
   return (
     <div className="flex flex-col h-full bg-rdc-secondary text-rdc-text">
       {/* ── Cabecera del Panel ── */}
@@ -37,11 +47,11 @@ export default function TemplatesSidebar({ canvasRef, onAplicarPlantilla, planti
         <div className="flex items-center gap-2">
           <LayoutTemplate className="w-4 h-4 text-rdc-accent" />
           <h3 className="font-titulo text-xs font-black uppercase tracking-wider text-rdc-text">
-            {t('editor.tabs.templates') || 'Plantillas de Página'}
+            {t('editor.templatesSidebar.title') || 'Plantillas de Maquetación'}
           </h3>
         </div>
         <p className="text-[11px] text-rdc-muted leading-tight">
-          Selecciona una cuadrícula para generar los marcos de viñetas en tu página de manga.
+          {t('editor.templatesSidebar.subtitle') || 'Selecciona una retícula para construir los marcos de viñetas en tu página.'}
         </p>
       </div>
 
@@ -49,7 +59,7 @@ export default function TemplatesSidebar({ canvasRef, onAplicarPlantilla, planti
       <div className="flex-1 overflow-y-auto p-3 space-y-3">
         {plantillas.length === 0 ? (
           <div className="p-4 text-center rounded-xl border border-dashed border-rdc-border text-rdc-muted text-xs">
-            No se encontraron plantillas de página.
+            {t('editor.templatesSidebar.noTemplates') || 'No se encontraron plantillas de página.'}
           </div>
         ) : (
           plantillas.map((p) => {
@@ -69,10 +79,10 @@ export default function TemplatesSidebar({ canvasRef, onAplicarPlantilla, planti
                 {/* Cabecera de la plantilla */}
                 <div className="flex items-center justify-between">
                   <span className="font-titulo text-xs font-bold text-rdc-text group-hover:text-rdc-accent transition-colors truncate">
-                    {p.nombre}
+                    {getNombrePlantilla(p)}
                   </span>
                   <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-rdc-card border border-rdc-border text-rdc-muted">
-                    {numVinetas} {numVinetas === 1 ? 'viñeta' : 'viñetas'}
+                    {numVinetas} {t('editor.tabs.panels') || 'viñetas'}
                   </span>
                 </div>
 
@@ -114,12 +124,12 @@ export default function TemplatesSidebar({ canvasRef, onAplicarPlantilla, planti
                     {esActiva ? (
                       <>
                         <Check className="w-3 h-3" />
-                        <span>Activa</span>
+                        <span>{t('common.active') || 'Activa'}</span>
                       </>
                     ) : (
                       <>
                         <Grid className="w-3 h-3" />
-                        <span>Aplicar al Lienzo</span>
+                        <span>{t('editor.templatesSidebar.applyToCanvas') || 'Aplicar al Lienzo'}</span>
                       </>
                     )}
                   </button>
@@ -134,7 +144,7 @@ export default function TemplatesSidebar({ canvasRef, onAplicarPlantilla, planti
       <div className="p-2.5 border-t border-rdc-border bg-rdc-primary/50 text-[11px] text-rdc-muted font-titulo flex items-center justify-between flex-shrink-0">
         <span className="flex items-center gap-1">
           <Sparkles className="w-3 h-3 text-rdc-accent" />
-          Marcos 4px Black
+          {t('editor.tools.panel') || 'Marcos'} 4px
         </span>
         <span className="text-[10px] font-mono">595 × 842 px</span>
       </div>

@@ -3,11 +3,13 @@
 // Proporciona sub-pestañas ergonómicas para alternar entre líneas cinéticas/screentones y efectos sonoros.
 
 import React, { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Sparkles, Zap } from 'lucide-react'
 import FXSidebar from './FXSidebar'
 import SFXSidebar from './SFXSidebar'
 
 export default function EfectosYSFXPanel({ canvasRef, onActualizar, onInsertarSFX }) {
+  const { t } = useTranslation()
   const [subTab, setSubTab] = useState('fx') // 'fx' (cinéticos) | 'sfx' (onomatopeyas)
 
   return (
@@ -23,10 +25,10 @@ export default function EfectosYSFXPanel({ canvasRef, onActualizar, onInsertarSF
                 ? 'bg-amber-500 text-slate-950 shadow-xs'
                 : 'text-rdc-muted hover:text-rdc-text hover:bg-rdc-card'
             }`}
-            title="Líneas cinéticas, velocidad, ondas de choque y tramas screentone manga"
+            title={t('editor.fx.linesAndTonesTitle')}
           >
             <Sparkles className="w-3.5 h-3.5" />
-            <span>Líneas & Tramas</span>
+            <span>{t('editor.fx.linesAndTones')}</span>
           </button>
 
           <button
@@ -37,10 +39,10 @@ export default function EfectosYSFXPanel({ canvasRef, onActualizar, onInsertarSF
                 ? 'bg-amber-500 text-slate-950 shadow-xs'
                 : 'text-rdc-muted hover:text-rdc-text hover:bg-rdc-card'
             }`}
-            title="Galería de onomatopeyas de impacto, cómics y manga katakana"
+            title={t('editor.fx.sfxTitle')}
           >
             <Zap className="w-3.5 h-3.5" />
-            <span>Onomatopeyas</span>
+            <span>{t('editor.tabs.sfx')}</span>
           </button>
         </div>
       </div>

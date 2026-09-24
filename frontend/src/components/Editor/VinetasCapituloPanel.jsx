@@ -4,6 +4,7 @@
 // así como generar bocadillos de diálogo con rotulación automática.
 
 import React, { useEffect, useState, useMemo, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Image as ImageIcon,
   Plus,
@@ -19,9 +20,11 @@ import {
 import useProjectStore from '../../store/projectStore'
 import useEditorStore from '../../store/editorStore'
 import { obtenerUrlImagen } from '../../services/api'
+import { insertarImagenEnVineta } from './MangaCanvas'
 import Spinner from '../UI/Spinner'
 
-export default function VinetasCapituloPanel({ onInsertarImagen, onCrearBocadillo }) {
+export default function VinetasCapituloPanel({ onInsertarImagen, onCrearBocadillo, canvasRef }) {
+  const { t } = useTranslation()
   const {
     proyectoActivo,
     cargarVinetasCatalogo,
@@ -70,10 +73,58 @@ export default function VinetasCapituloPanel({ onInsertarImagen, onCrearBocadill
     }
   }
 
+  const formatPlano = (plano) => {
+    if (!plano) return t('editor.panelsSidebar.shotTypes.medium') || 'Plano Medio'
+    const p = plano.toLowerCase().replace(/[-_ ]/g, '')
+    if (p.includes('wide') || p.includes('general') || p.includes('panoramico')) {
+      return t('editor.panelsSidebar.shotTypes.wide') || 'Plano General'
+    }
+    if (p.includes('close') || p.includes('primer')) {
+      return t('editor.panelsSidebar.shotTypes.closeUp') || 'Primer Plano'
+    }
+    if (p.includes('full') || p.includes('entero')) {
+      return t('editor.panelsSidebar.shotTypes.full') || 'Plano Entero'
+    }
+    return t('editor.panelsSidebar.shotTypes.medium') || 'Plano Medio'
+  }
+
   // Obtener viñetas filtradas por el capítulo seleccionado (combinando BD + memoria en tiempo real)
   const vinetas = useMemo(() => {
     return getVinetasCapitulo(capituloSeleccionado)
   }, [getVinetasCapitulo, capituloSeleccionado, vinetasCatalogo, vinetasEstudio])
+
+  const handleInsertarVineta = (vin) => {
+    const canvas = canvasRef?.current?.getFabricCanvas?.() || canvasRef?.current?.canvas
+    const url = vin.imagen_url
+
+    if (canvas) {
+      // 1. Verificar si hay un marco seleccionado en el canvas
+      const activo = canvas.getActiveObject()
+      let marcoDestino = null
+      if (activo && (activo.data?.tipo === 'vineta' || activo.data?.type === 'panel')) {
+        marcoDestino = activo
+      } else {
+        // 2. Si no, buscar el primer marco disponible (tipo === 'vineta')
+        const marcos = canvas.getObjects().filter(o => o.data?.tipo === 'vineta' || o.data?.type === 'panel')
+        const imagenes = canvas.getObjects().filter(o => o.data?.tipo === 'panel_image')
+        const marcoVacio = marcos.find(m => {
+          const mId = m.data?.panelId || m.data?.id
+          return !imagenes.some(img => (img.data?.panelId || img.data?.id) === mId)
+        })
+        marcoDestino = marcoVacio || marcos[0]
+      }
+
+      if (marcoDestino) {
+        insertarImagenEnVineta(canvas, url, marcoDestino)
+        return
+      }
+    }
+
+    if (onInsertarImagen) {
+      const urlCompleta = obtenerUrlImagen(vin.imagen_url)
+      onInsertarImagen(urlCompleta, vin)
+    }
+  }
 
   return (
     <div className="flex flex-col h-full bg-rdc-secondary text-rdc-text">
@@ -83,7 +134,7 @@ export default function VinetasCapituloPanel({ onInsertarImagen, onCrearBocadill
           <div className="flex items-center gap-2">
             <Film className="w-4 h-4 text-rdc-accent" />
             <h3 className="font-titulo text-xs font-black uppercase tracking-wider text-rdc-text">
-              Viñetas del Capítulo
+              {t('editor.panelsSidebar.title')}
             </h3>
           </div>
           <button
@@ -91,7 +142,7 @@ export default function VinetasCapituloPanel({ onInsertarImagen, onCrearBocadill
             onClick={() => proyectoActivo?.id && cargarVinetasCatalogo(proyectoActivo.id)}
             disabled={cargandoVinetasCatalogo || subiendo}
             className="text-rdc-muted hover:text-rdc-accent transition-colors p-1 rounded-md cursor-pointer disabled:opacity-50"
-            title="Recargar catálogo de viñetas"
+            title={t('editor.panelsSidebar.reloadCatalog')}
           >
             <RefreshCw className={`w-3.5 h-3.5 ${cargandoVinetasCatalogo || subiendo ? 'animate-spin' : ''}`} />
           </button>
@@ -100,7 +151,9 @@ export default function VinetasCapituloPanel({ onInsertarImagen, onCrearBocadill
         {/* Selector de Capítulo */}
         {capitulos && capitulos.length > 0 && (
           <div className="flex items-center gap-2">
-            <span className="text-[11px] font-bold text-rdc-muted font-titulo">Capítulo:</span>
+            <span className="text-[11px] font-bold text-rdc-muted font-titulo">
+              {t('editor.panelsSidebar.chapter')}:
+            </span>
             <select
               value={capituloSeleccionado}
               onChange={(e) => setCapituloSeleccionado(Number(e.target.value))}
@@ -108,7 +161,7 @@ export default function VinetasCapituloPanel({ onInsertarImagen, onCrearBocadill
             >
               {capitulos.map((c) => (
                 <option key={c.id || c.numero} value={c.numero}>
-                  Capítulo {c.numero} {c.titulo ? `— ${c.titulo}` : ''}
+                  {t('editor.panelsSidebar.chapter')} {c.numero} {c.titulo ? `— ${c.titulo}` : ''}
                 </option>
               ))}
             </select>
@@ -119,34 +172,33 @@ export default function VinetasCapituloPanel({ onInsertarImagen, onCrearBocadill
         <input
           type="file"
           ref={fileInputRef}
-          onChange={handleSeleccionarArchivos}
           multiple
           accept=".png,.jpg,.jpeg,.webp"
           className="hidden"
+          onChange={handleSeleccionarArchivos}
         />
-
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
           disabled={subiendo || cargandoVinetasCatalogo}
           className="w-full py-1.5 px-2.5 rounded-lg bg-rdc-card hover:bg-rdc-primary border border-rdc-border hover:border-rdc-accent text-rdc-text text-xs font-titulo font-bold flex items-center justify-center gap-2 shadow-xs transition-all cursor-pointer disabled:opacity-50"
-          title="Importar imágenes locales (.png, .jpg, .webp)"
+          title={t('editor.panelsSidebar.uploadImages')}
         >
           {subiendo ? (
             <>
               <RefreshCw className="w-3.5 h-3.5 animate-spin text-rdc-accent" />
-              <span>Importando imágenes...</span>
+              <span>{t('editor.panelsSidebar.importing')}</span>
             </>
           ) : (
             <>
               <FolderUp className="w-3.5 h-3.5 text-rdc-accent" />
-              <span>📂 Subir / Importar Imágenes</span>
+              <span>📂 {t('editor.panelsSidebar.uploadImages')}</span>
             </>
           )}
         </button>
 
         <p className="text-[11px] text-rdc-muted leading-tight">
-          Arrastra una viñeta al lienzo o pulsa <strong>Insertar</strong> para colocarla en el marco seleccionado.
+          {t('editor.panelsSidebar.dragHint')}
         </p>
       </div>
 
@@ -154,16 +206,16 @@ export default function VinetasCapituloPanel({ onInsertarImagen, onCrearBocadill
       <div className="flex-1 overflow-y-auto p-3 space-y-3">
         {cargandoVinetasCatalogo ? (
           <div className="py-12 text-center">
-            <Spinner texto="Cargando viñetas del capítulo..." size="sm" />
+            <Spinner texto={t('editor.panelsSidebar.loadingPanels')} size="sm" />
           </div>
         ) : vinetas.length === 0 ? (
           <div className="p-4 text-center rounded-xl border border-dashed border-rdc-border bg-rdc-primary/40 space-y-2 mt-2">
             <ImageIcon className="w-8 h-8 text-rdc-muted mx-auto opacity-40" />
             <p className="font-titulo text-xs font-bold text-rdc-text">
-              No hay viñetas generadas en este capítulo
+              {t('editor.panelsSidebar.noPanels')}
             </p>
             <p className="text-[11px] text-rdc-muted leading-relaxed">
-              Genera ilustraciones con FLUX.1 en la herramienta "Generador de Viñetas" del Studio para maquetarlas aquí.
+              {t('editor.panelsSidebar.noPanelsDesc')}
             </p>
           </div>
         ) : (
@@ -174,7 +226,7 @@ export default function VinetasCapituloPanel({ onInsertarImagen, onCrearBocadill
                 key={vin.id || idx}
                 draggable={true}
                 onDragStart={(e) => {
-                  e.dataTransfer.setData('text/plain', urlCompleta)
+                  e.dataTransfer.setData('text/plain', vin.imagen_url)
                   e.dataTransfer.setData('application/json', JSON.stringify(vin))
                   e.dataTransfer.effectAllowed = 'copy'
                 }}
@@ -189,11 +241,11 @@ export default function VinetasCapituloPanel({ onInsertarImagen, onCrearBocadill
                     loading="lazy"
                   />
                   <div className="absolute top-1.5 left-1.5 px-2 py-0.5 rounded-md bg-black/75 text-white font-mono text-[10px] font-bold">
-                    Pág. {vin.pagina_num} · Viñeta #{vin.vineta_num}
+                    {t('reader.page') || 'Pág.'} {vin.pagina_num} · #{vin.vineta_num}
                   </div>
                   <div className="absolute bottom-1.5 right-1.5 flex items-center gap-1 px-1.5 py-0.5 rounded bg-black/70 text-white text-[10px] font-medium">
                     <Move className="w-3 h-3 text-amber-300" />
-                    <span>Arrastrar</span>
+                    <span>{t('editor.panelsSidebar.drag')}</span>
                   </div>
                 </div>
 
@@ -201,7 +253,7 @@ export default function VinetasCapituloPanel({ onInsertarImagen, onCrearBocadill
                 <div className="space-y-1">
                   <div className="flex items-center justify-between text-[11px]">
                     <span className="font-titulo font-bold text-rdc-accent truncate">
-                      {vin.plano || 'Plano Medio'}
+                      {formatPlano(vin.plano)}
                     </span>
                   </div>
 
@@ -224,12 +276,12 @@ export default function VinetasCapituloPanel({ onInsertarImagen, onCrearBocadill
                 <div className="flex items-center gap-1.5 pt-1">
                   <button
                     type="button"
-                    onClick={() => onInsertarImagen?.(urlCompleta, vin)}
+                    onClick={() => handleInsertarVineta(vin)}
                     className="flex-1 py-1 px-2 rounded-lg bg-rdc-accent hover:bg-rdc-accent-hover text-white text-[11px] font-titulo font-bold flex items-center justify-center gap-1 shadow-xs transition-colors cursor-pointer"
-                    title="Insertar en la viñeta activa del lienzo"
+                    title={t('editor.panelsSidebar.insert')}
                   >
                     <Plus className="w-3 h-3" />
-                    <span>Insertar</span>
+                    <span>{t('editor.panelsSidebar.insert')}</span>
                   </button>
 
                   {vin.dialogo && onCrearBocadillo && (
@@ -237,10 +289,10 @@ export default function VinetasCapituloPanel({ onInsertarImagen, onCrearBocadill
                       type="button"
                       onClick={() => onCrearBocadillo(vin.dialogo)}
                       className="py-1 px-2 rounded-lg border border-rdc-border bg-rdc-secondary hover:bg-rdc-card text-rdc-text text-[11px] font-titulo font-semibold flex items-center justify-center gap-1 shadow-xs transition-colors cursor-pointer"
-                      title="Insertar bocadillo con el diálogo de esta viñeta"
+                      title={t('editor.panelsSidebar.insertBalloon')}
                     >
                       <MessageSquare className="w-3 h-3 text-indigo-400" />
-                      <span>Bocadillo</span>
+                      <span>{t('editor.panelsSidebar.insertBalloon')}</span>
                     </button>
                   )}
                 </div>
@@ -252,9 +304,9 @@ export default function VinetasCapituloPanel({ onInsertarImagen, onCrearBocadill
 
       {/* ── Footer / Contador ── */}
       <div className="p-2.5 border-t border-rdc-border bg-rdc-primary/50 flex items-center justify-between text-[11px] text-rdc-muted font-mono flex-shrink-0">
-        <span>{vinetas.length} ilustraciones</span>
+        <span>{t('editor.panelsSidebar.illustrationsCount', { count: vinetas.length })}</span>
         <span className="text-[10px] text-emerald-500 font-sans font-bold flex items-center gap-1">
-          <CheckCircle2 className="w-3 h-3" /> Activas para rotulación
+          <CheckCircle2 className="w-3 h-3" /> {t('editor.panelsSidebar.activeForLettering')}
         </span>
       </div>
     </div>

@@ -748,10 +748,10 @@ export default function ScriptGenerator({
             </div>
             <div>
               <p className="text-amber-700 dark:text-amber-300 text-sm font-bold font-titulo">
-                Modo Creación Propia Activo
+                {t('studio.ownCreationModeActive') || 'Modo Creación Propia Activo'}
               </p>
               <p className="text-rdc-muted text-xs mt-0.5 leading-relaxed">
-                Puedes calibrar y bloquear tu <strong>Firma Visual personalizada</strong> subiendo tus referencias artísticas para guiar el estilo de los personajes y páginas generadas.
+                {t('studio.calibrateVisualSignatureDesc') || 'Puedes calibrar y bloquear tu Firma Visual personalizada subiendo tus referencias artísticas para guiar el estilo de los personajes y páginas generadas.'}
               </p>
             </div>
           </div>
@@ -760,7 +760,7 @@ export default function ScriptGenerator({
               onClick={onIrAFirmaVisual}
               className="flex-shrink-0 px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-titulo font-bold rounded-xl transition-all shadow-sm flex items-center gap-1.5 cursor-pointer"
             >
-              <span>Firma Visual</span>
+              <span>{t('sidebar.visualSignature') || 'Firma Visual'}</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           )}
@@ -779,10 +779,10 @@ export default function ScriptGenerator({
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
               <span className="text-purple-600 dark:text-purple-300 text-sm font-bold font-titulo">
-                Estilo Legendario: {estiloLegendarioInfo?.name || proyecto?.estilo_legendario?.replace(/_/g, ' ') || 'Estilo Maestro'}
+                {t('studio.legendaryStyle') || 'Estilo Legendario'}: {estiloLegendarioInfo?.name || proyecto?.estilo_legendario?.replace(/_/g, ' ') || 'Estilo Maestro'}
               </span>
               <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded-md bg-purple-500/20 text-purple-600 dark:text-purple-300 font-bold">
-                Bloqueado
+                {t('studio.locked') || 'Bloqueado'}
               </span>
             </div>
             <p className="text-rdc-muted text-xs mt-0.5 leading-relaxed">
@@ -810,10 +810,10 @@ export default function ScriptGenerator({
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="font-bold text-slate-900 dark:text-white text-sm font-titulo">
-                  Estilo Sorteado: {estiloSorteado.name}
+                  {t('studio.sortedStyle') || 'Estilo Sorteado'}: {estiloSorteado.name}
                 </span>
                 <span className="text-[10px] uppercase tracking-wider font-semibold px-2 py-0.5 rounded bg-amber-500/20 text-amber-700 dark:text-amber-400 border border-amber-500/30">
-                  Aleatorio Bloqueado
+                  {t('studio.randomLocked') || 'Aleatorio Bloqueado'}
                 </span>
               </div>
               <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5 leading-relaxed">
@@ -828,7 +828,7 @@ export default function ScriptGenerator({
             className="flex-shrink-0 px-3.5 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 text-xs font-titulo font-bold rounded-xl transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer active:scale-95"
             title="Sortear otro estilo del catálogo oficial de 25 estilos"
           >
-            <span>🎲 Sortear Otro Estilo</span>
+            <span>{t('studio.rollAnotherStyle') || '🎲 Sortear Otro Estilo'}</span>
           </button>
         </div>
       )}
@@ -840,13 +840,13 @@ export default function ScriptGenerator({
             id: 'sinopsis',
             iconName: 'contador_capitulos',
             label: t('scriptGenerator.tabSinopsis') || '1.1 Sinopsis y Arcos',
-            desc: 'Estructura general, premisa y personajes'
+            desc: t('script.generalStructureDesc') || 'Estructura general, premisa y personajes'
           },
           {
             id: 'capitulo',
             iconName: 'guionista_ia',
             label: t('scriptGenerator.tabCapitulo') || '1.2 Guion de Capítulo',
-            desc: 'Desglose técnico de escenas, viñetas y diálogos'
+            desc: t('script.technicalBreakdownDesc') || 'Desglose técnico de escenas, viñetas y diálogos'
           },
         ].map((m) => {
           const activo = modo === m.id
@@ -903,13 +903,13 @@ export default function ScriptGenerator({
                 }`}
               >
                 {GENEROS_DISPONIBLES.map(g => (
-                  <option key={g} value={g}>{g}</option>
+                  <option key={g} value={g}>{t(`script.genres.${g}`) || g}</option>
                 ))}
               </select>
               {modoProyecto === 'aleatorio' && (
                 <p className="text-[11px] text-amber-600 dark:text-amber-400 mt-1.5 flex items-center gap-1.5 font-titulo leading-tight">
                   <Lock className="w-3 h-3 flex-shrink-0" />
-                  <span>Género fijado por el estilo aleatorio. Pulsa "Sortear Otro Estilo" para cambiarlo.</span>
+                  <span>{t('script.lockedGenreNote') || 'Género fijado por el estilo aleatorio. Pulsa "Sortear Otro Estilo" para cambiarlo.'}</span>
                 </p>
               )}
             </div>
@@ -926,7 +926,7 @@ export default function ScriptGenerator({
                 className="w-full bg-rdc-secondary border border-rdc-border rounded-xl px-3.5 py-2.5 text-rdc-text text-xs sm:text-sm font-medium focus:outline-none focus:border-rdc-accent transition-colors"
               >
                 {TONOS_DISPONIBLES.map(tOption => (
-                  <option key={tOption} value={tOption}>{tOption}</option>
+                  <option key={tOption} value={tOption}>{t(`script.tones.${tOption}`) || tOption}</option>
                 ))}
               </select>
             </div>
@@ -954,11 +954,11 @@ export default function ScriptGenerator({
               <div className="flex items-center gap-2">
                 <Lightbulb className="w-4 h-4 text-amber-500 animate-pulse" />
                 <span className="font-titulo font-bold text-xs uppercase tracking-wider text-amber-700 dark:text-amber-300">
-                  Caja de Idea Rápida (Flash Idea)
+                  {t('script.flashIdeaTitle') || 'Caja de Idea Rápida (Flash Idea)'}
                 </span>
               </div>
               <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300 font-semibold">
-                Sugerencia Instantánea
+                {t('script.instantSuggestion') || 'Sugerencia Instantánea'}
               </span>
             </div>
 
@@ -971,10 +971,10 @@ export default function ScriptGenerator({
                 type="button"
                 onClick={regenerarFlashPremisa}
                 className="px-3 py-1.5 bg-rdc-secondary hover:bg-rdc-card text-rdc-text text-xs font-titulo font-medium rounded-xl border border-rdc-border flex items-center gap-1.5 transition-colors cursor-pointer"
-                title="Generar otra sugerencia rápida"
+                title={t('script.generateAnotherSuggestion') || 'Generar otra sugerencia rápida'}
               >
                 <RefreshCw className="w-3.5 h-3.5" />
-                <span>Nueva Idea</span>
+                <span>{t('script.newIdea') || 'Nueva Idea'}</span>
               </button>
               <button
                 type="button"
@@ -988,12 +988,12 @@ export default function ScriptGenerator({
                 {flashPremisaAdoptada ? (
                   <>
                     <Check className="w-3.5 h-3.5" />
-                    <span>¡Idea Adoptada!</span>
+                    <span>{t('script.ideaAdopted') || '¡Idea Adoptada!'}</span>
                   </>
                 ) : (
                   <>
                     <Sparkles className="w-3.5 h-3.5" />
-                    <span>Adoptar Idea</span>
+                    <span>{t('script.adoptIdea') || 'Adoptar Idea'}</span>
                   </>
                 )}
               </button>
@@ -1005,10 +1005,10 @@ export default function ScriptGenerator({
             <div className="flex items-center justify-between mb-2">
               <label className="text-rdc-text text-xs uppercase tracking-wider font-bold font-titulo flex items-center gap-1.5">
                 <BookOpen className="w-3.5 h-3.5 text-rdc-accent" />
-                Premisa Inicial / Sinopsis del Proyecto
+                {t('script.initialPremiseTitle') || 'Premisa Inicial / Sinopsis del Proyecto'}
               </label>
               <span className="text-[11px] text-rdc-muted font-mono">
-                {form.premisa.length} caracteres
+                {t('script.charactersCount', { count: form.premisa.length }) || `${form.premisa.length} caracteres`}
               </span>
             </div>
 
@@ -1017,7 +1017,7 @@ export default function ScriptGenerator({
               value={form.premisa}
               onChange={e => setForm(prev => ({ ...prev, premisa: e.target.value }))}
               rows={4}
-              placeholder="Describe el núcleo narrativo, el conflicto del protagonista y el objetivo principal de la obra... O adopta una idea sugerida arriba."
+              placeholder={t('script.premisePlaceholder') || 'Describe el núcleo narrativo, el conflicto del protagonista y el objetivo principal de la obra... O adopta una idea sugerida arriba.'}
               className="w-full bg-rdc-secondary/70 border-2 border-slate-900 dark:border-slate-700 rounded-xl
                          p-3.5 text-rdc-text placeholder-rdc-muted text-sm leading-relaxed
                          focus:outline-none focus:border-rdc-accent resize-none
@@ -1041,17 +1041,17 @@ export default function ScriptGenerator({
               {guardandoSinopsis ? (
                 <>
                   <div className="w-4 h-4 border-2 border-rdc-text border-t-transparent rounded-full animate-spin" />
-                  <span>Guardando en BD...</span>
+                  <span>{t('script.savingToDb') || 'Guardando en BD...'}</span>
                 </>
               ) : sinopsisGuardadaExito ? (
                 <>
                   <CheckCircle2 className="w-4 h-4 text-white" />
-                  <span>✅ Sinopsis Guardada</span>
+                  <span>{t('script.synopsisSaved') || '✅ Sinopsis Guardada'}</span>
                 </>
               ) : (
                 <>
                   <Save className="w-4 h-4 text-rdc-accent" />
-                  <span>Guardar Sinopsis</span>
+                  <span>{t('script.saveSynopsis') || 'Guardar Sinopsis'}</span>
                 </>
               )}
             </button>
@@ -1139,10 +1139,10 @@ export default function ScriptGenerator({
           <div className="bg-rdc-card/70 border border-rdc-border rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="min-w-0 flex-1">
               <span className="text-rdc-muted text-[10px] uppercase font-bold font-titulo tracking-wider block">
-                Premisa Guardada del Proyecto
+                {t('script.savedPremise') || 'Premisa Guardada del Proyecto'}
               </span>
               <p className="text-rdc-text text-xs mt-0.5 line-clamp-2 italic">
-                {proyecto?.premisa || proyecto?.sinopsis || form.premisa || 'Sin premisa guardada en el proyecto.'}
+                {proyecto?.premisa || proyecto?.sinopsis || form.premisa || t('script.noSavedPremise') || 'Sin premisa guardada en el proyecto.'}
               </p>
             </div>
             <div className="flex-shrink-0 flex items-center gap-2">
@@ -1151,7 +1151,7 @@ export default function ScriptGenerator({
                   ? `Estilo: ${estiloLegendarioInfo?.name || proyecto?.estilo_legendario || 'Legendario'}`
                   : modoProyecto === 'aleatorio'
                   ? `Estilo: ${estiloSorteado?.name || 'Aleatorio'}`
-                  : 'Firma Propia'}
+                  : (t('script.ownSignature') || 'Firma Propia')}
               </span>
             </div>
           </div>
@@ -1162,7 +1162,7 @@ export default function ScriptGenerator({
               <div className="flex items-center gap-2">
                 <Lightbulb className="w-4 h-4 text-purple-400 animate-pulse" />
                 <span className="font-titulo font-bold text-xs uppercase tracking-wider text-purple-700 dark:text-purple-300">
-                  Idea Rápida para Capítulo {capituloActivoNum}
+                  {t('script.chapterFlashIdeaTitle', { num: capituloActivoNum }) || `Idea Rápida para Capítulo ${capituloActivoNum}`}
                 </span>
               </div>
               <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-700 dark:text-purple-300 font-semibold">
@@ -1179,10 +1179,10 @@ export default function ScriptGenerator({
                 type="button"
                 onClick={() => regenerarFlashCapitulo(capituloActivoNum)}
                 className="px-3 py-1.5 bg-rdc-secondary hover:bg-rdc-card text-rdc-text text-xs font-titulo font-medium rounded-xl border border-rdc-border flex items-center gap-1.5 transition-colors cursor-pointer"
-                title="Generar otra idea para este capítulo"
+                title={t('script.generateAnotherSuggestion') || 'Generar otra sugerencia rápida'}
               >
                 <RefreshCw className="w-3.5 h-3.5" />
-                <span>Nueva Idea</span>
+                <span>{t('script.newIdea') || 'Nueva Idea'}</span>
               </button>
               <button
                 type="button"
@@ -1196,12 +1196,12 @@ export default function ScriptGenerator({
                 {flashCapituloAdoptado ? (
                   <>
                     <Check className="w-3.5 h-3.5" />
-                    <span>¡Idea Adoptada!</span>
+                    <span>{t('script.ideaAdopted') || '¡Idea Adoptada!'}</span>
                   </>
                 ) : (
                   <>
                     <Sparkles className="w-3.5 h-3.5" />
-                    <span>Adoptar Idea</span>
+                    <span>{t('script.adoptIdea') || 'Adoptar Idea'}</span>
                   </>
                 )}
               </button>
@@ -1213,10 +1213,10 @@ export default function ScriptGenerator({
             <div className="flex items-center justify-between mb-2">
               <label className="text-rdc-text text-xs uppercase tracking-wider font-bold font-titulo flex items-center gap-1.5">
                 <Film className="w-3.5 h-3.5 text-rdc-accent" />
-                Desglose y Escenas del Capítulo {capituloActivoNum}
+                {t('script.chapterBreakdownTitle', { num: capituloActivoNum }) || `Desglose y Escenas del Capítulo ${capituloActivoNum}`}
               </label>
               <span className="text-[11px] text-rdc-muted font-mono">
-                {guionCapituloTexto.length} caracteres
+                {t('script.charactersCount', { count: guionCapituloTexto.length }) || `${guionCapituloTexto.length} caracteres`}
               </span>
             </div>
 
@@ -1224,7 +1224,7 @@ export default function ScriptGenerator({
               value={guionCapituloTexto}
               onChange={e => setGuionCapituloTexto(e.target.value)}
               rows={4}
-              placeholder={`Describe los eventos clave, detonantes, enfrentamientos y giros del Capítulo ${capituloActivoNum}... O adopta una idea sugerida arriba.`}
+              placeholder={t('script.chapterBreakdownPlaceholder', { num: capituloActivoNum }) || `Describe los eventos clave, detonantes, enfrentamientos y giros del Capítulo ${capituloActivoNum}... O adopta una idea sugerida arriba.`}
               className="w-full bg-rdc-secondary/70 border-2 border-slate-900 dark:border-slate-700 rounded-xl
                          p-3.5 text-rdc-text placeholder-rdc-muted text-sm leading-relaxed
                          focus:outline-none focus:border-rdc-accent resize-none

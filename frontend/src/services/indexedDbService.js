@@ -186,6 +186,54 @@ export async function contarBorradoresPendientes() {
   return lista.length
 }
 
+/**
+ * Elimina un borrador local de IndexedDB
+ */
+export async function eliminarBorradorLocal(idProyecto, idPagina) {
+  try {
+    const db = await abrirDB()
+    const draftKey = `p_${idProyecto}_pag_${idPagina}`
+
+    return new Promise((resolve, reject) => {
+      const transaccion = db.transaction([STORES.DRAFTS], 'readwrite')
+      const store = transaccion.objectStore(STORES.DRAFTS)
+      const req = store.delete(draftKey)
+
+      req.onsuccess = () => {
+        window.dispatchEvent(new CustomEvent('mep:draft-saved', { detail: { draftKey, deleted: true } }))
+        resolve(true)
+      }
+      req.onerror = (e) => reject(e.target.error)
+    })
+  } catch (err) {
+    console.error('Error al eliminar borrador de IndexedDB:', err)
+    return false
+  }
+}
+
+/**
+ * Elimina todos los borradores locales de IndexedDB
+ */
+export async function limpiarTodosBorradores() {
+  try {
+    const db = await abrirDB()
+    return new Promise((resolve, reject) => {
+      const transaccion = db.transaction([STORES.DRAFTS], 'readwrite')
+      const store = transaccion.objectStore(STORES.DRAFTS)
+      const req = store.clear()
+
+      req.onsuccess = () => {
+        window.dispatchEvent(new CustomEvent('mep:draft-saved', { detail: { cleared: true } }))
+        resolve(true)
+      }
+      req.onerror = (e) => reject(e.target.error)
+    })
+  } catch (err) {
+    console.error('Error al limpiar todos los borradores de IndexedDB:', err)
+    return false
+  }
+}
+
 // ─── CACHÉ DE ASSETS E IMÁGENES PESADAS ──────────────────────────────────────
 
 /**
@@ -282,5 +330,7 @@ export default {
   contarBorradoresPendientes,
   cachearAsset,
   obtenerAssetCache,
-  sincronizarBorradoresConServidor
+  sincronizarBorradoresConServidor,
+  eliminarBorradorLocal,
+  limpiarTodosBorradores
 }

@@ -4,6 +4,7 @@
 // Soporta clic directo para insertar o Drag & Drop hacia el lienzo Fabric.js.
 
 import React, { useState, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   MessageSquare,
   Zap,
@@ -17,18 +18,19 @@ import {
 } from 'lucide-react'
 import balloonPresetsData from '../../data/balloonPresets.json'
 
-const CATEGORIAS = [
-  { id: 'todas',    label: 'Todos',        icon: Layers },
-  { id: 'speech',   label: 'Diálogo',      icon: MessageSquare },
-  { id: 'scream',   label: 'Grito',        icon: Zap },
-  { id: 'thought',  label: 'Pensamiento',  icon: Cloud },
-  { id: 'whisper',  label: 'Susurro',      icon: VolumeX },
-  { id: 'caption',  label: 'Cartela',      icon: FileText },
-]
-
 export default function BalloonsSidebar({ onInsertarBocadillo, canvasRef }) {
+  const { t } = useTranslation()
   const [categoriaActiva, setCategoriaActiva] = useState('todas')
   const [textoPersonalizado, setTextoPersonalizado] = useState('')
+
+  const CATEGORIAS = useMemo(() => [
+    { id: 'todas',    label: t('editor.balloonsSidebar.categories.all'),     icon: Layers },
+    { id: 'speech',   label: t('editor.balloonsSidebar.categories.speech'),  icon: MessageSquare },
+    { id: 'scream',   label: t('editor.balloonsSidebar.categories.scream'),  icon: Zap },
+    { id: 'thought',  label: t('editor.balloonsSidebar.categories.thought'), icon: Cloud },
+    { id: 'whisper',  label: t('editor.balloonsSidebar.categories.whisper'), icon: VolumeX },
+    { id: 'caption',  label: t('editor.balloonsSidebar.categories.caption'), icon: FileText },
+  ], [t])
 
   // Convertir presets objeto a array
   const presets = useMemo(() => {
@@ -60,11 +62,11 @@ export default function BalloonsSidebar({ onInsertarBocadillo, canvasRef }) {
         <div className="flex items-center gap-2">
           <MessageSquare className="w-4 h-4 text-rdc-accent" />
           <h3 className="font-titulo text-xs font-black uppercase tracking-wider text-rdc-text">
-            Bocadillos & Globos
+            {t('editor.balloonsSidebar.title')}
           </h3>
         </div>
         <p className="text-[11px] text-rdc-muted leading-tight">
-          Vectores SVG con tipografía editorial integrada. Haz clic o arrastra al lienzo.
+          {t('editor.balloonsSidebar.desc')}
         </p>
 
         {/* Input opcional de texto previo */}
@@ -73,7 +75,7 @@ export default function BalloonsSidebar({ onInsertarBocadillo, canvasRef }) {
             type="text"
             value={textoPersonalizado}
             onChange={(e) => setTextoPersonalizado(e.target.value)}
-            placeholder="Texto inicial (opcional)..."
+            placeholder={t('editor.balloonsSidebar.placeholder')}
             className="w-full text-xs py-1.5 px-2.5 rounded-lg border border-rdc-border bg-rdc-primary text-rdc-text placeholder:text-rdc-muted/70 focus:outline-none focus:ring-1 focus:ring-rdc-accent font-titulo"
           />
         </div>
@@ -105,7 +107,7 @@ export default function BalloonsSidebar({ onInsertarBocadillo, canvasRef }) {
       <div className="flex-1 overflow-y-auto p-3 space-y-3">
         {presetsFiltrados.length === 0 ? (
           <div className="p-4 text-center rounded-xl border border-dashed border-rdc-border text-rdc-muted text-xs">
-            No hay bocadillos en esta categoría.
+            {t('editor.balloonsSidebar.noBalloons')}
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
@@ -141,14 +143,14 @@ export default function BalloonsSidebar({ onInsertarBocadillo, canvasRef }) {
                     />
                     <div className="absolute bottom-1 right-1 flex items-center gap-0.5 px-1 py-0.5 rounded bg-black/60 text-white text-[9px] font-mono opacity-0 group-hover:opacity-100 transition-opacity">
                       <Move className="w-2.5 h-2.5 text-amber-300" />
-                      <span>Arrastrar</span>
+                      <span>{t('editor.balloonsSidebar.drag')}</span>
                     </div>
                   </div>
 
                   {/* Metadatos y Tipografía */}
                   <div className="space-y-1">
                     <h4 className="font-titulo text-[11px] font-bold text-rdc-text truncate leading-tight group-hover:text-rdc-accent transition-colors">
-                      {preset.nombre}
+                      {t(`editor.balloonsSidebar.presets.${preset.id}`) || preset.nombre}
                     </h4>
                     <div className="flex items-center justify-between text-[10px] text-rdc-muted font-mono">
                       <span className="flex items-center gap-1 truncate max-w-[100px]" title={preset.fontFamily}>
@@ -169,7 +171,7 @@ export default function BalloonsSidebar({ onInsertarBocadillo, canvasRef }) {
                     className="w-full py-1 px-2 rounded-lg bg-rdc-card hover:bg-rdc-accent hover:text-white border border-rdc-border text-rdc-text text-[10px] font-titulo font-bold flex items-center justify-center gap-1 shadow-xs transition-colors cursor-pointer"
                   >
                     <Plus className="w-3 h-3" />
-                    <span>Insertar</span>
+                    <span>{t('editor.balloonsSidebar.insert')}</span>
                   </button>
                 </div>
               )
@@ -180,8 +182,8 @@ export default function BalloonsSidebar({ onInsertarBocadillo, canvasRef }) {
 
       {/* ── Footer ── */}
       <div className="p-2.5 border-t border-rdc-border bg-rdc-primary/50 text-[11px] text-rdc-muted font-mono flex items-center justify-between flex-shrink-0">
-        <span>{presetsFiltrados.length} modelos SVG</span>
-        <span className="text-[10px] font-sans text-amber-400 font-bold">IText Editable</span>
+        <span>{t('editor.balloonsSidebar.modelsCount', { count: presetsFiltrados.length })}</span>
+        <span className="text-[10px] font-sans text-amber-400 font-bold">{t('editor.balloonsSidebar.editableText')}</span>
       </div>
     </div>
   )

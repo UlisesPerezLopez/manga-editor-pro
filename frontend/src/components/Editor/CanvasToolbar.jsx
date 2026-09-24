@@ -30,30 +30,30 @@ export default function CanvasToolbar({
     {
       id: 'seleccionar',
       icon: MousePointer,
-      label: t('editor.tools.select') || 'Seleccionar',
+      label: t('editor.tools.select'),
       tecla: 'V',
-      desc: 'Puntero de selección e interacción de objetos',
+      desc: t('editor.tools.selectDesc'),
     },
     {
       id: 'mano',
       icon: Hand,
-      label: t('editor.tools.hand') || 'Mano / Desplazar',
+      label: t('editor.tools.hand'),
       tecla: 'H',
-      desc: 'Modo navegación / pan para arrastrar con zoom',
+      desc: t('editor.tools.handDesc'),
     },
     {
       id: 'texto',
       icon: Type,
-      label: t('editor.tools.text') || 'Texto Libre / Cartela',
+      label: t('editor.tools.text'),
       tecla: 'T',
-      desc: 'Insertar cuadro de texto libre o narrativo con un clic',
+      desc: t('editor.tools.textDesc'),
     },
     {
       id: 'pincel',
       icon: Paintbrush,
-      label: t('editor.tools.draw') || 'Pincel de tinta',
+      label: t('editor.tools.draw'),
       tecla: 'B',
-      desc: 'Modo lápiz/pincel de entintado manual libre',
+      desc: t('editor.tools.drawDesc'),
     },
   ]
 

@@ -2,7 +2,8 @@
 // Galería lateral de Onomatopeyas y Efectos Sonoros (SFX) para MEP — Manga Editor Pro.
 // Efectos de impacto, slapstick y kanji/katakana manga con estilos precalibrados y edición total en canvas.
 
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Sparkles, Zap, Flame, Move, Plus } from 'lucide-react'
 
 export const CATALOGO_SFX = [
@@ -294,13 +295,14 @@ export const CATALOGO_SFX = [
 ]
 
 export default function SFXSidebar({ onInsertarSFX }) {
+  const { t } = useTranslation()
   const [categoriaActiva, setCategoriaActiva] = useState('impacto')
 
-  const categorias = [
-    { id: 'impacto', label: '💥 Impacto Cómic' },
-    { id: 'movimiento', label: '⚡ Slapstick & Mov.' },
-    { id: 'manga', label: '🗾 Manga Katakana' },
-  ]
+  const categorias = useMemo(() => [
+    { id: 'impacto', label: t('editor.sfxGallery.categories.impact') },
+    { id: 'movimiento', label: t('editor.sfxGallery.categories.movement') },
+    { id: 'manga', label: t('editor.sfxGallery.categories.manga') },
+  ], [t])
 
   const items = CATALOGO_SFX.filter(s => s.categoria === categoriaActiva)
 
@@ -310,10 +312,10 @@ export default function SFXSidebar({ onInsertarSFX }) {
       <div className="p-3 border-b border-slate-800 bg-slate-950/40">
         <h4 className="font-titulo text-xs font-bold text-white flex items-center gap-1.5 uppercase tracking-wider">
           <Zap className="w-3.5 h-3.5 text-amber-400" />
-          <span>Galería de Onomatopeyas SFX</span>
+          <span>{t('editor.sfxGallery.title')}</span>
         </h4>
         <p className="text-[10px] text-slate-400 mt-0.5">
-          Efectos sonoros con estilos y contornos precalibrados
+          {t('editor.sfxGallery.desc')}
         </p>
 
         {/* Pestañas de categoría */}
@@ -370,7 +372,7 @@ export default function SFXSidebar({ onInsertarSFX }) {
 
                 <div className="absolute top-1 right-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
                   <span className="text-[9px] font-mono text-amber-400 bg-black/60 px-1 py-0.5 rounded">
-                    + Clic
+                    {t('editor.sfxGallery.clickToInsert')}
                   </span>
                 </div>
               </div>
@@ -393,10 +395,10 @@ export default function SFXSidebar({ onInsertarSFX }) {
                     onInsertarSFX?.(sfx)
                   }}
                   className="px-2 py-1 rounded-lg bg-amber-500/10 hover:bg-amber-500 text-amber-400 hover:text-slate-950 border border-amber-500/30 text-[10px] font-bold font-titulo flex items-center gap-1 transition-colors cursor-pointer"
-                  title="Insertar en el centro del lienzo o viñeta activa"
+                  title={t('editor.sfxGallery.insertTooltip')}
                 >
                   <Plus className="w-3 h-3" />
-                  <span>Insertar</span>
+                  <span>{t('editor.sfxGallery.insert')}</span>
                 </button>
               </div>
             </div>

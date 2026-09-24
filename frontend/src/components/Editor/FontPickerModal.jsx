@@ -3,6 +3,7 @@
 // Permite buscar fuentes de Google Fonts por categorías temáticas y subir archivos locales (.ttf, .otf, .woff2).
 
 import React, { useState, useMemo, useRef, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Search,
   Upload,
@@ -27,6 +28,7 @@ export default function FontPickerModal({
   onClose,
   isOpen = false,
 }) {
+  const { t } = useTranslation()
   const [busqueda, setBusqueda] = useState('')
   const [categoriaActiva, setCategoriaActiva] = useState('todas')
   const [fuentesLocales, setFuentesLocales] = useState(() => {
@@ -114,10 +116,10 @@ export default function FontPickerModal({
           <div>
             <h3 className="font-titulo text-base font-bold text-white flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-amber-400" />
-              <span>Catálogo de Tipografías</span>
+              <span>{t('editor.fontPicker.title')}</span>
             </h3>
             <p className="text-xs text-slate-400">
-              Cómic, manga, histórico y narración para tu obra
+              {t('editor.fontPicker.subtitle')}
             </p>
           </div>
           <button
@@ -137,7 +139,7 @@ export default function FontPickerModal({
                 type="text"
                 value={busqueda}
                 onChange={(e) => setBusqueda(e.target.value)}
-                placeholder="Buscar fuente por nombre (ej: Cinzel, Bangers)..."
+                placeholder={t('editor.fontPicker.searchPlaceholder')}
                 className="w-full bg-slate-800 border border-slate-700 rounded-xl pl-9 pr-3 py-2 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-amber-400 transition-colors"
                 autoFocus
               />
@@ -156,10 +158,10 @@ export default function FontPickerModal({
               type="button"
               onClick={() => fileInputRef.current?.click()}
               className="px-3 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl text-xs font-bold font-titulo flex items-center gap-1.5 transition-colors shadow-sm cursor-pointer whitespace-nowrap"
-              title="Subir archivo .ttf, .otf o .woff2 desde tu disco"
+              title={t('editor.fontPicker.uploadTitle')}
             >
               <Upload className="w-3.5 h-3.5" />
-              <span>Subir Tipografía</span>
+              <span>{t('editor.fontPicker.uploadFont')}</span>
             </button>
             <input
               ref={fileInputRef}
@@ -174,6 +176,7 @@ export default function FontPickerModal({
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
             {CATEGORIAS_FUENTES.map(cat => {
               const activa = categoriaActiva === cat.id
+              const labelTraducida = t(`editor.fontPicker.categories.${cat.id}`) || cat.label
               return (
                 <button
                   key={cat.id}
@@ -184,7 +187,7 @@ export default function FontPickerModal({
                       : 'bg-slate-800/60 text-slate-400 hover:bg-slate-800 hover:text-slate-200 border border-transparent'
                   }`}
                 >
-                  {cat.label}
+                  {labelTraducida}
                 </button>
               )
             })}
@@ -196,7 +199,7 @@ export default function FontPickerModal({
           {fuentesFiltradas.length === 0 ? (
             <div className="py-12 text-center text-slate-500 space-y-2">
               <FolderOpen className="w-8 h-8 mx-auto opacity-40" />
-              <p className="text-xs">No se encontraron fuentes con el criterio de búsqueda</p>
+              <p className="text-xs">{t('editor.fontPicker.noFontsFound')}</p>
             </div>
           ) : (
             fuentesFiltradas.map(fuente => {

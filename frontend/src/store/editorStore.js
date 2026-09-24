@@ -7,7 +7,9 @@ import { chaptersAPI } from '../services/api'
 import {
   guardarBorradorLocal,
   obtenerBorradorLocal,
-  marcarBorradorSincronizado
+  marcarBorradorSincronizado,
+  eliminarBorradorLocal,
+  limpiarTodosBorradores
 } from '../services/indexedDbService'
 
 const useEditorStore = create((set, get) => ({
@@ -22,6 +24,7 @@ const useEditorStore = create((set, get) => ({
   // Estados de UI
   cargando: false,
   guardando: false,
+  borradorPendiente: false, // Indicador reactivo de borrador local
   ultimoGuardado: null,     // timestamp del último guardado
   panelIzqAbierto: true,
   panelDerAbierto: true,
@@ -151,6 +154,7 @@ const useEditorStore = create((set, get) => ({
 
       // Comprobar si existe un borrador local en IndexedDB más reciente o no sincronizado
       const borradorLocal = await obtenerBorradorLocal(idProyecto, idPagina)
+      let tieneBorradorPendiente = false
       if (borradorLocal && borradorLocal.canvas_json) {
         if (!paginaData || !borradorLocal.sincronizado) {
           paginaData = {
@@ -158,12 +162,14 @@ const useEditorStore = create((set, get) => ({
             canvas_json: borradorLocal.canvas_json,
             es_borrador_local: true
           }
+          tieneBorradorPendiente = true
         }
       }
 
       set({
         paginaActiva: paginaData,
         capituloActivo: capitulo,
+        borradorPendiente: tieneBorradorPendiente,
         cargando: false
       })
     } catch (e) {
@@ -187,6 +193,7 @@ const useEditorStore = create((set, get) => ({
 
       set({
         guardando: false,
+        borradorPendiente: false,
         ultimoGuardado: new Date()
       })
       return { exito: true, online: true }
@@ -197,6 +204,38 @@ const useEditorStore = create((set, get) => ({
         ultimoGuardado: new Date()
       })
       return { exito: true, online: false, localOffline: true }
+    }
+  },
+
+  // Purga física de borradores locales (localStorage + IndexedDB)
+  purgarBorradores: async (idProyecto = null, idPagina = null) => {
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        Object.keys(localStorage).forEach(k => {
+          if (k.startsWith('editor_draft_')) {
+            localStorage.removeItem(k)
+          }
+        })
+      }
+      if (idProyecto && idPagina) {
+        await eliminarBorradorLocal(idProyecto, idPagina)
+      } else {
+        await limpiarTodosBorradores()
+      }
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('mep:draft-saved', { detail: { cleared: true } }))
+      }
+      const { paginaActiva } = get()
+      if (paginaActiva) {
+        set({
+          paginaActiva: { ...paginaActiva, es_borrador_local: false },
+          borradorPendiente: false
+        })
+      } else {
+        set({ borradorPendiente: false })
+      }
+    } catch (e) {
+      console.error('Error purgando borradores:', e)
     }
   },
 

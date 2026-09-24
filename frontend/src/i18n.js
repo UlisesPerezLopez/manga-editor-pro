@@ -9,7 +9,7 @@ import zh from './locales/zh.json'
 import fr from './locales/fr.json'
 import it from './locales/it.json'
 
-const IDIOMAS_SOPORTADOS = ['es', 'en', 'de', 'ja', 'zh', 'fr', 'it']
+const IDIOMAS_SOPORTADOS = ['es', 'en', 'de', 'fr', 'it', 'ja', 'zh']
 
 // Obtener idioma inicial guardado en localStorage o detectar del navegador
 const obtenerIdiomaInicial = () => {

@@ -87,71 +87,79 @@ export const instanciarMarcosPlantilla = (canvas, plantillaKey = 'grid_4_regular
   return nuevosMarcos
 }
 
-// Algoritmo infalible de escalado cover y recorte para viñetas en Fabric.js
+// Algoritmo infalible de escalado cover absoluto y recorte para viñetas en Fabric.js
 export const insertarImagenEnVineta = (canvas, imagenSrc, marcoObj) => {
-  if (!canvas || !marcoObj) return
+  if (!canvas || !marcoObj) return;
 
-  const marcoId = marcoObj.data?.panelId || marcoObj.data?.id
+  const marcoId = marcoObj.data?.panelId || marcoObj.data?.id;
 
-  // 1. Purgar cualquier ilustración previa vinculada a este marco
-  const prevImg = canvas.getObjects().find(o => o.data?.tipo === 'panel_image' && o.data?.panelId === marcoId)
-  if (prevImg) canvas.remove(prevImg)
+  // 1. Eliminar cualquier imagen previa de este marco
+  const prevImg = canvas.getObjects().find(
+    o => o.data?.tipo === 'panel_image' && o.data?.panelId === marcoId
+  );
+  if (prevImg) canvas.remove(prevImg);
 
-  // 2. Obtener dimensiones y centro exacto del marco
-  const destW = marcoObj.getScaledWidth()
-  const destH = marcoObj.getScaledHeight()
-  const centerX = marcoObj.left + destW / 2
-  const centerY = marcoObj.top + destH / 2
+  // 2. Obtener dimensiones reales del marco en pantalla
+  const marcoW = marcoObj.getScaledWidth ? marcoObj.getScaledWidth() : (marcoObj.width * (marcoObj.scaleX || 1));
+  const marcoH = marcoObj.getScaledHeight ? marcoObj.getScaledHeight() : (marcoObj.height * (marcoObj.scaleY || 1));
+  const marcoLeft = marcoObj.left;
+  const marcoTop = marcoObj.top;
 
-  // 3. Cargar la imagen y forzar modo Cover
-  fabric.Image.fromURL(imagenSrc, (img) => {
-    if (!img || !img.width || !img.height) return
+  const srcFinal = (typeof imagenSrc === 'string' && (imagenSrc.startsWith('http://') || imagenSrc.startsWith('https://') || imagenSrc.startsWith('data:')))
+    ? imagenSrc
+    : `http://127.0.0.1:8000${typeof imagenSrc === 'string' && imagenSrc.startsWith('/') ? '' : '/'}${imagenSrc}`;
 
-    // Escala para cubrir el marco sin deformar
-    const scale = Math.max(destW / img.width, destH / img.height)
+  fabric.Image.fromURL(srcFinal, (img) => {
+    if (!img || !img.width || !img.height) return;
 
+    // 3. Escalado COVER nativo de Fabric.js:
+    img.scaleToWidth(marcoW);
+    if (img.getScaledHeight() < marcoH) {
+      img.scaleToHeight(marcoH);
+    }
+
+    // 4. Centrado geométrico relativo al marco
+    const finalW = img.getScaledWidth();
+    const finalH = img.getScaledHeight();
     img.set({
-      originX: 'center',
-      originY: 'center',
-      left: centerX,
-      top: centerY,
-      scaleX: scale,
-      scaleY: scale,
+      left: marcoLeft + (marcoW - finalW) / 2,
+      top: marcoTop + (marcoH - finalH) / 2,
+      originX: 'left',
+      originY: 'top',
       selectable: false,
       evented: false,
       data: { tipo: 'panel_image', panelId: marcoId }
-    })
+    });
 
-    // 4. Recorte estricto coincidente con el marco
+    // 5. Recorte estricto coincidente con el marco
     img.clipPath = new fabric.Rect({
-      originX: 'center',
-      originY: 'center',
-      left: centerX,
-      top: centerY,
-      width: destW,
-      height: destH,
+      left: marcoLeft,
+      top: marcoTop,
+      width: marcoW,
+      height: marcoH,
+      originX: 'left',
+      originY: 'top',
       absolutePositioned: true
-    })
+    });
 
-    // 5. Inserción y orden Z de capas
-    canvas.add(img)
-    canvas.sendToBack(img) // El arte al fondo
+    // 6. Apilamiento de capas
+    canvas.add(img);
+    canvas.sendToBack(img);
 
-    // El marco perimetral negro va justo por encima de la imagen
-    marcoObj.set({ fill: 'rgba(255,255,255,0.001)' })
-    canvas.bringToFront(marcoObj)
+    marcoObj.set({ fill: 'rgba(255,255,255,0.001)' });
+    canvas.bringToFront(marcoObj);
 
-    // Traer bocadillos, textos, SFX y efectos por encima del marco
-    canvas.getObjects().forEach(obj => {
-      const t = obj.data?.tipo || obj.data?.type
-      if (t === 'balloon' || t === 'balloon_text' || t === 'balloon_shape' || t === 'free_text' || t === 'sfx' || t === 'sfx_text' || t === 'kinetic_fx' || t === 'fx_layer') {
-        canvas.bringToFront(obj)
+    // Traer bocadillos, textos y onomatopeyas al frente
+    canvas.getObjects().forEach(o => {
+      const t = o.data?.tipo || o.data?.type;
+      if (['balloon', 'balloon_text', 'free_text', 'sfx', 'kinetic_fx', 'balloon_shape', 'fx_layer', 'onomatopeya'].includes(t)) {
+        canvas.bringToFront(o);
       }
-    })
+    });
 
-    canvas.renderAll()
-  }, { crossOrigin: 'anonymous' })
-}
+    canvas.renderAll();
+  }, { crossOrigin: 'anonymous' });
+};
 
 // Colores de borde para los diferentes tipos de objetos
 const COLORES = {
@@ -642,6 +650,69 @@ const MangaCanvas = forwardRef(function MangaCanvas({
       onTextoSeleccionadoChange?.(null)
     })
 
+    // ── Drag & Drop nativo directamente sobre upperCanvasEl de Fabric.js ──
+    const upperEl = canvas.upperCanvasEl
+    const handleDragOver = (e) => {
+      e.preventDefault()
+      e.stopPropagation()
+      e.dataTransfer.dropEffect = 'copy'
+    }
+    const handleDrop = (e) => {
+      e.preventDefault()
+      e.stopPropagation()
+
+      const pointer = canvas.getPointer(e, true)
+
+      // Soportar presets de bocadillos o sfx arrastrados
+      const jsonStr = e.dataTransfer.getData('application/json')
+      if (jsonStr) {
+        try {
+          const parsed = JSON.parse(jsonStr)
+          if (parsed.type === 'balloon_preset' && parsed.preset) {
+            insertarBocadilloPreset(parsed.preset, pointer.x, pointer.y, parsed.texto)
+            return
+          }
+          if (parsed.tipo === 'sfx' && parsed.sfx) {
+            insertarSFX(parsed.sfx, pointer.x, pointer.y)
+            return
+          }
+        } catch (_) {}
+      }
+
+      let imgSrc = e.dataTransfer.getData('text/plain') || e.dataTransfer.getData('application/json')
+      if (jsonStr && !imgSrc) {
+        try {
+          const parsed = JSON.parse(jsonStr)
+          imgSrc = parsed.imagen_url || parsed.url
+        } catch (_) {}
+      }
+      if (!imgSrc) return
+
+      const fabricPoint = new fabric.Point(pointer.x, pointer.y)
+      // Encontrar el marco bajo el puntero
+      const marcoDestino = canvas.getObjects().find(obj => {
+        if (obj.data?.tipo !== 'vineta' && obj.data?.type !== 'panel') return false
+        if (typeof obj.containsPoint === 'function' && obj.containsPoint(fabricPoint)) {
+          return true
+        }
+        const left = obj.left
+        const top = obj.top
+        const right = left + obj.getScaledWidth()
+        const bottom = top + obj.getScaledHeight()
+        return pointer.x >= left && pointer.x <= right && pointer.y >= top && pointer.y <= bottom
+      })
+
+      if (marcoDestino) {
+        insertarImagenEnVineta(canvas, imgSrc, marcoDestino)
+        guardarEstado(canvas)
+      }
+    }
+
+    if (upperEl) {
+      upperEl.addEventListener('dragover', handleDragOver)
+      upperEl.addEventListener('drop', handleDrop)
+    }
+
     // Atajos de teclado
     const handleKeyDown = (e) => {
       if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return
@@ -662,6 +733,10 @@ const MangaCanvas = forwardRef(function MangaCanvas({
     document.addEventListener('keydown', handleKeyDown)
 
     return () => {
+      if (upperEl) {
+        upperEl.removeEventListener('dragover', handleDragOver)
+        upperEl.removeEventListener('drop', handleDrop)
+      }
       canvas.dispose()
       document.removeEventListener('keydown', handleKeyDown)
       if (guardadoTimerRef.current) clearInterval(guardadoTimerRef.current)
@@ -805,9 +880,15 @@ const MangaCanvas = forwardRef(function MangaCanvas({
           return
         }
         const pointer = canvas.getPointer(opt.e)
+        const PADDING_SEGURIDAD = 16
+        const textW = 180
+        const textH = 40
+        const clampedX = Math.max(PADDING_SEGURIDAD, Math.min(CANVAS_W - PADDING_SEGURIDAD - textW, pointer.x))
+        const clampedY = Math.max(PADDING_SEGURIDAD, Math.min(CANVAS_H - PADDING_SEGURIDAD - textH, pointer.y))
+
         const nuevoTexto = new fabric.Textbox('Escribe tu texto aquí...', {
-          left: pointer.x,
-          top: pointer.y,
+          left: clampedX,
+          top: clampedY,
           fontFamily: 'Comic Relief',
           fontSize: 18,
           fill: '#000000',
@@ -1272,9 +1353,23 @@ const MangaCanvas = forwardRef(function MangaCanvas({
           })
 
           const svgShape = fabric.util.groupSVGElements(objects, options)
+          const shapeW = (svgShape.width || 120) * (svgShape.scaleX || 1)
+          const shapeH = (svgShape.height || 80) * (svgShape.scaleY || 1)
+
+          // Margen de seguridad estricto de 16px respecto a los 4 bordes del lienzo
+          const PADDING_SEGURIDAD = 16
+          const halfW = shapeW / 2
+          const halfH = shapeH / 2
+          const minX = PADDING_SEGURIDAD + halfW
+          const maxX = Math.max(minX, CANVAS_W - PADDING_SEGURIDAD - halfW)
+          const minY = PADDING_SEGURIDAD + halfH
+          const maxY = Math.max(minY, CANVAS_H - PADDING_SEGURIDAD - halfH)
+          const finalX = Math.max(minX, Math.min(maxX, x))
+          const finalY = Math.max(minY, Math.min(maxY, y))
+
           svgShape.set({
-            left: x,
-            top: y,
+            left: finalX,
+            top: finalY,
             originX: 'center',
             originY: 'center',
             strokeUniform: true,
@@ -1293,13 +1388,12 @@ const MangaCanvas = forwardRef(function MangaCanvas({
             }
           })
 
-          const shapeW = svgShape.width * (svgShape.scaleX || 1)
           const usableTextWidth = Math.max(90, shapeW * 0.72)
 
           // Caja de texto desacoplada e inteligente (fabric.Textbox con auto word-wrap)
           const textBox = new fabric.Textbox(textoPorDefecto, {
-            left: x,
-            top: y,
+            left: finalX,
+            top: finalY,
             originX: 'center',
             originY: 'center',
             width: usableTextWidth,
@@ -1375,6 +1469,7 @@ const MangaCanvas = forwardRef(function MangaCanvas({
       const fontPrincipal = preset.fontFamily ? preset.fontFamily.split(',')[0].replace(/['"]/g, '').trim() : 'Comic Relief'
       const textoFinal = texto || '¡Escribe aquí!'
       const balloonId = `balloon_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`
+      const PADDING_SEGURIDAD = 16
 
       fabric.loadSVGFromURL(
         preset.svg,
@@ -1382,11 +1477,20 @@ const MangaCanvas = forwardRef(function MangaCanvas({
           if (!objects || objects.length === 0) {
             const ancho = Math.max(160, Math.min(260, textoFinal.length * 8 + 40))
             const alto = 70
+            const halfW = ancho / 2
+            const halfH = alto / 2
+            const minX = PADDING_SEGURIDAD + halfW
+            const maxX = Math.max(minX, CANVAS_W - PADDING_SEGURIDAD - halfW)
+            const minY = PADDING_SEGURIDAD + halfH
+            const maxY = Math.max(minY, CANVAS_H - PADDING_SEGURIDAD - halfH)
+            const finalX = Math.max(minX, Math.min(maxX, targetX))
+            const finalY = Math.max(minY, Math.min(maxY, targetY))
+
             const elipse = new fabric.Ellipse({
-              left: targetX,
-              top: targetY,
-              rx: ancho / 2,
-              ry: alto / 2,
+              left: finalX,
+              top: finalY,
+              rx: halfW,
+              ry: halfH,
               fill: '#FFFFFF',
               stroke: '#000000',
               strokeWidth: 3,
@@ -1406,8 +1510,8 @@ const MangaCanvas = forwardRef(function MangaCanvas({
             })
 
             const textBox = new fabric.Textbox(textoFinal, {
-              left: targetX,
-              top: targetY,
+              left: finalX,
+              top: finalY,
               originX: 'center',
               originY: 'center',
               width: ancho * 0.75,
@@ -1438,9 +1542,20 @@ const MangaCanvas = forwardRef(function MangaCanvas({
 
           objects.forEach(o => o.set({ strokeUniform: true }))
           const svgShape = fabric.util.groupSVGElements(objects, options)
+          const shapeW = (svgShape.width || 140) * (svgShape.scaleX || 1)
+          const shapeH = (svgShape.height || 90) * (svgShape.scaleY || 1)
+          const halfW = shapeW / 2
+          const halfH = shapeH / 2
+          const minX = PADDING_SEGURIDAD + halfW
+          const maxX = Math.max(minX, CANVAS_W - PADDING_SEGURIDAD - halfW)
+          const minY = PADDING_SEGURIDAD + halfH
+          const maxY = Math.max(minY, CANVAS_H - PADDING_SEGURIDAD - halfH)
+          const finalX = Math.max(minX, Math.min(maxX, targetX))
+          const finalY = Math.max(minY, Math.min(maxY, targetY))
+
           svgShape.set({
-            left: targetX,
-            top: targetY,
+            left: finalX,
+            top: finalY,
             originX: 'center',
             originY: 'center',
             strokeUniform: true,
@@ -1459,12 +1574,11 @@ const MangaCanvas = forwardRef(function MangaCanvas({
             }
           })
 
-          const shapeW = svgShape.width * (svgShape.scaleX || 1)
           const usableTextWidth = Math.max(90, shapeW * 0.72)
 
           const textBox = new fabric.Textbox(textoFinal, {
-            left: targetX,
-            top: targetY,
+            left: finalX,
+            top: finalY,
             originX: 'center',
             originY: 'center',
             width: usableTextWidth,
@@ -1504,12 +1618,15 @@ const MangaCanvas = forwardRef(function MangaCanvas({
       const canvas = fabricRef.current
       if (!canvas || !sfx) return
 
+      const PADDING_SEGURIDAD = 16
       const x = posX !== null && posX !== undefined ? posX : CANVAS_W / 2
       const y = posY !== null && posY !== undefined ? posY : CANVAS_H / 2
+      const finalX = Math.max(PADDING_SEGURIDAD + 40, Math.min(CANVAS_W - PADDING_SEGURIDAD - 40, x))
+      const finalY = Math.max(PADDING_SEGURIDAD + 25, Math.min(CANVAS_H - PADDING_SEGURIDAD - 25, y))
 
       const sfxObj = new fabric.IText(sfx.texto, {
-        left: x,
-        top: y,
+        left: finalX,
+        top: finalY,
         originX: 'center',
         originY: 'center',
         fontFamily: sfx.fontFamily || 'Bangers',
@@ -1557,10 +1674,17 @@ const MangaCanvas = forwardRef(function MangaCanvas({
       instanciarMarcosPlantilla(canvas, targetPlantilla)
       canvas.renderAll()
       guardarEstado(canvas)
-      if (paginaActiva?.id) {
+      if (typeof window !== 'undefined' && window.localStorage) {
         try {
-          localStorage.removeItem(`editor_draft_${paginaActiva.id}`)
+          Object.keys(localStorage).forEach(k => {
+            if (k.startsWith('editor_draft_')) {
+              localStorage.removeItem(k)
+            }
+          })
         } catch (_) {}
+      }
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('mep:draft-saved', { detail: { cleared: true } }))
       }
       if (onGuardar) {
         onGuardar()
@@ -1597,21 +1721,15 @@ const MangaCanvas = forwardRef(function MangaCanvas({
       if (coords) {
         marcoDestino = canvas.getObjects().find(o => {
           if (o.data?.tipo !== 'vineta' && o.data?.type !== 'panel') return false
-          const w = o.getScaledWidth()
-          const h = o.getScaledHeight()
-          return coords.x >= o.left && coords.x <= o.left + w &&
-                 coords.y >= o.top && coords.y <= o.top + h
+          const left = o.left
+          const top = o.top
+          const right = left + o.getScaledWidth()
+          const bottom = top + o.getScaledHeight()
+          return coords.x >= left && coords.x <= right && coords.y >= top && coords.y <= bottom
         })
       }
 
-      // 2. Si targetObjOrVineta ya es un objeto Fabric de viñeta
-      if (!marcoDestino && targetObjOrVineta && (targetObjOrVineta.type || targetObjOrVineta.getScaledWidth)) {
-        if (targetObjOrVineta.data?.tipo === 'vineta' || targetObjOrVineta.data?.type === 'panel') {
-          marcoDestino = targetObjOrVineta
-        }
-      }
-
-      // 3. Si hay un marco actualmente seleccionado en el canvas
+      // 2. Si hay un marco actualmente seleccionado en el canvas
       if (!marcoDestino) {
         const activo = canvas.getActiveObject()
         if (activo && (activo.data?.tipo === 'vineta' || activo.data?.type === 'panel')) {
@@ -1619,7 +1737,14 @@ const MangaCanvas = forwardRef(function MangaCanvas({
         }
       }
 
-      // 4. Si no hay selección, buscar el marco por ordinal de la viñeta o el primer marco libre
+      // 3. Si targetObjOrVineta ya es un objeto Fabric de viñeta
+      if (!marcoDestino && targetObjOrVineta && (targetObjOrVineta.type || targetObjOrVineta.getScaledWidth)) {
+        if (targetObjOrVineta.data?.tipo === 'vineta' || targetObjOrVineta.data?.type === 'panel') {
+          marcoDestino = targetObjOrVineta
+        }
+      }
+
+      // 4. Si no hay marco seleccionado, buscar el primer marco vacío del canvas
       if (!marcoDestino) {
         let marcos = canvas.getObjects().filter(o => o.data?.tipo === 'vineta' || o.data?.type === 'panel')
         if (marcos.length === 0) {
@@ -1627,24 +1752,12 @@ const MangaCanvas = forwardRef(function MangaCanvas({
           marcos = instanciarMarcosPlantilla(canvas, plantillaId)
         }
 
-        // A) Buscar por vineta_num ordinal
-        const numVineta = typeof targetObjOrVineta === 'number'
-          ? targetObjOrVineta
-          : (targetObjOrVineta?.vineta_num ? Number(targetObjOrVineta.vineta_num) : null)
-
-        if (numVineta && marcos[numVineta - 1]) {
-          marcoDestino = marcos[numVineta - 1]
-        }
-
-        // B) Si no, buscar el primer marco libre (sin panel_image)
-        if (!marcoDestino) {
-          const imagenes = canvas.getObjects().filter(o => o.data?.tipo === 'panel_image' || o.data?.type === 'panel_image')
-          const marcoLibre = marcos.find(m => {
-            const mId = m.data?.panelId || m.data?.id
-            return !imagenes.some(img => (img.data?.panelId || img.data?.id) === mId)
-          })
-          marcoDestino = marcoLibre || marcos[0]
-        }
+        const imagenes = canvas.getObjects().filter(o => o.data?.tipo === 'panel_image' || o.data?.type === 'panel_image')
+        const marcoVacio = marcos.find(m => {
+          const mId = m.data?.panelId || m.data?.id
+          return !imagenes.some(img => (img.data?.panelId || img.data?.id) === mId)
+        })
+        marcoDestino = marcoVacio || marcos[0]
       }
 
       if (marcoDestino) {
@@ -1666,6 +1779,8 @@ const MangaCanvas = forwardRef(function MangaCanvas({
     setColor: (color) => actualizarPropiedadTexto('fill', color),
     setFontFamily: (font) => actualizarPropiedadTexto('fontFamily', font),
     setFontSize: (size) => actualizarPropiedadTexto('fontSize', size),
+    getFabricCanvas: () => fabricRef.current,
+    canvas: fabricRef.current,
   }))
 
   return (
@@ -1686,22 +1801,16 @@ const MangaCanvas = forwardRef(function MangaCanvas({
           try {
             const parsed = JSON.parse(jsonStr)
             if (parsed.type === 'balloon_preset' && parsed.preset) {
-              const canvasEl = canvas.upperCanvasEl || elementoCanvasRef.current
-              const rect = canvasEl.getBoundingClientRect()
-              const x = (e.clientX - rect.left) * (canvas.width / rect.width)
-              const y = (e.clientY - rect.top) * (canvas.height / rect.height)
+              const pointer = canvas.getPointer(e, true)
               if (canvasRef?.current?.insertarBocadilloPreset) {
-                canvasRef.current.insertarBocadilloPreset(parsed.preset, x, y, parsed.texto)
+                canvasRef.current.insertarBocadilloPreset(parsed.preset, pointer.x, pointer.y, parsed.texto)
               }
               return
             }
             if (parsed.type === 'sfx_preset' && parsed.sfx) {
-              const canvasEl = canvas.upperCanvasEl || elementoCanvasRef.current
-              const rect = canvasEl.getBoundingClientRect()
-              const x = (e.clientX - rect.left) * (canvas.width / rect.width)
-              const y = (e.clientY - rect.top) * (canvas.height / rect.height)
+              const pointer = canvas.getPointer(e, true)
               if (canvasRef?.current?.insertarSFX) {
-                canvasRef.current.insertarSFX(parsed.sfx, x, y)
+                canvasRef.current.insertarSFX(parsed.sfx, pointer.x, pointer.y)
               }
               return
             }
@@ -1721,20 +1830,15 @@ const MangaCanvas = forwardRef(function MangaCanvas({
         }
         if (!imgSrc) return
 
-        const canvasEl = canvas.upperCanvasEl || elementoCanvasRef.current
-        const rect = canvasEl.getBoundingClientRect()
-        const pointer = {
-          x: (e.clientX - rect.left) * (canvas.width / rect.width),
-          y: (e.clientY - rect.top) * (canvas.height / rect.height)
-        }
-
-        // Localizar el marco que contiene el punto
+        const pointer = canvas.getPointer(e, true)
+        // Buscar el marco que contiene las coordenadas del puntero
         const marcoDestino = canvas.getObjects().find(o => {
           if (o.data?.tipo !== 'vineta' && o.data?.type !== 'panel') return false
-          const w = o.getScaledWidth()
-          const h = o.getScaledHeight()
-          return pointer.x >= o.left && pointer.x <= o.left + w &&
-                 pointer.y >= o.top && pointer.y <= o.top + h
+          const left = o.left
+          const top = o.top
+          const right = left + o.getScaledWidth()
+          const bottom = top + o.getScaledHeight()
+          return pointer.x >= left && pointer.x <= right && pointer.y >= top && pointer.y <= bottom
         })
 
         if (marcoDestino) {

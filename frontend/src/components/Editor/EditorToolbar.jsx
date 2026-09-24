@@ -27,6 +27,7 @@ import {
   X
 } from 'lucide-react'
 import FontPickerModal from './FontPickerModal'
+import useEditorStore from '../../store/editorStore'
 
 const NIVELES_ZOOM = [
   { valor: 0.5,  label: '50%' },
@@ -50,6 +51,7 @@ export default function EditorToolbar({
   textoSeleccionado = null,
 }) {
   const { t } = useTranslation()
+  const purgarBorradores = useEditorStore(state => state.purgarBorradores)
   const [exportando, setExportando] = useState(false)
   const [fontPickerAbierto, setFontPickerAbierto] = useState(false)
 
@@ -86,19 +88,20 @@ export default function EditorToolbar({
     }
   }
 
-  // Restablecer el lienzo a plantilla limpia
-  const handleResetearPlantilla = () => {
+  // Restablecer el lienzo a plantilla limpia y purgar borradores
+  const handleResetearPlantilla = async () => {
     if (!canvasRef?.current) return
     const confirmar = window.confirm(
+      t('editor.toolbar.resetConfirm') ||
       '¿Restablecer el lienzo a la plantilla actual? Se limpiarán las viñetas y elementos del lienzo.'
     )
     if (confirmar) {
       const targetPlantilla = paginaActiva?.layout_template || 'grid_4_regular'
       canvasRef.current.reconstruirPlantilla?.(targetPlantilla)
-      if (paginaActiva?.id) {
-        try {
-          localStorage.removeItem(`editor_draft_${paginaActiva.id}`)
-        } catch (_) {}
+      try {
+        await purgarBorradores(proyectoActivo?.id, paginaActiva?.id)
+      } catch (err) {
+        console.warn('Error purgando borradores:', err)
       }
     }
   }
@@ -185,10 +188,10 @@ export default function EditorToolbar({
             type="button"
             onClick={() => aplicarZoom(1.0)}
             className="h-7 px-2 text-[11px] font-titulo font-semibold text-rdc-muted hover:text-rdc-text hover:bg-rdc-card rounded-lg border border-rdc-border transition-colors hidden sm:flex items-center gap-1 cursor-pointer"
-            title="Restablecer al 100%"
+            title={t('editor.toolbar.fit11') || 'Ajustar 1:1'}
           >
             <Maximize2 className="w-3 h-3" />
-            <span>Ajustar 1:1</span>
+            <span>{t('editor.toolbar.fit11') || 'Ajustar 1:1'}</span>
           </button>
         </div>
 
@@ -255,7 +258,7 @@ export default function EditorToolbar({
                       ? 'bg-amber-500 text-slate-950 font-bold'
                       : 'text-rdc-muted hover:text-rdc-text hover:bg-rdc-secondary'
                   }`}
-                  title="Negrita"
+                  title={t('editor.toolbar.bold')}
                 >
                   <Bold className="w-3 h-3" />
                 </button>
@@ -267,7 +270,7 @@ export default function EditorToolbar({
                       ? 'bg-amber-500 text-slate-950 font-bold'
                       : 'text-rdc-muted hover:text-rdc-text hover:bg-rdc-secondary'
                   }`}
-                  title="Cursiva"
+                  title={t('editor.toolbar.italic')}
                 >
                   <Italic className="w-3 h-3" />
                 </button>
@@ -281,7 +284,7 @@ export default function EditorToolbar({
                   className={`p-1 rounded cursor-pointer ${
                     textoSeleccionado.textAlign === 'left' ? 'bg-amber-500 text-slate-950' : 'text-rdc-muted hover:text-rdc-text hover:bg-rdc-secondary'
                   }`}
-                  title="Alinear a la izquierda"
+                  title={t('editor.toolbar.alignLeft')}
                 >
                   <AlignLeft className="w-3 h-3" />
                 </button>
@@ -291,7 +294,7 @@ export default function EditorToolbar({
                   className={`p-1 rounded cursor-pointer ${
                     textoSeleccionado.textAlign === 'center' ? 'bg-amber-500 text-slate-950' : 'text-rdc-muted hover:text-rdc-text hover:bg-rdc-secondary'
                   }`}
-                  title="Centrar"
+                  title={t('editor.toolbar.alignCenter')}
                 >
                   <AlignCenter className="w-3 h-3" />
                 </button>
@@ -301,7 +304,7 @@ export default function EditorToolbar({
                   className={`p-1 rounded cursor-pointer ${
                     textoSeleccionado.textAlign === 'right' ? 'bg-amber-500 text-slate-950' : 'text-rdc-muted hover:text-rdc-text hover:bg-rdc-secondary'
                   }`}
-                  title="Alinear a la derecha"
+                  title={t('editor.toolbar.alignRight')}
                 >
                   <AlignRight className="w-3 h-3" />
                 </button>
@@ -309,11 +312,11 @@ export default function EditorToolbar({
 
               {/* Color de Relleno del Texto */}
               <div className="flex items-center gap-1 bg-rdc-card border border-rdc-border rounded-lg px-1.5 py-0.5">
-                <span className="text-[10px] text-rdc-muted font-bold">Color:</span>
+                <span className="text-[10px] text-rdc-muted font-bold">{t('editor.toolbar.color')}:</span>
                 <label
                   className="relative w-4 h-4 rounded-full border border-slate-500 overflow-hidden cursor-pointer flex items-center justify-center hover:scale-110 transition-transform"
                   style={{ backgroundColor: textoSeleccionado.color || '#000000' }}
-                  title="Color de texto"
+                  title={t('editor.toolbar.textColor')}
                 >
                   <input
                     type="color"
@@ -326,7 +329,7 @@ export default function EditorToolbar({
 
               {/* Contorno / Stroke del Texto (paintFirst: stroke) */}
               <div className="flex items-center gap-1 bg-rdc-card border border-rdc-border rounded-lg px-1.5 py-0.5">
-                <span className="text-[10px] text-rdc-muted font-bold">Contorno:</span>
+                <span className="text-[10px] text-rdc-muted font-bold">{t('editor.toolbar.stroke')}:</span>
                 {[0, 2, 4, 6].map((w) => {
                   const esActivo = (textoSeleccionado.strokeWidth || 0) === w
                   return (
@@ -339,7 +342,7 @@ export default function EditorToolbar({
                           ? 'bg-amber-500 text-slate-950 shadow-xs'
                           : 'text-rdc-muted hover:text-rdc-text hover:bg-rdc-secondary'
                       }`}
-                      title={`Grosor de contorno: ${w}px`}
+                      title={t('editor.toolbar.strokeWidth', { width: w })}
                     >
                       {w === 0 ? '0' : `${w}p`}
                     </button>
@@ -348,7 +351,7 @@ export default function EditorToolbar({
                 <label
                   className="relative w-4 h-4 rounded-full border border-slate-500 overflow-hidden cursor-pointer flex items-center justify-center hover:scale-110 transition-transform ml-0.5"
                   style={{ backgroundColor: textoSeleccionado.stroke || '#000000' }}
-                  title="Color del contorno"
+                  title={t('editor.toolbar.strokeColor')}
                 >
                   <input
                     type="color"
@@ -361,7 +364,7 @@ export default function EditorToolbar({
 
               {/* Sombra de Texto */}
               <div className="flex items-center gap-1 bg-rdc-card border border-rdc-border rounded-lg px-1.5 py-0.5">
-                <span className="text-[10px] text-rdc-muted font-bold">Sombra:</span>
+                <span className="text-[10px] text-rdc-muted font-bold">{t('editor.toolbar.shadow')}:</span>
                 <button
                   type="button"
                   onClick={() => canvasRef.current?.setTextShadow?.('none')}
@@ -370,36 +373,36 @@ export default function EditorToolbar({
                       ? 'bg-amber-500 text-slate-950 font-bold'
                       : 'text-rdc-muted hover:text-rdc-text hover:bg-rdc-secondary'
                   }`}
-                  title="Sin sombra"
+                  title={t('editor.toolbar.noShadow')}
                 >
-                  No
+                  {t('editor.toolbar.noShadow')}
                 </button>
                 <button
                   type="button"
                   onClick={() => canvasRef.current?.setTextShadow?.('subtle')}
                   className="px-1.5 py-0.5 text-[10px] font-semibold rounded text-rdc-muted hover:text-rdc-text hover:bg-rdc-secondary cursor-pointer transition-colors"
-                  title="Sombra suave"
+                  title={t('editor.toolbar.softShadow')}
                 >
-                  Suave
+                  {t('editor.toolbar.softShadow')}
                 </button>
                 <button
                   type="button"
                   onClick={() => canvasRef.current?.setTextShadow?.('comic')}
                   className="px-1.5 py-0.5 text-[10px] font-semibold rounded text-rdc-muted hover:text-rdc-text hover:bg-rdc-secondary cursor-pointer transition-colors"
-                  title="Sombra de alto impacto Cómic 3D"
+                  title={t('editor.toolbar.comicShadow')}
                 >
-                  Cómic
+                  {t('editor.toolbar.comicShadow')}
                 </button>
               </div>
 
               {/* Opciones adicionales para Bocadillos (Fondo y Borde del Globo) */}
               {textoSeleccionado.isBalloon && (
                 <div className="flex items-center gap-1.5 bg-rdc-card border border-sky-500/50 rounded-lg px-2 py-0.5">
-                  <span className="text-[10px] text-sky-400 font-bold">Globo:</span>
+                  <span className="text-[10px] text-sky-400 font-bold">{t('editor.toolbar.balloon')}:</span>
                   <label
                     className="relative w-4 h-4 rounded-full border border-slate-500 overflow-hidden cursor-pointer"
                     style={{ backgroundColor: textoSeleccionado.shapeFill || '#FFFFFF' }}
-                    title="Color de fondo del bocadillo"
+                    title={t('editor.toolbar.balloonBg')}
                   >
                     <input
                       type="color"
@@ -411,7 +414,7 @@ export default function EditorToolbar({
                   <label
                     className="relative w-4 h-4 rounded-full border border-slate-500 overflow-hidden cursor-pointer"
                     style={{ backgroundColor: textoSeleccionado.shapeStroke || '#000000' }}
-                    title="Color del trazo del bocadillo"
+                    title={t('editor.toolbar.balloonStroke')}
                   >
                     <input
                       type="color"
@@ -433,7 +436,7 @@ export default function EditorToolbar({
                   onClick={onDeshacer}
                   disabled={!puedeDeshacer}
                   className="w-7 h-7 flex items-center justify-center text-rdc-muted hover:text-rdc-text hover:bg-rdc-card rounded-md transition-colors disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
-                  title="Deshacer (Ctrl+Z)"
+                  title={`${t('editor.tools.undo')} (Ctrl+Z)`}
                 >
                   <Undo2 className="w-3.5 h-3.5" />
                 </button>
@@ -442,7 +445,7 @@ export default function EditorToolbar({
                   onClick={onRehacer}
                   disabled={!puedeRehacer}
                   className="w-7 h-7 flex items-center justify-center text-rdc-muted hover:text-rdc-text hover:bg-rdc-card rounded-md transition-colors disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
-                  title="Rehacer (Ctrl+Y)"
+                  title={`${t('editor.tools.redo')} (Ctrl+Y)`}
                 >
                   <Redo2 className="w-3.5 h-3.5" />
                 </button>
@@ -455,10 +458,10 @@ export default function EditorToolbar({
                 type="button"
                 onClick={handleTraerAlFrente}
                 className="h-7 px-2.5 rounded-lg bg-rdc-card hover:bg-rdc-primary border border-rdc-border hover:border-rdc-accent text-rdc-text text-[11px] font-titulo font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
-                title="Traer elemento seleccionado al frente"
+                title={t('editor.toolbar.bringToFront')}
               >
                 <BringToFront className="w-3.5 h-3.5 text-amber-400" />
-                <span className="hidden md:inline">Traer al Frente</span>
+                <span className="hidden md:inline">{t('editor.toolbar.bringToFront')}</span>
               </button>
 
               {/* Enviar al Fondo */}
@@ -466,10 +469,10 @@ export default function EditorToolbar({
                 type="button"
                 onClick={handleEnviarAlFondo}
                 className="h-7 px-2.5 rounded-lg bg-rdc-card hover:bg-rdc-primary border border-rdc-border hover:border-rdc-accent text-rdc-text text-[11px] font-titulo font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
-                title="Enviar elemento seleccionado al fondo"
+                title={t('editor.toolbar.sendToBack')}
               >
                 <SendToBack className="w-3.5 h-3.5 text-sky-400" />
-                <span className="hidden md:inline">Enviar al Fondo</span>
+                <span className="hidden md:inline">{t('editor.toolbar.sendToBack')}</span>
               </button>
 
               {/* Eliminar Selección */}
@@ -477,10 +480,10 @@ export default function EditorToolbar({
                 type="button"
                 onClick={handleEliminar}
                 className="h-7 px-2.5 rounded-lg bg-rdc-card hover:bg-red-500/20 hover:text-red-400 border border-rdc-border hover:border-red-500 text-rdc-muted text-[11px] font-titulo font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
-                title="Eliminar Selección (Supr)"
+                title={t('editor.toolbar.delete')}
               >
                 <Trash2 className="w-3.5 h-3.5" />
-                <span className="hidden lg:inline">Eliminar (Del)</span>
+                <span className="hidden lg:inline">{t('editor.toolbar.delete')}</span>
               </button>
             </>
           )}
@@ -492,10 +495,10 @@ export default function EditorToolbar({
             type="button"
             onClick={handleResetearPlantilla}
             className="h-7 px-2.5 rounded-lg bg-rdc-card hover:bg-amber-500/20 text-rdc-muted hover:text-amber-400 border border-rdc-border hover:border-amber-500 text-[11px] font-titulo font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
-            title="Limpia el lienzo y recrea los marcos limpios de la plantilla activa"
+            title={t('editor.toolbar.resetTemplate')}
           >
             <RotateCcw className="w-3.5 h-3.5 text-amber-400" />
-            <span className="hidden sm:inline">🔄 Resetear a Plantilla</span>
+            <span className="hidden sm:inline">🔄 {t('editor.toolbar.resetTemplate')}</span>
           </button>
 
           <button
@@ -503,17 +506,17 @@ export default function EditorToolbar({
             onClick={handleExportarPNG}
             disabled={exportando}
             className="h-7 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-titulo font-bold flex items-center gap-1.5 shadow-sm hover:shadow-md transition-all cursor-pointer disabled:opacity-50"
-            title="Descarga la página maquetada en PNG a doble resolución (2x)"
+            title={t('editor.toolbar.exportPng')}
           >
             {exportando ? (
               <>
                 <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                <span>Exportando...</span>
+                <span>{t('editor.saving') || 'Exportando...'}</span>
               </>
             ) : (
               <>
                 <FileImage className="w-3.5 h-3.5" />
-                <span>💾 Exportar Página PNG</span>
+                <span>💾 {t('editor.toolbar.exportPng')}</span>
               </>
             )}
           </button>

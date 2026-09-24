@@ -8,10 +8,10 @@ export const IDIOMAS = [
   { codigo: 'es', flagUrl: 'https://flagcdn.com/w20/es.png', etiqueta: 'Español', corto: 'ES' },
   { codigo: 'en', flagUrl: 'https://flagcdn.com/w20/gb.png', etiqueta: 'English', corto: 'EN' },
   { codigo: 'de', flagUrl: 'https://flagcdn.com/w20/de.png', etiqueta: 'Deutsch', corto: 'DE' },
-  { codigo: 'ja', flagUrl: 'https://flagcdn.com/w20/jp.png', etiqueta: '日本語', corto: 'JA' },
-  { codigo: 'zh', flagUrl: 'https://flagcdn.com/w20/cn.png', etiqueta: '简体中文', corto: 'ZH' },
   { codigo: 'fr', flagUrl: 'https://flagcdn.com/w20/fr.png', etiqueta: 'Français', corto: 'FR' },
   { codigo: 'it', flagUrl: 'https://flagcdn.com/w20/it.png', etiqueta: 'Italiano', corto: 'IT' },
+  { codigo: 'ja', flagUrl: 'https://flagcdn.com/w20/jp.png', etiqueta: '日本語', corto: 'JA' },
+  { codigo: 'zh', flagUrl: 'https://flagcdn.com/w20/cn.png', etiqueta: '简体中文', corto: 'ZH' },
 ]
 
 export default function LanguageSelector({ variante = 'default' }) {

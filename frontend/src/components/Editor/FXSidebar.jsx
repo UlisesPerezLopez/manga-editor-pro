@@ -411,11 +411,11 @@ export default function FXSidebar({ canvasRef, onActualizar }) {
         <div className="flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-rdc-accent" />
           <h3 className="font-titulo text-xs font-black uppercase tracking-wider text-rdc-text">
-            Efectos Cinéticos Manga
+            {t('editor.fx.kineticTitle')}
           </h3>
         </div>
         <p className="text-[11px] text-rdc-muted leading-tight">
-          Generación procedural de líneas cinéticas y semitonos sin descargas externas.
+          {t('editor.fx.kineticDesc')}
         </p>
       </div>
 
@@ -423,12 +423,15 @@ export default function FXSidebar({ canvasRef, onActualizar }) {
         {/* Selector de Tipo de Efecto */}
         <div className="space-y-2">
           <label className="text-[11px] font-bold font-titulo uppercase tracking-wider text-rdc-muted">
-            Tipo de Efecto:
+            {t('editor.fx.effectType')}
           </label>
           <div className="space-y-1.5">
             {TIPOS_EFECTOS.map((ef) => {
               const Icon = ef.icon
               const esActivo = efectoActivo === ef.id
+              const nombreTraducido = t(`editor.fx.effects.${ef.id}`) || ef.nombre
+              const descTraducida = t(`editor.fx.effects.${ef.id}_desc`) || ef.descripcion
+
               return (
                 <button
                   key={ef.id}
@@ -444,10 +447,10 @@ export default function FXSidebar({ canvasRef, onActualizar }) {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="font-titulo font-bold text-xs text-rdc-text">
-                      {ef.nombre}
+                      {nombreTraducido}
                     </div>
                     <div className="text-[10px] text-rdc-muted leading-tight mt-0.5">
-                      {ef.descripcion}
+                      {descTraducida}
                     </div>
                   </div>
                 </button>
@@ -461,9 +464,9 @@ export default function FXSidebar({ canvasRef, onActualizar }) {
           <div className="flex items-center justify-between text-[11px] font-titulo font-bold text-rdc-muted">
             <span className="flex items-center gap-1">
               <Eye className="w-3.5 h-3.5 text-rdc-accent" />
-              Vista Previa en Tiempo Real
+              {t('editor.fx.previewRealtime')}
             </span>
-            <span className="text-[10px] font-mono">{opacidad}% opacidad</span>
+            <span className="text-[10px] font-mono">{opacidad}% {t('editor.fx.opacity')}</span>
           </div>
 
           <div className="aspect-[4/3] rounded-xl border-2 border-slate-300 dark:border-slate-700 bg-white overflow-hidden shadow-inner flex items-center justify-center p-1">
@@ -481,13 +484,13 @@ export default function FXSidebar({ canvasRef, onActualizar }) {
         <div className="bg-rdc-primary p-3 rounded-xl border border-rdc-border space-y-3 font-titulo">
           <div className="flex items-center gap-1.5 text-xs font-bold text-rdc-text pb-1 border-b border-rdc-border">
             <Sliders className="w-3.5 h-3.5 text-rdc-accent" />
-            <span>Ajustes del Efecto</span>
+            <span>{t('editor.fx.settings')}</span>
           </div>
 
           {/* Slider Densidad */}
           <div className="space-y-1">
             <div className="flex justify-between text-[11px]">
-              <span className="text-rdc-muted">Densidad de Rayos / Puntos:</span>
+              <span className="text-rdc-muted">{t('editor.fx.density')}</span>
               <span className="font-mono text-rdc-text font-bold">{densidad}%</span>
             </div>
             <input
@@ -504,7 +507,7 @@ export default function FXSidebar({ canvasRef, onActualizar }) {
           {efectoActivo === 'radial_speedlines' && (
             <div className="space-y-1">
               <div className="flex justify-between text-[11px]">
-                <span className="text-rdc-muted">Apertura del Foco Central:</span>
+                <span className="text-rdc-muted">{t('editor.fx.focalRadius')}</span>
                 <span className="font-mono text-rdc-text font-bold">{radioFoco}%</span>
               </div>
               <input
@@ -521,7 +524,7 @@ export default function FXSidebar({ canvasRef, onActualizar }) {
           {/* Slider Opacidad */}
           <div className="space-y-1">
             <div className="flex justify-between text-[11px]">
-              <span className="text-rdc-muted">Opacidad de Capa:</span>
+              <span className="text-rdc-muted">{t('editor.fx.layerOpacity')}</span>
               <span className="font-mono text-rdc-text font-bold">{opacidad}%</span>
             </div>
             <input
@@ -536,7 +539,7 @@ export default function FXSidebar({ canvasRef, onActualizar }) {
 
           {/* Color del Trazo */}
           <div className="flex items-center justify-between pt-1">
-            <span className="text-[11px] text-rdc-muted">Color del Trazo:</span>
+            <span className="text-[11px] text-rdc-muted">{t('editor.fx.strokeColor')}</span>
             <div className="flex items-center gap-1.5">
               <button
                 type="button"
@@ -544,7 +547,7 @@ export default function FXSidebar({ canvasRef, onActualizar }) {
                 className={`w-6 h-6 rounded-full border-2 transition-transform cursor-pointer ${
                   colorEfecto === '#000000' ? 'border-amber-400 scale-110' : 'border-slate-400'
                 } bg-black`}
-                title="Tinta Negra"
+                title={t('editor.fx.blackInk')}
               />
               <button
                 type="button"
@@ -552,7 +555,7 @@ export default function FXSidebar({ canvasRef, onActualizar }) {
                 className={`w-6 h-6 rounded-full border-2 transition-transform cursor-pointer ${
                   colorEfecto === '#FFFFFF' ? 'border-amber-400 scale-110' : 'border-slate-400'
                 } bg-white`}
-                title="Brillo Blanco"
+                title={t('editor.fx.whiteGlow')}
               />
             </div>
           </div>
@@ -565,14 +568,14 @@ export default function FXSidebar({ canvasRef, onActualizar }) {
           className="w-full py-2.5 px-3 rounded-xl bg-rdc-accent hover:bg-rdc-accent-hover text-white text-xs font-titulo font-bold flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer"
         >
           <Sparkles className="w-4 h-4" />
-          <span>Insertar Capa de Efecto</span>
+          <span>{t('editor.fx.insertLayer')}</span>
         </button>
       </div>
 
       {/* ── Footer ── */}
       <div className="p-2.5 border-t border-rdc-border bg-rdc-primary/50 text-[11px] text-rdc-muted font-mono flex items-center justify-between flex-shrink-0">
-        <span>Capas con clipPath</span>
-        <span className="text-[10px] text-amber-400 font-bold">Modo Cómic</span>
+        <span>{t('editor.fx.clipPathLayers')}</span>
+        <span className="text-[10px] text-amber-400 font-bold">{t('editor.fx.comicMode')}</span>
       </div>
     </div>
   )
