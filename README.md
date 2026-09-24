@@ -2,7 +2,9 @@
 
 \*\*Full-Stack Creative Studio Engine, Offline-First PWA \& Distributed AI Pipelines\*\*
 
-
+> 🔴 **Active Test Environment (Live Demo)**
+> Temporary access for testers: [Try Manga Editor Pro Live](https://sam-notes-virtual-shop.trycloudflare.com)
+> *(Available only while the local test environment is running).*
 
 A modern web-based comic and manga creation suite engineered with an asynchronous micro-services architecture, high-performance interactive 2D canvas manipulation, relational data persistence, and multi-tier AI inference runtime (Zero-Cloud local GPU \& Cloud fallback).
 
