@@ -8,6 +8,23 @@
 
 A modern web-based comic and manga creation suite engineered with an asynchronous micro-services architecture, high-performance interactive 2D canvas manipulation, relational data persistence, and multi-tier AI inference runtime (Zero-Cloud local GPU \& Cloud fallback).
 
+## 📸 Capturas de la Suite / Preview
+
+| Bienvenida & Modos | Selección Legendaria |
+| :---: | :---: |
+| ![Landing Page](docs/screenshots/01-landing-page.png) | ![Selección de Estilos](docs/screenshots/02-legendary-selection.png) |
+
+| Guionista (Sinopsis & Arcos) | Desglose de Capítulos |
+| :---: | :---: |
+| ![Sinopsis y Arcos](docs/screenshots/04-synospsis-arcs.png) | ![Estructura de Capítulos](docs/screenshots/05-chapter-structure.png) |
+
+| Fichas de Personajes | Generador de Viñetas (Panel Art) |
+| :---: | :---: |
+| ![Personajes](docs/screenshots/06-characters.png) | ![Generador de Viñetas](docs/screenshots/07-panel-art.png) |
+
+| Editor de Páginas & Lienzo | Módulo de Exportación |
+| :---: | :---: |
+| ![Editor de Páginas](docs/screenshots/08-page-art.png) | ![Exportación](docs/screenshots/09-export.png) |
 
 
 \---
